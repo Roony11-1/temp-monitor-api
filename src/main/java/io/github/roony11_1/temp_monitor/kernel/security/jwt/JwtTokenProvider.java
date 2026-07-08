@@ -20,27 +20,32 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class JwtTokenProvider 
 {
-
     private final JwtConfig jwtConfig;
 
-    private SecretKey getSigningKey() {
+    private SecretKey getSigningKey() 
+    {
         byte[] keyBytes = Base64.getDecoder().decode(jwtConfig.getSecret());
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public boolean validateToken(String token) {
-        try {
+    public boolean validateToken(String token)
+    {
+        try 
+        {
             Jwts.parser()
                     .verifyWith(getSigningKey())
                     .build()
                     .parseSignedClaims(token);
             return true;
-        } catch (Exception e) {
+        } 
+        catch (Exception e) 
+        {
             return false;
         }
     }
 
-    private Claims getClaims(String token) {
+    private Claims getClaims(String token) 
+    {
         return Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()
@@ -48,25 +53,29 @@ public class JwtTokenProvider
                 .getPayload();
     }
 
-    public Long getUserId(String token) {
+    public Long getUserId(String token) 
+    {
         return Long.valueOf(getClaims(token).getSubject());
     }
 
-    public String getEmail(String token) {
+    public String getEmail(String token) 
+    {
         return getClaims(token).get("email", String.class);
     }
 
-    @SuppressWarnings("unchecked")
-    public List<String> getRoles(String token) {
+    public List<String> getRoles(String token) 
+    {
         return getClaims(token).get("roles", List.class);
     }
 
-    public TokenUser getTokenUser(String token) {
+    public TokenUser getTokenUser(String token) 
+    {
         Claims claims = getClaims(token);
         Long userId = Long.valueOf(claims.getSubject());
         String email = claims.get("email", String.class);
         List<String> roleNames = claims.get("roles", List.class);
-        if (roleNames == null || roleNames.isEmpty()) {
+        if (roleNames == null || roleNames.isEmpty()) 
+        {
             throw new InvalidTokenUserException("El token no contiene roles");
         }
         Set<Rol> roles = roleNames.stream()
@@ -75,7 +84,8 @@ public class JwtTokenProvider
         Long empresaId = claims.get("empresaId", Long.class);
         Long sucursalId = claims.get("sucursalId", Long.class);
 
-        return new TokenUser() {
+        return new TokenUser() 
+        {
             @Override public Long getId() { return userId; }
             @Override public String getEmail() { return email; }
             @Override public Set<Rol> getRoles() { return roles; }

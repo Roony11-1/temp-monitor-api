@@ -13,8 +13,8 @@ import java.time.Instant;
 @NoArgsConstructor
 @Builder
 @EqualsAndHashCode(callSuper = false)
-public class Camara {
-
+public class Camara 
+{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

@@ -10,11 +10,12 @@ import java.util.Base64;
 
 @Component
 @RequiredArgsConstructor
-public class JwtKeyProvider {
-
+public class JwtKeyProvider 
+{
     private final JwtConfig jwtConfig;
 
-    public SecretKey getHmacKey() {
+    public SecretKey getHmacKey() 
+    {
         byte[] decoded = Base64.getDecoder().decode(jwtConfig.getSecret());
         return new SecretKeySpec(decoded, "HmacSHA256");
     }

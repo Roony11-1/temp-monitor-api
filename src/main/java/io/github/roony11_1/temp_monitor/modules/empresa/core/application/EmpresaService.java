@@ -13,21 +13,24 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class EmpresaService {
-
+public class EmpresaService 
+{
     private final EmpresaRepository empresaRepository;
 
-    public List<Empresa> listarTodas() {
+    public List<Empresa> listarTodas() 
+    {
         return empresaRepository.findAll();
     }
 
-    public Empresa buscarPorId(Long id) {
+    public Empresa buscarPorId(Long id) 
+    {
         return empresaRepository.findById(id)
                 .orElseThrow(() -> new EmpresaNotFoundException("ID " + id));
     }
 
     @Transactional
-    public Empresa crear(String nombre, String direccion, String telefono, String email) {
+    public Empresa crear(String nombre, String direccion, String telefono, String email) 
+    {
         if (empresaRepository.existsByNombre(nombre))
             throw new NombreEmpresaAlreadyExistsException(nombre);
 
@@ -43,7 +46,8 @@ public class EmpresaService {
     }
 
     @Transactional
-    public Empresa actualizar(Long id, String nombre, String direccion, String telefono, String email) {
+    public Empresa actualizar(Long id, String nombre, String direccion, String telefono, String email) 
+    {
         Empresa empresa = buscarPorId(id);
 
         empresa.setNombre(nombre);
@@ -55,7 +59,8 @@ public class EmpresaService {
     }
 
     @Transactional
-    public void activar(Long id) {
+    public void activar(Long id) 
+    {
         Empresa empresa = buscarPorId(id);
         empresa.setActivo(true);
         empresa.setUpdatedAt(Instant.now());
@@ -63,7 +68,8 @@ public class EmpresaService {
     }
 
     @Transactional
-    public void desactivar(Long id) {
+    public void desactivar(Long id) 
+    {
         Empresa empresa = buscarPorId(id);
         empresa.setActivo(false);
         empresa.setUpdatedAt(Instant.now());
@@ -71,7 +77,8 @@ public class EmpresaService {
     }
 
     @Transactional
-    public void eliminar(Long id) {
+    public void eliminar(Long id) 
+    {
         var empresa = buscarPorId(id);
         empresaRepository.delete(empresa);
     }

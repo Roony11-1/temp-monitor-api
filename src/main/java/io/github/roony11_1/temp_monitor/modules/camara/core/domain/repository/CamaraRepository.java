@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface CamaraRepository extends JpaRepository<Camara, Long> {
-
+public interface CamaraRepository extends JpaRepository<Camara, Long> 
+{
     List<Camara> findBySucursalId(Long sucursalId);
 }

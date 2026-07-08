@@ -16,39 +16,44 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/usuarios")
 @RequiredArgsConstructor
-public class UsuarioController {
-
+public class UsuarioController 
+{
     private final UsuarioService usuarioService;
 
     @GetMapping
-    public List<UsuarioResponse> listarTodos() {
+    public List<UsuarioResponse> listarTodos() 
+    {
         return usuarioService.listarTodos().stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     @GetMapping("/empresa/{empresaId}")
-    public List<UsuarioResponse> listarPorEmpresa(@PathVariable Long empresaId) {
+    public List<UsuarioResponse> listarPorEmpresa(@PathVariable Long empresaId) 
+    {
         return usuarioService.listarPorEmpresa(empresaId).stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     @GetMapping("/sucursal/{sucursalId}")
-    public List<UsuarioResponse> listarPorSucursal(@PathVariable Long sucursalId) {
+    public List<UsuarioResponse> listarPorSucursal(@PathVariable Long sucursalId) 
+    {
         return usuarioService.listarPorSucursal(sucursalId).stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     @GetMapping("/{id}")
-    public UsuarioResponse buscarPorId(@PathVariable Long id) {
+    public UsuarioResponse buscarPorId(@PathVariable Long id) 
+    {
         return toResponse(usuarioService.buscarPorId(id));
     }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'SUPER_ADMIN')")
-    public ResponseEntity<UsuarioResponse> crear(@RequestBody UsuarioRequest request) {
+    public ResponseEntity<UsuarioResponse> crear(@RequestBody UsuarioRequest request) 
+    {
         Usuario usuario = usuarioService.crear(
                 request.getEmail(),
                 request.getPassword(),
@@ -63,7 +68,8 @@ public class UsuarioController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'SUPER_ADMIN')")
-    public UsuarioResponse actualizar(@PathVariable Long id, @RequestBody UsuarioRequest request) {
+    public UsuarioResponse actualizar(@PathVariable Long id, @RequestBody UsuarioRequest request) 
+    {
         return toResponse(usuarioService.actualizar(
                 id,
                 request.getNombre(),
@@ -75,33 +81,38 @@ public class UsuarioController {
     }
 
     @PostMapping("/{id}/password")
-    public ResponseEntity<Void> cambiarPassword(@PathVariable Long id, @RequestBody CambiarPasswordRequest request) {
+    public ResponseEntity<Void> cambiarPassword(@PathVariable Long id, @RequestBody CambiarPasswordRequest request) 
+    {
         usuarioService.cambiarPassword(id, request.getNuevaPassword());
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{id}/activar")
     @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'SUPER_ADMIN')")
-    public ResponseEntity<Void> activar(@PathVariable Long id) {
+    public ResponseEntity<Void> activar(@PathVariable Long id) 
+    {
         usuarioService.activar(id);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{id}/desactivar")
     @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'SUPER_ADMIN')")
-    public ResponseEntity<Void> desactivar(@PathVariable Long id) {
+    public ResponseEntity<Void> desactivar(@PathVariable Long id) 
+    {
         usuarioService.desactivar(id);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'SUPER_ADMIN')")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) 
+    {
         usuarioService.eliminar(id);
         return ResponseEntity.noContent().build();
     }
 
-    private UsuarioResponse toResponse(Usuario usuario) {
+    private UsuarioResponse toResponse(Usuario usuario) 
+    {
         UsuarioResponse response = new UsuarioResponse();
         response.setId(usuario.getId());
         response.setEmail(usuario.getEmail());

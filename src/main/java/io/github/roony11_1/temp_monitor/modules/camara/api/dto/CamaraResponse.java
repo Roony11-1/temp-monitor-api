@@ -5,7 +5,8 @@ import lombok.Data;
 import java.time.Instant;
 
 @Data
-public class CamaraResponse {
+public class CamaraResponse 
+{
     private Long id;
     private String nombre;
     private String descripcion;

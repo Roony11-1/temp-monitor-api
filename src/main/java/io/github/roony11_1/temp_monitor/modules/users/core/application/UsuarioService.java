@@ -20,49 +20,62 @@ import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
-public class UsuarioService {
-
+public class UsuarioService 
+{
     private final UsuarioRepository usuarioRepository;
     private final PasswordHasher passwordHasher;
 
-    public List<Usuario> listarTodos() {
+    public List<Usuario> listarTodos() 
+    {
         return usuarioRepository.findAll();
     }
 
-    public List<Usuario> listarPorEmpresa(Long empresaId) {
+    public List<Usuario> listarPorEmpresa(Long empresaId) 
+    {
         return usuarioRepository.findByEmpresaId(empresaId);
     }
 
-    public List<Usuario> listarPorSucursal(Long sucursalId) {
+    public List<Usuario> listarPorSucursal(Long sucursalId) 
+    {
         return usuarioRepository.findBySucursalId(sucursalId);
     }
 
-    public Usuario buscarPorId(Long id) {
+    public Usuario buscarPorId(Long id) 
+    {
         return usuarioRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("ID " + id));
     }
 
     @Transactional
-    public Usuario crear(String email, String password, String nombre, Long empresaId, Long sucursalId, Set<Rol> roles) {
+    public Usuario crear(String email, String password, String nombre, Long empresaId, Long sucursalId, Set<Rol> roles) 
+    {
         if (usuarioRepository.existsByEmail(email))
             throw new EmailAlreadyExistsException(email);
 
         TokenUser currentUser = getCurrentUser();
 
-        if (currentUser.getRoles().contains(Rol.SUPER_ADMIN)) {
+        if (currentUser.getRoles().contains(Rol.SUPER_ADMIN)) 
+        {
             // SUPER_ADMIN puede crear cualquier rol
-        } else if (currentUser.getRoles().contains(Rol.ADMIN_EMPRESA)) {
+        } 
+        else if (currentUser.getRoles().contains(Rol.ADMIN_EMPRESA)) 
+        {
             // ADMIN_EMPRESA solo puede crear ADMIN_SUCURSAL, TECNICO, USUARIO
-            for (Rol r : roles) {
-                if (r == Rol.SUPER_ADMIN || r == Rol.ADMIN_EMPRESA) {
+            for (Rol r : roles) 
+            {
+                if (r == Rol.SUPER_ADMIN || r == Rol.ADMIN_EMPRESA) 
+                {
                     throw new AccessDeniedException("No puedes crear usuarios con rol " + r);
                 }
             }
             // Debe asignar su misma empresa
-            if (empresaId == null || !empresaId.equals(currentUser.getEmpresaId())) {
+            if (empresaId == null || !empresaId.equals(currentUser.getEmpresaId())) 
+            {
                 throw new AccessDeniedException("Solo puedes crear usuarios en tu propia empresa");
             }
-        } else {
+        } 
+        else 
+        {
             throw new AccessDeniedException("No tienes permiso para crear usuarios");
         }
 
@@ -79,23 +92,27 @@ public class UsuarioService {
         return usuarioRepository.save(usuario);
     }
 
-    private TokenUser getCurrentUser() {
+    private TokenUser getCurrentUser() 
+    {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !(auth.getPrincipal() instanceof TokenUser)) {
+        if (auth == null || !(auth.getPrincipal() instanceof TokenUser)) 
+        {
             throw new AccessDeniedException("Usuario no autenticado");
         }
         return (TokenUser) auth.getPrincipal();
     }
 
     @Transactional
-    public Usuario actualizar(Long id, String nombre, String telefono, Long empresaId, Long sucursalId, Set<Rol> roles) {
+    public Usuario actualizar(Long id, String nombre, String telefono, Long empresaId, Long sucursalId, Set<Rol> roles) 
+    {
         Usuario usuario = buscarPorId(id);
 
         usuario.setNombre(nombre);
         usuario.setTelefono(telefono);
         usuario.setEmpresaId(empresaId);
         usuario.setSucursalId(sucursalId);
-        if (roles != null && !roles.isEmpty()) {
+        if (roles != null && !roles.isEmpty()) 
+        {
             usuario.setRoles(roles);
         }
         usuario.setUpdatedAt(Instant.now());
@@ -103,7 +120,8 @@ public class UsuarioService {
     }
 
     @Transactional
-    public void cambiarPassword(Long id, String nuevaPassword) {
+    public void cambiarPassword(Long id, String nuevaPassword) 
+    {
         Usuario usuario = buscarPorId(id);
         usuario.setPasswordHash(passwordHasher.hash(nuevaPassword));
         usuario.setUpdatedAt(Instant.now());
@@ -111,7 +129,8 @@ public class UsuarioService {
     }
 
     @Transactional
-    public void activar(Long id) {
+    public void activar(Long id) 
+    {
         Usuario usuario = buscarPorId(id);
         usuario.setActivo(true);
         usuario.setUpdatedAt(Instant.now());
@@ -119,7 +138,8 @@ public class UsuarioService {
     }
 
     @Transactional
-    public void desactivar(Long id) {
+    public void desactivar(Long id) 
+    {
         Usuario usuario = buscarPorId(id);
         usuario.setActivo(false);
         usuario.setUpdatedAt(Instant.now());
@@ -127,7 +147,8 @@ public class UsuarioService {
     }
 
     @Transactional
-    public void eliminar(Long id) {
+    public void eliminar(Long id) 
+    {
         var usuario = buscarPorId(id);
         usuarioRepository.delete(usuario);
     }

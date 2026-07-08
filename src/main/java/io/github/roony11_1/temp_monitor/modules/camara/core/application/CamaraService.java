@@ -15,26 +15,30 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class CamaraService {
-
+public class CamaraService 
+{
     private final CamaraRepository camaraRepository;
     private final SucursalRepository sucursalRepository;
 
-    public List<Camara> listarTodas() {
+    public List<Camara> listarTodas() 
+    {
         return camaraRepository.findAll();
     }
 
-    public List<Camara> listarPorSucursal(Long sucursalId) {
+    public List<Camara> listarPorSucursal(Long sucursalId) 
+    {
         return camaraRepository.findBySucursalId(sucursalId);
     }
 
-    public Camara buscarPorId(Long id) {
+    public Camara buscarPorId(Long id) 
+    {
         return camaraRepository.findById(id)
                 .orElseThrow(() -> new CamaraNotFoundException("ID " + id));
     }
 
     @Transactional
-    public Camara crear(String nombre, String descripcion, Long sucursalId, Double temperaturaMinima, Double temperaturaMaxima) {
+    public Camara crear(String nombre, String descripcion, Long sucursalId, Double temperaturaMinima, Double temperaturaMaxima) 
+    {
         Sucursal sucursal = sucursalRepository.findById(sucursalId)
                 .orElseThrow(() -> new SucursalNotFoundException("ID " + sucursalId));
 
@@ -51,12 +55,14 @@ public class CamaraService {
     }
 
     @Transactional
-    public Camara actualizar(Long id, String nombre, String descripcion, Long sucursalId, Double temperaturaMinima, Double temperaturaMaxima) {
+    public Camara actualizar(Long id, String nombre, String descripcion, Long sucursalId, Double temperaturaMinima, Double temperaturaMaxima) 
+    {
         Camara camara = buscarPorId(id);
 
         camara.setNombre(nombre);
         camara.setDescripcion(descripcion);
-        if (sucursalId != null) {
+        if (sucursalId != null) 
+        {
             Sucursal sucursal = sucursalRepository.findById(sucursalId)
                     .orElseThrow(() -> new SucursalNotFoundException("ID " + sucursalId));
             camara.setSucursal(sucursal);
@@ -68,7 +74,8 @@ public class CamaraService {
     }
 
     @Transactional
-    public void activar(Long id) {
+    public void activar(Long id) 
+    {
         Camara camara = buscarPorId(id);
         camara.setActivo(true);
         camara.setUpdatedAt(Instant.now());
@@ -76,7 +83,8 @@ public class CamaraService {
     }
 
     @Transactional
-    public void desactivar(Long id) {
+    public void desactivar(Long id) 
+    {
         Camara camara = buscarPorId(id);
         camara.setActivo(false);
         camara.setUpdatedAt(Instant.now());
@@ -84,7 +92,8 @@ public class CamaraService {
     }
 
     @Transactional
-    public void eliminar(Long id) {
+    public void eliminar(Long id) 
+    {
         var camara = buscarPorId(id);
         camaraRepository.delete(camara);
     }

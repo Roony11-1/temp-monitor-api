@@ -12,12 +12,13 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 @Slf4j
-public class AuthController {
-
+public class AuthController 
+{
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) 
+    {
         log.info("Intento de login para email: {}", request.getEmail());
 
         String token = authService.login(request.getEmail(), request.getPassword());

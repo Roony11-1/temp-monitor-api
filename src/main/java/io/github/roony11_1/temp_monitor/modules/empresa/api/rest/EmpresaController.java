@@ -14,24 +14,27 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/empresas")
 @RequiredArgsConstructor
-public class EmpresaController {
-
+public class EmpresaController 
+{
     private final EmpresaService empresaService;
 
     @GetMapping
-    public List<EmpresaResponse> listarTodas() {
+    public List<EmpresaResponse> listarTodas() 
+    {
         return empresaService.listarTodas().stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     @GetMapping("/{id}")
-    public EmpresaResponse buscarPorId(@PathVariable Long id) {
+    public EmpresaResponse buscarPorId(@PathVariable Long id) 
+    {
         return toResponse(empresaService.buscarPorId(id));
     }
 
     @PostMapping
-    public ResponseEntity<EmpresaResponse> crear(@RequestBody EmpresaRequest request) {
+    public ResponseEntity<EmpresaResponse> crear(@RequestBody EmpresaRequest request) 
+    {
         Empresa empresa = empresaService.crear(
                 request.getNombre(),
                 request.getDireccion(),
@@ -43,7 +46,8 @@ public class EmpresaController {
     }
 
     @PutMapping("/{id}")
-    public EmpresaResponse actualizar(@PathVariable Long id, @RequestBody EmpresaRequest request) {
+    public EmpresaResponse actualizar(@PathVariable Long id, @RequestBody EmpresaRequest request) 
+    {
         return toResponse(empresaService.actualizar(
                 id,
                 request.getNombre(),
@@ -54,24 +58,28 @@ public class EmpresaController {
     }
 
     @PostMapping("/{id}/activar")
-    public ResponseEntity<Void> activar(@PathVariable Long id) {
+    public ResponseEntity<Void> activar(@PathVariable Long id) 
+    {
         empresaService.activar(id);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{id}/desactivar")
-    public ResponseEntity<Void> desactivar(@PathVariable Long id) {
+    public ResponseEntity<Void> desactivar(@PathVariable Long id) 
+    {
         empresaService.desactivar(id);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) 
+    {
         empresaService.eliminar(id);
         return ResponseEntity.noContent().build();
     }
 
-    private EmpresaResponse toResponse(Empresa empresa) {
+    private EmpresaResponse toResponse(Empresa empresa) 
+    {
         EmpresaResponse response = new EmpresaResponse();
         response.setId(empresa.getId());
         response.setNombre(empresa.getNombre());

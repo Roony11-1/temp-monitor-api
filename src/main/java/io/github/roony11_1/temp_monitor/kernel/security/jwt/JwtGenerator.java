@@ -21,12 +21,13 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class JwtGenerator {
-
+public class JwtGenerator 
+{
     private final JwtKeyProvider keyProvider;
     private final JwtConfig jwtConfig;
 
-    public String generate(TokenUser user) {
+    public String generate(TokenUser user) 
+    {
         Objects.requireNonNull(user.getId(), "El usuario no tiene ID");
         Objects.requireNonNull(user.getEmail(), "El usuario no tiene email");
 
@@ -35,11 +36,13 @@ public class JwtGenerator {
                 .map(Rol::name)
                 .collect(Collectors.toSet());
 
-        if (roles.isEmpty()) {
+        if (roles.isEmpty()) 
+        {
             throw new InvalidTokenUserException("El usuario no tiene roles asignados");
         }
 
-        try {
+        try 
+        {
             SecretKey key = keyProvider.getHmacKey();
 
             var builder = Jwts.builder()
@@ -50,16 +53,20 @@ public class JwtGenerator {
                     .issuedAt(new Date())
                     .expiration(Date.from(Instant.now().plus(Duration.ofHours(jwtConfig.getExpirationHours()))));
 
-            if (user.getEmpresaId() != null) {
+            if (user.getEmpresaId() != null) 
+            {
                 builder.claim("empresaId", user.getEmpresaId());
             }
 
-            if (user.getSucursalId() != null) {
+            if (user.getSucursalId() != null) 
+            {
                 builder.claim("sucursalId", user.getSucursalId());
             }
 
             return builder.signWith(key).compact();
-        } catch (Exception e) {
+        } 
+        catch (Exception e) 
+        {
             log.error("Error al generar JWT para userId={}", user.getId(), e);
             throw new InternalErrorException("generar el token JWT", e);
         }

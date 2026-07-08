@@ -1,6 +1,5 @@
 package io.github.roony11_1.temp_monitor.config;
 
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -10,10 +9,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.Map;
 
 @RestControllerAdvice
-public class SecurityExceptionHandler {
-
+public class SecurityExceptionHandler 
+{
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<Map<String, String>> handleAccessDenied(AccessDeniedException ex) {
+    public ResponseEntity<Map<String, String>> handleAccessDenied(AccessDeniedException ex) 
+    {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(Map.of("code", "AUTH-004", "message", "Acceso denegado"));
     }

@@ -14,19 +14,21 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/sucursales")
 @RequiredArgsConstructor
-public class SucursalController {
-
+public class SucursalController 
+{
     private final SucursalService sucursalService;
 
     @GetMapping
-    public List<SucursalResponse> listarTodas() {
+    public List<SucursalResponse> listarTodas() 
+    {
         return sucursalService.listarTodas().stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     @GetMapping("/empresa/{empresaId}")
-    public List<SucursalResponse> listarPorEmpresa(@PathVariable Long empresaId) {
+    public List<SucursalResponse> listarPorEmpresa(@PathVariable Long empresaId) 
+    {
         return sucursalService.listarPorEmpresa(empresaId).stream()
                 .map(this::toResponse)
                 .toList();
@@ -38,7 +40,8 @@ public class SucursalController {
     }
 
     @PostMapping
-    public ResponseEntity<SucursalResponse> crear(@RequestBody SucursalRequest request) {
+    public ResponseEntity<SucursalResponse> crear(@RequestBody SucursalRequest request) 
+    {
         Sucursal sucursal = sucursalService.crear(
                 request.getNombre(),
                 request.getDireccion(),
@@ -50,7 +53,8 @@ public class SucursalController {
     }
 
     @PutMapping("/{id}")
-    public SucursalResponse actualizar(@PathVariable Long id, @RequestBody SucursalRequest request) {
+    public SucursalResponse actualizar(@PathVariable Long id, @RequestBody SucursalRequest request) 
+    {
         return toResponse(sucursalService.actualizar(
                 id,
                 request.getNombre(),
@@ -61,24 +65,28 @@ public class SucursalController {
     }
 
     @PostMapping("/{id}/activar")
-    public ResponseEntity<Void> activar(@PathVariable Long id) {
+    public ResponseEntity<Void> activar(@PathVariable Long id) 
+    {
         sucursalService.activar(id);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{id}/desactivar")
-    public ResponseEntity<Void> desactivar(@PathVariable Long id) {
+    public ResponseEntity<Void> desactivar(@PathVariable Long id) 
+    {
         sucursalService.desactivar(id);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) 
+    {
         sucursalService.eliminar(id);
         return ResponseEntity.noContent().build();
     }
 
-    private SucursalResponse toResponse(Sucursal sucursal) {
+    private SucursalResponse toResponse(Sucursal sucursal) 
+    {
         SucursalResponse response = new SucursalResponse();
         response.setId(sucursal.getId());
         response.setNombre(sucursal.getNombre());

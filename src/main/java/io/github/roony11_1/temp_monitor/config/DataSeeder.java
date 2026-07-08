@@ -20,8 +20,8 @@ import java.util.Set;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class DataSeeder implements CommandLineRunner {
-
+public class DataSeeder implements CommandLineRunner 
+{
     private final UsuarioRepository usuarioRepository;
     private final EmpresaRepository empresaRepository;
     private final SucursalRepository sucursalRepository;
@@ -29,7 +29,8 @@ public class DataSeeder implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public void run(String... args) {
+    public void run(String... args) 
+    {
         if (usuarioRepository.count() > 0) return;
 
         log.info("Sembrando datos de prueba...");

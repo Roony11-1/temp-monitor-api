@@ -14,31 +14,35 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/camaras")
 @RequiredArgsConstructor
-public class CamaraController {
-
+public class CamaraController 
+{
     private final CamaraService camaraService;
 
     @GetMapping
-    public List<CamaraResponse> listarTodas() {
+    public List<CamaraResponse> listarTodas() 
+    {
         return camaraService.listarTodas().stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     @GetMapping("/sucursal/{sucursalId}")
-    public List<CamaraResponse> listarPorSucursal(@PathVariable Long sucursalId) {
+    public List<CamaraResponse> listarPorSucursal(@PathVariable Long sucursalId) 
+    {
         return camaraService.listarPorSucursal(sucursalId).stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     @GetMapping("/{id}")
-    public CamaraResponse buscarPorId(@PathVariable Long id) {
+    public CamaraResponse buscarPorId(@PathVariable Long id) 
+    {
         return toResponse(camaraService.buscarPorId(id));
     }
 
     @PostMapping
-    public ResponseEntity<CamaraResponse> crear(@RequestBody CamaraRequest request) {
+    public ResponseEntity<CamaraResponse> crear(@RequestBody CamaraRequest request) 
+    {
         Camara camara = camaraService.crear(
                 request.getNombre(),
                 request.getDescripcion(),
@@ -51,7 +55,8 @@ public class CamaraController {
     }
 
     @PutMapping("/{id}")
-    public CamaraResponse actualizar(@PathVariable Long id, @RequestBody CamaraRequest request) {
+    public CamaraResponse actualizar(@PathVariable Long id, @RequestBody CamaraRequest request) 
+    {
         return toResponse(camaraService.actualizar(
                 id,
                 request.getNombre(),
@@ -63,24 +68,28 @@ public class CamaraController {
     }
 
     @PostMapping("/{id}/activar")
-    public ResponseEntity<Void> activar(@PathVariable Long id) {
+    public ResponseEntity<Void> activar(@PathVariable Long id) 
+    {
         camaraService.activar(id);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{id}/desactivar")
-    public ResponseEntity<Void> desactivar(@PathVariable Long id) {
+    public ResponseEntity<Void> desactivar(@PathVariable Long id) 
+    {
         camaraService.desactivar(id);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) 
+    {
         camaraService.eliminar(id);
         return ResponseEntity.noContent().build();
     }
 
-    private CamaraResponse toResponse(Camara camara) {
+    private CamaraResponse toResponse(Camara camara) 
+    {
         CamaraResponse response = new CamaraResponse();
         response.setId(camara.getId());
         response.setNombre(camara.getNombre());

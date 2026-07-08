@@ -16,22 +16,25 @@ import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
-public class DefaultUserCredentialsService implements IUserCredentialsService {
-
+public class DefaultUserCredentialsService implements IUserCredentialsService 
+{
     private final UsuarioRepository usuarioRepository;
     private final PasswordHasher passwordHasher;
 
     @Override
     @Transactional
-    public TokenUser authenticate(String email, String rawPassword) {
+    public TokenUser authenticate(String email, String rawPassword) 
+    {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException(email));
 
-        if (!usuario.isActivo()) {
+        if (!usuario.isActivo()) 
+        {
             throw new UserDisabledException();
         }
 
-        if (!passwordHasher.verify(rawPassword, usuario.getPasswordHash())) {
+        if (!passwordHasher.verify(rawPassword, usuario.getPasswordHash())) 
+        {
             throw new InvalidCredentialsException();
         }
 
