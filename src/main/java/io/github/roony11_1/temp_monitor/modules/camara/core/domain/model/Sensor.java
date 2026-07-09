@@ -45,14 +45,14 @@ public class Sensor
     private String macAddress;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "camara_id", nullable = false)
+    @JoinColumn(name = "camara_id")
     @ToString.Exclude
     private Camara camara;
 
     private Instant ultimoContacto;
 
     @Builder.Default
-    private boolean activo = true;
+    private EstadoSensor estado = EstadoSensor.PENDIENTE;
 
     @CreationTimestamp
     private Instant createdAt;

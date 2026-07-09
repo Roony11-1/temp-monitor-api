@@ -1,8 +1,12 @@
 package io.github.roony11_1.temp_monitor.modules.camara.core.application;
 
+import java.util.UUID;
+
 import org.springframework.stereotype.Service;
 
-import io.github.roony11_1.temp_monitor.modules.camara.api.dto.RegistroSensorResponse;
+import io.github.roony11_1.temp_monitor.modules.camara.api.dto.RegistroSensorRequest;
+import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.SensorAlreadyExistsException;
+import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Sensor;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.SensorRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -12,8 +16,20 @@ public class SensorService
 {
     private final SensorRepository sensorRepository;
 
-    public RegistroSensorResponse registrar()
+    public Sensor registrar(RegistroSensorRequest request)
     {
-        return RegistroSensorResponse.builder().build();
+        if (sensorRepository.findByMacAddress(request.getMacAddress()).isPresent())
+        {
+            throw new SensorAlreadyExistsException(request.getMacAddress());
+        }
+
+
+        var sensor = Sensor.builder()
+            .uuid(UUID.randomUUID())
+            .apiKeyHash(UUID.randomUUID().toString())
+            .macAddress(request.getMacAddress())
+            .build();
+
+        return sensorRepository.save(sensor);
     }
 }
