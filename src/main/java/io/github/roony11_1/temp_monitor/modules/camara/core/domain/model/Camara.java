@@ -29,9 +29,6 @@ public class Camara
     @ToString.Exclude
     private Sucursal sucursal;
 
-    private Double temperaturaMinima;
-    private Double temperaturaMaxima;
-
     @Builder.Default
     private boolean activo = true;
 
