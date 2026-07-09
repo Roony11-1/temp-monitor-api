@@ -46,8 +46,6 @@ public class CamaraService
                 .nombre(nombre)
                 .descripcion(descripcion)
                 .sucursal(sucursal)
-                .temperaturaMinima(temperaturaMinima)
-                .temperaturaMaxima(temperaturaMaxima)
                 .activo(true)
                 .build();
 
@@ -55,7 +53,7 @@ public class CamaraService
     }
 
     @Transactional
-    public Camara actualizar(Long id, String nombre, String descripcion, Long sucursalId, Double temperaturaMinima, Double temperaturaMaxima) 
+    public Camara actualizar(Long id, String nombre, String descripcion, Long sucursalId) 
     {
         Camara camara = buscarPorId(id);
 
@@ -67,8 +65,6 @@ public class CamaraService
                     .orElseThrow(() -> new SucursalNotFoundException("ID " + sucursalId));
             camara.setSucursal(sucursal);
         }
-        camara.setTemperaturaMinima(temperaturaMinima);
-        camara.setTemperaturaMaxima(temperaturaMaxima);
         camara.setUpdatedAt(Instant.now());
         return camaraRepository.save(camara);
     }

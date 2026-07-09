@@ -21,7 +21,7 @@ public class AuthController
     {
         log.info("Intento de login para email: {}", request.getEmail());
 
-        String token = authService.login(request.getEmail(), request.getPassword());
+        String token = authService.login(request);
 
         LoginResponse response = new LoginResponse();
         response.setToken(token);

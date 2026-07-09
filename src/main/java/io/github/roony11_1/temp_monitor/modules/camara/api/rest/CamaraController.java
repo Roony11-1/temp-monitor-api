@@ -61,9 +61,7 @@ public class CamaraController
                 id,
                 request.getNombre(),
                 request.getDescripcion(),
-                request.getSucursalId(),
-                request.getTemperaturaMinima(),
-                request.getTemperaturaMaxima()
+                request.getSucursalId()
         ));
     }
 
@@ -95,8 +93,6 @@ public class CamaraController
         response.setNombre(camara.getNombre());
         response.setDescripcion(camara.getDescripcion());
         response.setSucursalId(camara.getSucursal().getId());
-        response.setTemperaturaMinima(camara.getTemperaturaMinima());
-        response.setTemperaturaMaxima(camara.getTemperaturaMaxima());
         response.setActivo(camara.isActivo());
         response.setCreatedAt(camara.getCreatedAt());
         response.setUpdatedAt(camara.getUpdatedAt());
