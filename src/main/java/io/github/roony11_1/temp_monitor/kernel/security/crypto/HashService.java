@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class PasswordHasher 
+public class HashService 
 {
     private final PasswordEncoder passwordEncoder;
 

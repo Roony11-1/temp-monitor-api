@@ -1,6 +1,6 @@
 package io.github.roony11_1.temp_monitor.modules.users.core.application;
 
-import io.github.roony11_1.temp_monitor.kernel.security.crypto.PasswordHasher;
+import io.github.roony11_1.temp_monitor.kernel.security.crypto.HashService;
 import io.github.roony11_1.temp_monitor.kernel.security.model.Rol;
 import io.github.roony11_1.temp_monitor.kernel.security.model.TokenUser;
 import io.github.roony11_1.temp_monitor.modules.users.core.domain.exceptions.EmailAlreadyExistsException;
@@ -23,7 +23,7 @@ import java.util.Set;
 public class UsuarioService 
 {
     private final UsuarioRepository usuarioRepository;
-    private final PasswordHasher passwordHasher;
+    private final HashService passwordHasher;
 
     public List<Usuario> listarTodos() 
     {
