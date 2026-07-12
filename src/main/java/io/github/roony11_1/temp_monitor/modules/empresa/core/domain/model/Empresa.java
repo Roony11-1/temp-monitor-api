@@ -7,6 +7,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 @Entity
 @Table(name = "empresas")
 @Data
@@ -14,8 +17,8 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @EqualsAndHashCode(callSuper = false)
-public class Empresa {
-
+public class Empresa 
+{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -35,8 +38,9 @@ public class Empresa {
     @Builder.Default
     private boolean activo = true;
 
-    @Builder.Default
-    private Instant createdAt = Instant.now();
+    @CreationTimestamp
+    private Instant createdAt;
 
+    @UpdateTimestamp
     private Instant updatedAt;
 }

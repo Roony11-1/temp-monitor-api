@@ -22,7 +22,7 @@ public class SucursalController
     public List<SucursalResponse> listarTodas() 
     {
         return sucursalService.listarTodas().stream()
-                .map(this::toResponse)
+                .map(SucursalResponse::toResponse)
                 .toList();
     }
 
@@ -30,38 +30,33 @@ public class SucursalController
     public List<SucursalResponse> listarPorEmpresa(@PathVariable Long empresaId) 
     {
         return sucursalService.listarPorEmpresa(empresaId).stream()
-                .map(this::toResponse)
+                .map(SucursalResponse::toResponse)
                 .toList();
     }
 
     @GetMapping("/{id}")
-    public SucursalResponse buscarPorId(@PathVariable Long id) {
-        return toResponse(sucursalService.buscarPorId(id));
+    public SucursalResponse buscarPorId(@PathVariable Long id) 
+    {
+        var sucursal = sucursalService.buscarPorId(id);
+
+        return SucursalResponse.toResponse(sucursal);
     }
 
     @PostMapping
     public ResponseEntity<SucursalResponse> crear(@RequestBody SucursalRequest request) 
     {
-        Sucursal sucursal = sucursalService.crear(
-                request.getNombre(),
-                request.getDireccion(),
-                request.getTelefono(),
-                request.getEmpresaId()
-        );
+        Sucursal sucursal = sucursalService.crear(request);
+
         return ResponseEntity.created(URI.create("/api/sucursales/" + sucursal.getId()))
-                .body(toResponse(sucursal));
+                .body(SucursalResponse.toResponse(sucursal));
     }
 
     @PutMapping("/{id}")
     public SucursalResponse actualizar(@PathVariable Long id, @RequestBody SucursalRequest request) 
     {
-        return toResponse(sucursalService.actualizar(
-                id,
-                request.getNombre(),
-                request.getDireccion(),
-                request.getTelefono(),
-                request.getEmpresaId()
-        ));
+        var sucursal = sucursalService.actualizar(id, request);
+
+        return SucursalResponse.toResponse(sucursal);
     }
 
     @PostMapping("/{id}/activar")
@@ -83,19 +78,5 @@ public class SucursalController
     {
         sucursalService.eliminar(id);
         return ResponseEntity.noContent().build();
-    }
-
-    private SucursalResponse toResponse(Sucursal sucursal) 
-    {
-        SucursalResponse response = new SucursalResponse();
-        response.setId(sucursal.getId());
-        response.setNombre(sucursal.getNombre());
-        response.setDireccion(sucursal.getDireccion());
-        response.setTelefono(sucursal.getTelefono());
-        response.setEmpresaId(sucursal.getEmpresa().getId());
-        response.setActivo(sucursal.isActivo());
-        response.setCreatedAt(sucursal.getCreatedAt());
-        response.setUpdatedAt(sucursal.getUpdatedAt());
-        return response;
     }
 }

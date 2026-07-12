@@ -11,4 +11,10 @@ public final class SucursalErrorCategories
         @Override public String name() { return "SUCURSAL_NOT_FOUND"; }
         @Override public String description() { return "Sucursal no encontrada"; }
     };
+
+    public static final ErrorCategory SUCURSAL_ALREADY_EXISTS = new ErrorCategory() 
+    {
+        @Override public String name() { return "SUCURSAL_ALREADY_EXISTS"; }
+        @Override public String description() { return "La sucursal ya existe"; }
+    };
 }

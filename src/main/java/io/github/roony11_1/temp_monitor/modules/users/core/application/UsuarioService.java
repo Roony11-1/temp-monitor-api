@@ -3,6 +3,7 @@ package io.github.roony11_1.temp_monitor.modules.users.core.application;
 import io.github.roony11_1.temp_monitor.kernel.security.crypto.HashService;
 import io.github.roony11_1.temp_monitor.kernel.security.model.Rol;
 import io.github.roony11_1.temp_monitor.kernel.security.model.TokenUser;
+import io.github.roony11_1.temp_monitor.modules.users.api.dto.UsuarioRequest;
 import io.github.roony11_1.temp_monitor.modules.users.core.domain.exceptions.EmailAlreadyExistsException;
 import io.github.roony11_1.temp_monitor.modules.users.core.domain.exceptions.UserNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.users.core.domain.model.Usuario;
@@ -15,8 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -47,10 +48,10 @@ public class UsuarioService
     }
 
     @Transactional
-    public Usuario crear(String email, String password, String nombre, Long empresaId, Long sucursalId, Set<Rol> roles) 
+    public Usuario crear(UsuarioRequest request) 
     {
-        if (usuarioRepository.existsByEmail(email))
-            throw new EmailAlreadyExistsException(email);
+        if (usuarioRepository.existsByEmail(request.getEmail()))
+            throw new EmailAlreadyExistsException(request.getEmail());
 
         TokenUser currentUser = getCurrentUser();
 
@@ -61,7 +62,7 @@ public class UsuarioService
         else if (currentUser.getRoles().contains(Rol.ADMIN_EMPRESA)) 
         {
             // ADMIN_EMPRESA solo puede crear ADMIN_SUCURSAL, TECNICO, USUARIO
-            for (Rol r : roles) 
+            for (Rol r : request.getRoles()) 
             {
                 if (r == Rol.SUPER_ADMIN || r == Rol.ADMIN_EMPRESA) 
                 {
@@ -69,7 +70,7 @@ public class UsuarioService
                 }
             }
             // Debe asignar su misma empresa
-            if (empresaId == null || !empresaId.equals(currentUser.getEmpresaId())) 
+            if (request.getEmpresaId() == null || !request.getEmpresaId().equals(currentUser.getEmpresaId())) 
             {
                 throw new AccessDeniedException("Solo puedes crear usuarios en tu propia empresa");
             }
@@ -80,12 +81,12 @@ public class UsuarioService
         }
 
         Usuario usuario = Usuario.builder()
-                .email(email)
-                .passwordHash(passwordHasher.hash(password))
-                .nombre(nombre)
-                .roles(new java.util.HashSet<>(roles))
-                .empresaId(empresaId)
-                .sucursalId(sucursalId)
+                .email(request.getEmail())
+                .passwordHash(passwordHasher.hash(request.getPassword()))
+                .nombre(request.getNombre())
+                .roles(new HashSet<>(request.getRoles()))
+                .empresaId(request.getEmpresaId())
+                .sucursalId(request.getSucursalId())
                 .activo(true)
                 .build();
 
@@ -103,18 +104,20 @@ public class UsuarioService
     }
 
     @Transactional
-    public Usuario actualizar(Long id, String nombre, String telefono, Long empresaId, Long sucursalId, Set<Rol> roles) 
+    public Usuario actualizar(Long id, UsuarioRequest request) 
     {
         Usuario usuario = buscarPorId(id);
 
-        usuario.setNombre(nombre);
-        usuario.setTelefono(telefono);
-        usuario.setEmpresaId(empresaId);
-        usuario.setSucursalId(sucursalId);
-        if (roles != null && !roles.isEmpty()) 
+        usuario.setNombre(request.getNombre());
+        usuario.setTelefono(request.getTelefono());
+        usuario.setEmpresaId(request.getEmpresaId());
+        usuario.setSucursalId(request.getSucursalId());
+        
+        if (request.getRoles() != null && !request.getRoles().isEmpty()) 
         {
-            usuario.setRoles(roles);
+            usuario.setRoles(request.getRoles());
         }
+
         usuario.setUpdatedAt(Instant.now());
         return usuarioRepository.save(usuario);
     }

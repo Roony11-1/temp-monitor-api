@@ -37,6 +37,7 @@ public class DefaultUserCredentialsService implements IUserCredentialsService
         }
 
         usuario.setLastLogin(Instant.now());
+        
         usuarioRepository.save(usuario);
 
         return usuario;

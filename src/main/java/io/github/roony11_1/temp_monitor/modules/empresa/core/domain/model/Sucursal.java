@@ -5,6 +5,9 @@ import lombok.*;
 
 import java.time.Instant;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 @Entity
 @Table(name = "sucursales")
 @Data
@@ -12,8 +15,8 @@ import java.time.Instant;
 @NoArgsConstructor
 @Builder
 @EqualsAndHashCode(callSuper = false)
-public class Sucursal {
-
+public class Sucursal 
+{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -32,8 +35,9 @@ public class Sucursal {
     @Builder.Default
     private boolean activo = true;
 
-    @Builder.Default
-    private Instant createdAt = Instant.now();
+    @CreationTimestamp
+    private Instant createdAt;
 
+    @UpdateTimestamp
     private Instant updatedAt;
 }

@@ -1,22 +1,21 @@
 package io.github.roony11_1.temp_monitor.modules.users.api.dto;
 
-import java.time.Instant;
-import java.util.Set;
-
-import io.github.roony11_1.temp_monitor.kernel.security.model.Rol;
+import io.github.roony11_1.temp_monitor.modules.users.core.domain.model.Usuario;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
+@Builder
 public class UsuarioResponse 
 {
-    private Long id;
     private String email;
     private String nombre;
-    private String telefono;
-    private Set<Rol> roles;
-    private Long empresaId;
-    private Long sucursalId;
-    private boolean activo;
-    private Instant createdAt;
-    private Instant lastLogin;
+
+    public static UsuarioResponse toResponse(Usuario usuario) 
+    {
+        return UsuarioResponse.builder()
+                .email(usuario.getEmail())
+                .nombre(usuario.getNombre())
+                .build();
+    }
 }

@@ -19,13 +19,7 @@ public class AuthController
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) 
     {
-        log.info("Intento de login para email: {}", request.getEmail());
-
-        String token = authService.login(request);
-
-        LoginResponse response = new LoginResponse();
-        response.setToken(token);
-        response.setEmail(request.getEmail());
+        LoginResponse response = authService.login(request);
 
         return ResponseEntity.ok(response);
     }

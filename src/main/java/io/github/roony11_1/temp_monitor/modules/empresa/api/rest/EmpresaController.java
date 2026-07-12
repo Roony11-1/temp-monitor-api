@@ -22,39 +22,33 @@ public class EmpresaController
     public List<EmpresaResponse> listarTodas() 
     {
         return empresaService.listarTodas().stream()
-                .map(this::toResponse)
+                .map(EmpresaResponse::toResponse)
                 .toList();
     }
 
     @GetMapping("/{id}")
     public EmpresaResponse buscarPorId(@PathVariable Long id) 
     {
-        return toResponse(empresaService.buscarPorId(id));
+        var empresa = empresaService.buscarPorId(id);
+        
+        return EmpresaResponse.toResponse(empresa);
     }
 
     @PostMapping
     public ResponseEntity<EmpresaResponse> crear(@RequestBody EmpresaRequest request) 
     {
-        Empresa empresa = empresaService.crear(
-                request.getNombre(),
-                request.getDireccion(),
-                request.getTelefono(),
-                request.getEmail()
-        );
-        return ResponseEntity.created(URI.create("/api/empresas/" + empresa.getId()))
-                .body(toResponse(empresa));
+        Empresa empresa = empresaService.crear(request);
+
+            return ResponseEntity.created(URI.create("/api/empresas/" + empresa.getId()))
+                .body(EmpresaResponse.toResponse(empresa));
     }
 
     @PutMapping("/{id}")
     public EmpresaResponse actualizar(@PathVariable Long id, @RequestBody EmpresaRequest request) 
     {
-        return toResponse(empresaService.actualizar(
-                id,
-                request.getNombre(),
-                request.getDireccion(),
-                request.getTelefono(),
-                request.getEmail()
-        ));
+        var empresa = empresaService.actualizar(id, request);
+
+        return EmpresaResponse.toResponse(empresa);
     }
 
     @PostMapping("/{id}/activar")
@@ -76,19 +70,5 @@ public class EmpresaController
     {
         empresaService.eliminar(id);
         return ResponseEntity.noContent().build();
-    }
-
-    private EmpresaResponse toResponse(Empresa empresa) 
-    {
-        EmpresaResponse response = new EmpresaResponse();
-        response.setId(empresa.getId());
-        response.setNombre(empresa.getNombre());
-        response.setDireccion(empresa.getDireccion());
-        response.setTelefono(empresa.getTelefono());
-        response.setEmail(empresa.getEmail());
-        response.setActivo(empresa.isActivo());
-        response.setCreatedAt(empresa.getCreatedAt());
-        response.setUpdatedAt(empresa.getUpdatedAt());
-        return response;
     }
 }

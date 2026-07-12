@@ -24,66 +24,61 @@ public class UsuarioController
     public List<UsuarioResponse> listarTodos() 
     {
         return usuarioService.listarTodos().stream()
-                .map(this::toResponse)
-                .toList();
+            .map(UsuarioResponse::toResponse)
+            .toList();
     }
 
     @GetMapping("/empresa/{empresaId}")
     public List<UsuarioResponse> listarPorEmpresa(@PathVariable Long empresaId) 
     {
         return usuarioService.listarPorEmpresa(empresaId).stream()
-                .map(this::toResponse)
-                .toList();
+            .map(UsuarioResponse::toResponse)
+            .toList();
     }
 
     @GetMapping("/sucursal/{sucursalId}")
     public List<UsuarioResponse> listarPorSucursal(@PathVariable Long sucursalId) 
     {
-        return usuarioService.listarPorSucursal(sucursalId).stream()
-                .map(this::toResponse)
-                .toList();
+        var response = usuarioService.listarPorSucursal(sucursalId).stream()
+            .map(UsuarioResponse::toResponse)
+            .toList();
+
+        return response;
     }
 
     @GetMapping("/{id}")
     public UsuarioResponse buscarPorId(@PathVariable Long id) 
     {
-        return toResponse(usuarioService.buscarPorId(id));
+        var usuario = usuarioService.buscarPorId(id);
+
+        return UsuarioResponse.toResponse(usuario);
     }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'SUPER_ADMIN')")
     public ResponseEntity<UsuarioResponse> crear(@RequestBody UsuarioRequest request) 
     {
-        Usuario usuario = usuarioService.crear(
-                request.getEmail(),
-                request.getPassword(),
-                request.getNombre(),
-                request.getEmpresaId(),
-                request.getSucursalId(),
-                request.getRoles()
-        );
-        return ResponseEntity.created(URI.create("/api/usuarios/" + usuario.getId()))
-                .body(toResponse(usuario));
+        Usuario usuario = usuarioService.crear(request);
+        
+        return ResponseEntity
+            .created(URI.create("/api/usuarios/" + usuario.getId()))
+            .body(UsuarioResponse.toResponse(usuario));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'SUPER_ADMIN')")
     public UsuarioResponse actualizar(@PathVariable Long id, @RequestBody UsuarioRequest request) 
     {
-        return toResponse(usuarioService.actualizar(
-                id,
-                request.getNombre(),
-                request.getTelefono(),
-                request.getEmpresaId(),
-                request.getSucursalId(),
-                request.getRoles()
-        ));
+        var usuario = usuarioService.actualizar(id, request);
+
+        return UsuarioResponse.toResponse(usuario);
     }
 
     @PostMapping("/{id}/password")
     public ResponseEntity<Void> cambiarPassword(@PathVariable Long id, @RequestBody CambiarPasswordRequest request) 
     {
         usuarioService.cambiarPassword(id, request.getNuevaPassword());
+        
         return ResponseEntity.ok().build();
     }
 
@@ -92,6 +87,7 @@ public class UsuarioController
     public ResponseEntity<Void> activar(@PathVariable Long id) 
     {
         usuarioService.activar(id);
+
         return ResponseEntity.ok().build();
     }
 
@@ -100,6 +96,7 @@ public class UsuarioController
     public ResponseEntity<Void> desactivar(@PathVariable Long id) 
     {
         usuarioService.desactivar(id);
+
         return ResponseEntity.ok().build();
     }
 
@@ -108,22 +105,7 @@ public class UsuarioController
     public ResponseEntity<Void> eliminar(@PathVariable Long id) 
     {
         usuarioService.eliminar(id);
-        return ResponseEntity.noContent().build();
-    }
 
-    private UsuarioResponse toResponse(Usuario usuario) 
-    {
-        UsuarioResponse response = new UsuarioResponse();
-        response.setId(usuario.getId());
-        response.setEmail(usuario.getEmail());
-        response.setNombre(usuario.getNombre());
-        response.setTelefono(usuario.getTelefono());
-        response.setRoles(usuario.getRoles());
-        response.setEmpresaId(usuario.getEmpresaId());
-        response.setSucursalId(usuario.getSucursalId());
-        response.setActivo(usuario.isActivo());
-        response.setCreatedAt(usuario.getCreatedAt());
-        response.setLastLogin(usuario.getLastLogin());
-        return response;
+        return ResponseEntity.noContent().build();
     }
 }

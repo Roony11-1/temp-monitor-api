@@ -1,6 +1,8 @@
 package io.github.roony11_1.temp_monitor.modules.empresa.core.application;
 
+import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.SucursalRequest;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.EmpresaNotFoundException;
+import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.NombreSucursalAlreadyExistsException;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.SucursalNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Empresa;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Sucursal;
@@ -37,15 +39,20 @@ public class SucursalService
     }
 
     @Transactional
-    public Sucursal crear(String nombre, String direccion, String telefono, Long empresaId) 
+    public Sucursal crear(SucursalRequest requst) 
     {
-        Empresa empresa = empresaRepository.findById(empresaId)
-                .orElseThrow(() -> new EmpresaNotFoundException("ID " + empresaId));
+        Empresa empresa = empresaRepository.findById(requst.getEmpresaId())
+                .orElseThrow(() -> new EmpresaNotFoundException("ID " + requst.getEmpresaId()));
+
+        if (sucursalRepository.existsByNombre(requst.getNombre())) 
+        {
+            throw new NombreSucursalAlreadyExistsException(requst.getNombre());
+        }
 
         Sucursal sucursal = Sucursal.builder()
-                .nombre(nombre)
-                .direccion(direccion)
-                .telefono(telefono)
+                .nombre(requst.getNombre())
+                .direccion(requst.getDireccion())
+                .telefono(requst.getTelefono())
                 .empresa(empresa)
                 .activo(true)
                 .build();
@@ -54,20 +61,21 @@ public class SucursalService
     }
 
     @Transactional
-    public Sucursal actualizar(Long id, String nombre, String direccion, String telefono, Long empresaId) 
+    public Sucursal actualizar(Long id, SucursalRequest request) 
     {
         Sucursal sucursal = buscarPorId(id);
 
-        sucursal.setNombre(nombre);
-        sucursal.setDireccion(direccion);
-        sucursal.setTelefono(telefono);
-        if (empresaId != null) 
+        sucursal.setNombre(request.getNombre());
+        sucursal.setDireccion(request.getDireccion());
+        sucursal.setTelefono(request.getTelefono());
+        
+        if (request.getEmpresaId() != null) 
         {
-            Empresa empresa = empresaRepository.findById(empresaId)
-                    .orElseThrow(() -> new EmpresaNotFoundException("ID " + empresaId));
+            Empresa empresa = empresaRepository.findById(request.getEmpresaId())
+                    .orElseThrow(() -> new EmpresaNotFoundException("ID " + request.getEmpresaId()));
             sucursal.setEmpresa(empresa);
         }
-        sucursal.setUpdatedAt(Instant.now());
+
         return sucursalRepository.save(sucursal);
     }
 

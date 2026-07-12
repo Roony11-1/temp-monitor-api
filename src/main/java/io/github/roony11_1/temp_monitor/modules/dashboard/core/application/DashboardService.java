@@ -39,6 +39,7 @@ public class DashboardService
         long sensoresOffline = sensorRepository.countOffline(threshold);
 
         List<TemperaturePoint> temperatura24h = obtenerTemperatura24h();
+        
         double temperaturaPromedio = temperatura24h.stream()
             .mapToDouble(TemperaturePoint::getTemperatura)
             .average()
