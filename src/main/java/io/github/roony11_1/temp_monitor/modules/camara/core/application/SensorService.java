@@ -11,6 +11,7 @@ import io.github.roony11_1.temp_monitor.kernel.security.crypto.HashService;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.ActualizarSensorRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.AsignarSensorRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.CamaraResponse;
+
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.RegistrarLecturaRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.RegistroSensorRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.RegistroSensorResponse;

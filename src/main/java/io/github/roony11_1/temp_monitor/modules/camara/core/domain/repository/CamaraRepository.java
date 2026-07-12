@@ -8,4 +8,6 @@ import java.util.List;
 public interface CamaraRepository extends JpaRepository<Camara, Long> 
 {
     List<Camara> findBySucursalId(Long sucursalId);
+
+    long countByActivo(boolean activo);
 }
