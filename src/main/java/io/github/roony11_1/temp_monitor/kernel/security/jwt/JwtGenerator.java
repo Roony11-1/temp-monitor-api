@@ -1,8 +1,8 @@
 package io.github.roony11_1.temp_monitor.kernel.security.jwt;
 
-import io.github.roony11_1.error.core.exceptions.InternalErrorException;
 import io.github.roony11_1.temp_monitor.config.JwtConfig;
 import io.github.roony11_1.temp_monitor.kernel.security.exception.InvalidTokenUserException;
+import io.github.roony11_1.temp_monitor.kernel.security.exception.JwtGenerationException;
 import io.github.roony11_1.temp_monitor.kernel.security.model.Rol;
 import io.github.roony11_1.temp_monitor.kernel.security.model.TokenUser;
 import io.jsonwebtoken.Jwts;
@@ -68,7 +68,7 @@ public class JwtGenerator
         catch (Exception e) 
         {
             log.error("Error al generar JWT para userId={}", user.getId(), e);
-            throw new InternalErrorException("generar el token JWT", e);
+            throw new JwtGenerationException(e.getMessage());
         }
     }
 }

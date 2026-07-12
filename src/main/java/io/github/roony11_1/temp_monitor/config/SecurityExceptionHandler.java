@@ -15,6 +15,10 @@ public class SecurityExceptionHandler
     public ResponseEntity<Map<String, String>> handleAccessDenied(AccessDeniedException ex) 
     {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(Map.of("code", "AUTH-004", "message", "Acceso denegado"));
+                .body(Map.of(
+                        "code", "AUTH-004",
+                        "message", "No tiene permisos para acceder a este recurso",
+                        "category", "ACCESS_DENIED"
+                ));
     }
 }

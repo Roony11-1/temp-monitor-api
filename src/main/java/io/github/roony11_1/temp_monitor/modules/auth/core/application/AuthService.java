@@ -1,6 +1,6 @@
 package io.github.roony11_1.temp_monitor.modules.auth.core.application;
 
-import io.github.roony11_1.error.core.exceptions.InternalErrorException;
+import io.github.roony11_1.temp_monitor.kernel.security.exception.JwtGenerationException;
 import io.github.roony11_1.temp_monitor.kernel.security.jwt.JwtGenerator;
 import io.github.roony11_1.temp_monitor.kernel.security.model.TokenUser;
 import io.github.roony11_1.temp_monitor.kernel.security.service.IUserCredentialsService;
@@ -33,7 +33,8 @@ public class AuthService
             return token;
         } catch (Exception e) 
         {
-            throw new InternalErrorException("generar el token JWT", e);
+            log.error("Error al generar JWT para email={}", email, e);
+            throw new JwtGenerationException(e.getMessage());
         }
     }
 }

@@ -5,7 +5,6 @@ import io.github.roony11_1.temp_monitor.kernel.security.model.TokenUser;
 import io.github.roony11_1.temp_monitor.kernel.security.service.IUserCredentialsService;
 import io.github.roony11_1.temp_monitor.modules.users.core.domain.exceptions.InvalidCredentialsException;
 import io.github.roony11_1.temp_monitor.modules.users.core.domain.exceptions.UserDisabledException;
-import io.github.roony11_1.temp_monitor.modules.users.core.domain.exceptions.UserNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.users.core.domain.model.Usuario;
 import io.github.roony11_1.temp_monitor.modules.users.core.domain.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,17 +24,16 @@ public class DefaultUserCredentialsService implements IUserCredentialsService
     @Transactional
     public TokenUser authenticate(String email, String rawPassword) 
     {
-        Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException(email));
+        Usuario usuario = usuarioRepository.findByEmail(email).orElse(null);
+
+        if (usuario == null || !passwordHasher.verify(rawPassword, usuario.getPasswordHash())) 
+        {
+            throw new InvalidCredentialsException();
+        }
 
         if (!usuario.isActivo()) 
         {
             throw new UserDisabledException();
-        }
-
-        if (!passwordHasher.verify(rawPassword, usuario.getPasswordHash())) 
-        {
-            throw new InvalidCredentialsException();
         }
 
         usuario.setLastLogin(Instant.now());
