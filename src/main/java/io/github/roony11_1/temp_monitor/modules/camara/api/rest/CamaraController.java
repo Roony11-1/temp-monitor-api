@@ -22,7 +22,7 @@ public class CamaraController
     public List<CamaraResponse> listarTodas() 
     {
         return camaraService.listarTodas().stream()
-                .map(this::toResponse)
+                .map(CamaraResponse::toResponse)
                 .toList();
     }
 
@@ -30,39 +30,29 @@ public class CamaraController
     public List<CamaraResponse> listarPorSucursal(@PathVariable Long sucursalId) 
     {
         return camaraService.listarPorSucursal(sucursalId).stream()
-                .map(this::toResponse)
+                .map(CamaraResponse::toResponse)
                 .toList();
     }
 
     @GetMapping("/{id}")
     public CamaraResponse buscarPorId(@PathVariable Long id) 
     {
-        return toResponse(camaraService.buscarPorId(id));
+        return CamaraResponse.toResponse(camaraService.buscarPorId(id));
     }
 
     @PostMapping
     public ResponseEntity<CamaraResponse> crear(@RequestBody CamaraRequest request) 
     {
-        Camara camara = camaraService.crear(
-                request.getNombre(),
-                request.getDescripcion(),
-                request.getSucursalId(),
-                request.getTemperaturaMinima(),
-                request.getTemperaturaMaxima()
-        );
+        Camara camara = camaraService.crear(request);
+
         return ResponseEntity.created(URI.create("/api/camaras/" + camara.getId()))
-                .body(toResponse(camara));
+                .body(CamaraResponse.toResponse(camara));
     }
 
     @PutMapping("/{id}")
     public CamaraResponse actualizar(@PathVariable Long id, @RequestBody CamaraRequest request) 
     {
-        return toResponse(camaraService.actualizar(
-                id,
-                request.getNombre(),
-                request.getDescripcion(),
-                request.getSucursalId()
-        ));
+        return CamaraResponse.toResponse(camaraService.actualizar(id, request));
     }
 
     @PostMapping("/{id}/activar")
@@ -84,18 +74,5 @@ public class CamaraController
     {
         camaraService.eliminar(id);
         return ResponseEntity.noContent().build();
-    }
-
-    private CamaraResponse toResponse(Camara camara) 
-    {
-        CamaraResponse response = new CamaraResponse();
-        response.setId(camara.getId());
-        response.setNombre(camara.getNombre());
-        response.setDescripcion(camara.getDescripcion());
-        response.setSucursalId(camara.getSucursal().getId());
-        response.setActivo(camara.isActivo());
-        response.setCreatedAt(camara.getCreatedAt());
-        response.setUpdatedAt(camara.getUpdatedAt());
-        return response;
     }
 }

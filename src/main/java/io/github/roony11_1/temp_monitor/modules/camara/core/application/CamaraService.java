@@ -1,5 +1,6 @@
 package io.github.roony11_1.temp_monitor.modules.camara.core.application;
 
+import io.github.roony11_1.temp_monitor.modules.camara.api.dto.CamaraRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.CamaraNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Camara;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.CamaraRepository;
@@ -10,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -37,14 +37,14 @@ public class CamaraService
     }
 
     @Transactional
-    public Camara crear(String nombre, String descripcion, Long sucursalId, Double temperaturaMinima, Double temperaturaMaxima) 
+    public Camara crear(CamaraRequest request) 
     {
-        Sucursal sucursal = sucursalRepository.findById(sucursalId)
-                .orElseThrow(() -> new SucursalNotFoundException("ID " + sucursalId));
+        Sucursal sucursal = sucursalRepository.findById(request.getSucursalId())
+                .orElseThrow(() -> new SucursalNotFoundException("ID " + request.getSucursalId()));
 
         Camara camara = Camara.builder()
-                .nombre(nombre)
-                .descripcion(descripcion)
+                .nombre(request.getNombre())
+                .descripcion(request.getDescripcion())
                 .sucursal(sucursal)
                 .activo(true)
                 .build();
@@ -53,19 +53,21 @@ public class CamaraService
     }
 
     @Transactional
-    public Camara actualizar(Long id, String nombre, String descripcion, Long sucursalId) 
+    public Camara actualizar(Long id, CamaraRequest request) 
     {
         Camara camara = buscarPorId(id);
 
-        camara.setNombre(nombre);
-        camara.setDescripcion(descripcion);
-        if (sucursalId != null) 
+        camara.setNombre(request.getNombre());
+        camara.setDescripcion(request.getDescripcion());
+        
+        if (request.getSucursalId() != null) 
         {
-            Sucursal sucursal = sucursalRepository.findById(sucursalId)
-                    .orElseThrow(() -> new SucursalNotFoundException("ID " + sucursalId));
+            Sucursal sucursal = sucursalRepository.findById(request.getSucursalId())
+                    .orElseThrow(() -> new SucursalNotFoundException("ID " + request.getSucursalId()));
+
             camara.setSucursal(sucursal);
         }
-        camara.setUpdatedAt(Instant.now());
+
         return camaraRepository.save(camara);
     }
 
@@ -73,8 +75,9 @@ public class CamaraService
     public void activar(Long id) 
     {
         Camara camara = buscarPorId(id);
+
         camara.setActivo(true);
-        camara.setUpdatedAt(Instant.now());
+
         camaraRepository.save(camara);
     }
 
@@ -82,8 +85,9 @@ public class CamaraService
     public void desactivar(Long id) 
     {
         Camara camara = buscarPorId(id);
+
         camara.setActivo(false);
-        camara.setUpdatedAt(Instant.now());
+
         camaraRepository.save(camara);
     }
 
@@ -91,6 +95,7 @@ public class CamaraService
     public void eliminar(Long id) 
     {
         var camara = buscarPorId(id);
+
         camaraRepository.delete(camara);
     }
 }

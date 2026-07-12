@@ -6,6 +6,6 @@ public class SensorDeshabilitadoException extends AppException
 {
     public SensorDeshabilitadoException(String uuid) 
     {
-        super("SENSOR-003", "El sensor está deshabilitado: " + uuid, SensorErrorCategories.SENSOR_DESHABILITADO, "El sensor está deshabilitado: " + uuid);
+        super("SENSOR-003", "El sensor no está configurado: " + uuid, SensorErrorCategories.SENSOR_DESHABILITADO, "El sensor no está configurado: " + uuid);
     }
 }
