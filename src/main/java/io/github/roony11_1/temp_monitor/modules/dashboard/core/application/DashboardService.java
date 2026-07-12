@@ -2,19 +2,12 @@ package io.github.roony11_1.temp_monitor.modules.dashboard.core.application;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.EstadoSensor;
-import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Lectura;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.CamaraRepository;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.LecturaRepository;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.SensorRepository;
@@ -64,30 +57,7 @@ public class DashboardService
 
     private List<TemperaturePoint> obtenerTemperatura24h()
     {
-        Instant desde = Instant.now().minus(Duration.ofHours(24));
-        List<Lectura> lecturas = lecturaRepository.findByTimestampAfterOrderByTimestampAsc(desde);
-
-        Map<String, List<Double>> agrupadas = lecturas.stream()
-            .collect(Collectors.groupingBy(
-                l -> {
-                    LocalDateTime dt = LocalDateTime.ofInstant(l.getTimestamp(), ZoneId.systemDefault());
-                    return dt.getHour() + ":00";
-                },
-                Collectors.mapping(Lectura::getTemperatura, Collectors.toList())
-            ));
-
         List<TemperaturePoint> puntos = new ArrayList<>();
-        int horaActual = LocalDateTime.now().getHour();
-        for (int i = 23; i >= 0; i--)
-        {
-            int hora = (horaActual - i + 24) % 24;
-            String label = String.format("%02d:00", hora);
-            List<Double> temps = agrupadas.get(label);
-            double promedio = temps != null && !temps.isEmpty()
-                ? temps.stream().mapToDouble(Double::doubleValue).average().orElse(0.0)
-                : 0.0;
-            puntos.add(new TemperaturePoint(label, Math.round(promedio * 10.0) / 10.0));
-        }
 
         return puntos;
     }

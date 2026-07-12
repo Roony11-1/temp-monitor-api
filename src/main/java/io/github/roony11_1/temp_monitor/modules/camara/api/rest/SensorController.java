@@ -20,6 +20,7 @@ import io.github.roony11_1.temp_monitor.modules.camara.api.dto.RegistroSensorRes
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.SensorResponse;
 import io.github.roony11_1.temp_monitor.modules.camara.core.application.SensorService;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.EstadoSensor;
+import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Lectura;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -68,6 +69,12 @@ public class SensorController
     {
         sensorService.registrarLectura(uuid, request);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{uuid}/lecturas")
+    public ResponseEntity<List<Lectura>> listarLecturas(@PathVariable UUID uuid)
+    {
+        return ResponseEntity.ok(sensorService.listarLecturas(uuid));
     }
 
     @GetMapping("/{uuid}/estado")
