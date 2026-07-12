@@ -54,27 +54,27 @@ public class DataSeeder implements CommandLineRunner
 
         // Usuarios
         crearUsuario("admin@test.com",       pass, "Admin Global",      null,   null,   Rol.SUPER_ADMIN);
-        crearUsuario("empresa1@test.com",    pass, "Admin TechCorp",    techCorp.getId(), null, Rol.ADMIN_EMPRESA);
-        crearUsuario("empresa2@test.com",    pass, "Admin FoodInc",     foodInc.getId(),  null, Rol.ADMIN_EMPRESA);
-        crearUsuario("sucursal1@test.com",   pass, "Admin Centro",      techCorp.getId(), centro.getId(), Rol.ADMIN_SUCURSAL);
-        crearUsuario("sucursal2@test.com",   pass, "Admin Norte",       techCorp.getId(), norte.getId(),  Rol.ADMIN_SUCURSAL);
-        crearUsuario("tecnico1@test.com",    pass, "Técnico Centro",    techCorp.getId(), centro.getId(), Rol.TECNICO);
-        crearUsuario("tecnico2@test.com",    pass, "Técnico Norte",     techCorp.getId(), norte.getId(),  Rol.TECNICO);
-        crearUsuario("tecnico3@test.com",    pass, "Técnico Sur",       foodInc.getId(),  sur.getId(),    Rol.TECNICO);
-        crearUsuario("usuario1@test.com",    pass, "Usuario Centro",    techCorp.getId(), centro.getId(), Rol.USUARIO);
-        crearUsuario("usuario2@test.com",    pass, "Usuario Norte",     techCorp.getId(), norte.getId(),  Rol.USUARIO);
+        crearUsuario("empresa1@test.com",    pass, "Admin TechCorp",    techCorp, null, Rol.ADMIN_EMPRESA);
+        crearUsuario("empresa2@test.com",    pass, "Admin FoodInc",     foodInc,  null, Rol.ADMIN_EMPRESA);
+        crearUsuario("sucursal1@test.com",   pass, "Admin Centro",      techCorp, centro, Rol.ADMIN_SUCURSAL);
+        crearUsuario("sucursal2@test.com",   pass, "Admin Norte",       techCorp, norte,  Rol.ADMIN_SUCURSAL);
+        crearUsuario("tecnico1@test.com",    pass, "Técnico Centro",    techCorp, centro, Rol.TECNICO);
+        crearUsuario("tecnico2@test.com",    pass, "Técnico Norte",     techCorp, norte,  Rol.TECNICO);
+        crearUsuario("tecnico3@test.com",    pass, "Técnico Sur",       foodInc,  sur,    Rol.TECNICO);
+        crearUsuario("usuario1@test.com",    pass, "Usuario Centro",    techCorp, centro, Rol.USUARIO);
+        crearUsuario("usuario2@test.com",    pass, "Usuario Norte",     techCorp, norte,  Rol.USUARIO);
 
         log.info("Seed completado. Todos los usuarios usan contraseña 'admin123'");
     }
 
-    private void crearUsuario(String email, String password, String nombre, Long empresaId, Long sucursalId, Rol rol) {
+    private void crearUsuario(String email, String password, String nombre, Empresa empresa, Sucursal sucursal, Rol rol) {
         usuarioRepository.save(Usuario.builder()
                 .email(email)
                 .passwordHash(passwordEncoder.encode(password))
                 .nombre(nombre)
                 .roles(Set.of(rol))
-                .empresaId(empresaId)
-                .sucursalId(sucursalId)
+                .empresa(empresa)
+                .sucursal(sucursal)
                 .activo(true)
                 .build());
     }

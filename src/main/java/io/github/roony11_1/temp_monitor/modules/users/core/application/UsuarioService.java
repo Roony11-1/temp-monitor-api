@@ -3,6 +3,12 @@ package io.github.roony11_1.temp_monitor.modules.users.core.application;
 import io.github.roony11_1.temp_monitor.kernel.security.crypto.HashService;
 import io.github.roony11_1.temp_monitor.kernel.security.model.Rol;
 import io.github.roony11_1.temp_monitor.kernel.security.model.TokenUser;
+import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Empresa;
+import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Sucursal;
+import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.repository.EmpresaRepository;
+import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.repository.SucursalRepository;
+import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.EmpresaNotFoundException;
+import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.SucursalNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.users.api.dto.UsuarioRequest;
 import io.github.roony11_1.temp_monitor.modules.users.core.domain.exceptions.EmailAlreadyExistsException;
 import io.github.roony11_1.temp_monitor.modules.users.core.domain.exceptions.UserNotFoundException;
@@ -24,23 +30,29 @@ import java.util.List;
 public class UsuarioService 
 {
     private final UsuarioRepository usuarioRepository;
+    private final EmpresaRepository empresaRepository;
+    private final SucursalRepository sucursalRepository;
     private final HashService passwordHasher;
 
+    @Transactional(readOnly = true)
     public List<Usuario> listarTodos() 
     {
         return usuarioRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
     public List<Usuario> listarPorEmpresa(Long empresaId) 
     {
-        return usuarioRepository.findByEmpresaId(empresaId);
+        return usuarioRepository.findByEmpresa_Id(empresaId);
     }
 
+    @Transactional(readOnly = true)
     public List<Usuario> listarPorSucursal(Long sucursalId) 
     {
-        return usuarioRepository.findBySucursalId(sucursalId);
+        return usuarioRepository.findBySucursal_Id(sucursalId);
     }
 
+    @Transactional(readOnly = true)
     public Usuario buscarPorId(Long id) 
     {
         return usuarioRepository.findById(id)
@@ -80,13 +92,25 @@ public class UsuarioService
             throw new AccessDeniedException("No tienes permiso para crear usuarios");
         }
 
+        Empresa empresa = null;
+        if (request.getEmpresaId() != null) {
+            empresa = empresaRepository.findById(request.getEmpresaId())
+                    .orElseThrow(() -> new EmpresaNotFoundException("ID " + request.getEmpresaId()));
+        }
+
+        Sucursal sucursal = null;
+        if (request.getSucursalId() != null) {
+            sucursal = sucursalRepository.findById(request.getSucursalId())
+                    .orElseThrow(() -> new SucursalNotFoundException("ID " + request.getSucursalId()));
+        }
+
         Usuario usuario = Usuario.builder()
                 .email(request.getEmail())
                 .passwordHash(passwordHasher.hash(request.getPassword()))
                 .nombre(request.getNombre())
                 .roles(new HashSet<>(request.getRoles()))
-                .empresaId(request.getEmpresaId())
-                .sucursalId(request.getSucursalId())
+                .empresa(empresa)
+                .sucursal(sucursal)
                 .activo(true)
                 .build();
 
@@ -110,8 +134,29 @@ public class UsuarioService
 
         usuario.setNombre(request.getNombre());
         usuario.setTelefono(request.getTelefono());
-        usuario.setEmpresaId(request.getEmpresaId());
-        usuario.setSucursalId(request.getSucursalId());
+
+        if (request.getEmpresaId() != null) 
+        {
+            Empresa empresa = empresaRepository.findById(request.getEmpresaId())
+                    .orElseThrow(() -> new EmpresaNotFoundException("ID " + request.getEmpresaId()));
+
+            usuario.setEmpresa(empresa);
+        } 
+        else 
+        {
+            usuario.setEmpresa(null);
+        }
+
+        if (request.getSucursalId() != null) 
+        {
+            Sucursal sucursal = sucursalRepository.findById(request.getSucursalId())
+                    .orElseThrow(() -> new SucursalNotFoundException("ID " + request.getSucursalId()));
+            usuario.setSucursal(sucursal);
+        } 
+        else 
+        {
+            usuario.setSucursal(null);
+        }
         
         if (request.getRoles() != null && !request.getRoles().isEmpty()) 
         {

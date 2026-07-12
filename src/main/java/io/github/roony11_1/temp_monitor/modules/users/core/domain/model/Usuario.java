@@ -9,6 +9,8 @@ import java.util.Set;
 
 import io.github.roony11_1.temp_monitor.kernel.security.model.Rol;
 import io.github.roony11_1.temp_monitor.kernel.security.model.TokenUser;
+import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Empresa;
+import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Sucursal;
 
 @Entity
 @Table(name = "usuarios")
@@ -39,8 +41,15 @@ public class Usuario implements TokenUser
     private String nombre;
     private String telefono;
 
-    private Long empresaId;
-    private Long sucursalId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "empresa_id")
+    @ToString.Exclude
+    private Empresa empresa;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sucursal_id")
+    @ToString.Exclude
+    private Sucursal sucursal;
 
     @Builder.Default
     private Instant createdAt = Instant.now();
@@ -50,4 +59,14 @@ public class Usuario implements TokenUser
 
     @Builder.Default
     private boolean activo = true;
+
+    @Override
+    public Long getEmpresaId() {
+        return empresa != null ? empresa.getId() : null;
+    }
+
+    @Override
+    public Long getSucursalId() {
+        return sucursal != null ? sucursal.getId() : null;
+    }
 }
