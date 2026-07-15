@@ -31,11 +31,16 @@ public class SensorResponse
         response.setUuid(sensor.getUuid());
         response.setApiKeyHash(sensor.getApiKeyHash());
         response.setMacAddress(sensor.getMacAddress());
-        response.setCamara(CamaraResponse.toResponse(sensor.getCamara()));
-        response.setSucursalId(sensor.getCamara().getSucursal().getId());
-        response.setSucursalNombre(sensor.getCamara().getSucursal().getNombre());
-        response.setEmpresaId(sensor.getCamara().getSucursal().getEmpresa().getId());
-        response.setEmpresaNombre(sensor.getCamara().getSucursal().getEmpresa().getNombre());
+
+        if (sensor.getCamara() != null)
+        {
+            response.setCamara(CamaraResponse.toResponse(sensor.getCamara()));
+            response.setSucursalId(sensor.getCamara().getSucursal().getId());
+            response.setSucursalNombre(sensor.getCamara().getSucursal().getNombre());
+            response.setEmpresaId(sensor.getCamara().getSucursal().getEmpresa().getId());
+            response.setEmpresaNombre(sensor.getCamara().getSucursal().getEmpresa().getNombre());
+        }
+
         response.setUltimoContacto(sensor.getUltimoContacto());
         response.setEstado(sensor.getEstado());
         response.setCreatedAt(sensor.getCreatedAt());

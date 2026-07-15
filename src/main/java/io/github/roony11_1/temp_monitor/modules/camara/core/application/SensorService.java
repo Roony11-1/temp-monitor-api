@@ -1,6 +1,8 @@
 package io.github.roony11_1.temp_monitor.modules.camara.core.application;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -32,6 +34,12 @@ public class SensorService
     private final CamaraRepository camaraRepository;
     private final HashService hashService;
     private final ApiKeyGenerator apiKeyGenerator;
+
+    public Optional<Sensor> authenticateByUuidAndApiKey(UUID uuid, String apiKey) 
+    {
+        return sensorRepository.findByUuid(uuid)
+            .filter(sensor -> hashService.verify(apiKey, sensor.getApiKeyHash()));
+    }
 
     @Transactional
     public RegistroSensorResponse registrar(RegistroSensorRequest request)
@@ -107,7 +115,7 @@ public class SensorService
     @Transactional
     public Sensor actualizar(UUID uuid, ActualizarSensorRequest request)
     {
-        Sensor sensor = sensorRepository.findByUuid(uuid)
+        Sensor sensor = sensorRepository.findByUuidWithHierarchy(uuid)
             .orElseThrow(() -> new SensorNotFoundException("UUID " + uuid));
 
         if (request.getCamaraId() != null)
@@ -139,5 +147,14 @@ public class SensorService
         return sensorRepository.findByUuid(uuid)
             .map(Sensor::getEstado)
             .orElseThrow(() -> new SensorNotFoundException("UUID " + uuid));
+    }
+
+    @Transactional
+    public void actualizarUltimoContacto(UUID uuid)
+    {
+        Sensor sensor = sensorRepository.findByUuid(uuid)
+            .orElseThrow(() -> new SensorNotFoundException("UUID " + uuid));
+        sensor.setUltimoContacto(Instant.now());
+        sensorRepository.save(sensor);
     }
 }

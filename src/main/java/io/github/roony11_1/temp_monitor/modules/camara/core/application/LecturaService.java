@@ -40,6 +40,7 @@ public class LecturaService
             .build();
 
         lecturaRepository.save(lectura);
+        
         sensor.setUltimoContacto(lectura.getTimestamp());
         sensorRepository.save(sensor);
     }

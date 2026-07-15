@@ -8,4 +8,9 @@ public class ApiKeyInvalidaException extends AppException
     {
         super("SENSOR-004", "API Key inválida", SensorErrorCategories.SENSOR_API_KEY_INVALIDA, "API Key inválida");
     }
+
+    public ApiKeyInvalidaException(String mensaje) 
+    {
+        super("SENSOR-004", "API Key inválida", SensorErrorCategories.SENSOR_API_KEY_INVALIDA, mensaje);
+    }
 }
