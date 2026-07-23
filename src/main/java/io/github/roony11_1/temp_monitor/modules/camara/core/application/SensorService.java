@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -139,7 +140,12 @@ public class SensorService
             sensor.setEstado(request.getEstado());
         }
 
-        return sensorRepository.save(sensor);
+        var saved = sensorRepository.save(sensor);
+        
+        Hibernate.initialize(saved.getCamara().getSucursal());
+        Hibernate.initialize(saved.getCamara().getSucursal().getEmpresa());
+        
+        return saved;
     }
 
     public EstadoSensor consultarEstado(UUID uuid)
