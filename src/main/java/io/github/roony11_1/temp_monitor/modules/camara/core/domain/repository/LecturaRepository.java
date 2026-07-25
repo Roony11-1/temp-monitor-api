@@ -18,6 +18,10 @@ public interface LecturaRepository extends JpaRepository<Lectura, Long>
 
     Page<Lectura> findBySensorUuidOrderByTimestampDesc(UUID sensorUuid, Pageable pageable);
 
+    List<Lectura> findBySensorUuidAndTimestampAfterOrderByTimestampDesc(UUID sensorUuid, Instant since);
+
+    Page<Lectura> findBySensorUuidAndTimestampAfterOrderByTimestampDesc(UUID sensorUuid, Instant since, Pageable pageable);
+
     @Query("SELECT l FROM Lectura l WHERE l.timestamp > :since ORDER BY l.timestamp ASC")
     List<Lectura> findUltimas24h(@Param("since") Instant since);
 }

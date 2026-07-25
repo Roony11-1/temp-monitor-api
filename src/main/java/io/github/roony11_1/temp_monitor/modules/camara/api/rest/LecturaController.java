@@ -1,5 +1,6 @@
 package io.github.roony11_1.temp_monitor.modules.camara.api.rest;
 
+import java.time.Instant;
 import java.util.UUID;
 
 import org.springframework.data.domain.Pageable;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.github.roony11_1.temp_monitor.kernel.dto.PageResponse;
@@ -34,9 +36,11 @@ public class LecturaController
     }
 
     @GetMapping("/sensor/{uuid}")
-    public ResponseEntity<PageResponse<Lectura>> listarPorSensor(@PathVariable UUID uuid, @PageableDefault(size = 10000, sort = "timestamp") Pageable pageable)
+    public ResponseEntity<PageResponse<Lectura>> listarPorSensor(@PathVariable UUID uuid, @RequestParam(required = false) Long since, @PageableDefault(size = 10000, sort = "timestamp") Pageable pageable)
     {
-        var page = lecturaService.listarPorSensor(uuid, pageable);
+        var page = since != null
+            ? lecturaService.listarPorSensor(uuid, Instant.ofEpochMilli(since), pageable)
+            : lecturaService.listarPorSensor(uuid, pageable);
 
         return ResponseEntity.ok(PageResponse.from(page));
     }

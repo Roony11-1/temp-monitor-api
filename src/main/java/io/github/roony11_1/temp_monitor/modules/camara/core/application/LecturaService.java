@@ -1,5 +1,6 @@
 package io.github.roony11_1.temp_monitor.modules.camara.core.application;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -57,5 +58,17 @@ public class LecturaService
     public Page<Lectura> listarPorSensor(UUID sensorUuid, Pageable pageable)
     {
         return lecturaRepository.findBySensorUuidOrderByTimestampDesc(sensorUuid, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Lectura> listarPorSensor(UUID sensorUuid, Instant since)
+    {
+        return lecturaRepository.findBySensorUuidAndTimestampAfterOrderByTimestampDesc(sensorUuid, since);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Lectura> listarPorSensor(UUID sensorUuid, Instant since, Pageable pageable)
+    {
+        return lecturaRepository.findBySensorUuidAndTimestampAfterOrderByTimestampDesc(sensorUuid, since, pageable);
     }
 }
