@@ -9,6 +9,8 @@ import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Sucurs
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.repository.EmpresaRepository;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.repository.SucursalRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,9 +29,19 @@ public class SucursalService
         return sucursalRepository.findAll();
     }
 
+    public Page<Sucursal> listarTodas(Pageable pageable) 
+    {
+        return sucursalRepository.findAll(pageable);
+    }
+
     public List<Sucursal> listarPorEmpresa(Long empresaId) 
     {
         return sucursalRepository.findByEmpresaId(empresaId);
+    }
+
+    public Page<Sucursal> listarPorEmpresa(Long empresaId, Pageable pageable) 
+    {
+        return sucursalRepository.findByEmpresaId(empresaId, pageable);
     }
 
     public Sucursal buscarPorId(Long id) 

@@ -6,6 +6,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.hibernate.Hibernate;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -101,6 +103,12 @@ public class SensorService
     }
 
     @Transactional(readOnly = true)
+    public Page<Sensor> listarPorCamara(Long camaraId, Pageable pageable)
+    {
+        return sensorRepository.findByCamaraIdWithHierarchy(camaraId, pageable);
+    }
+
+    @Transactional(readOnly = true)
     public Sensor buscarPorUuid(UUID uuid)
     {
         return sensorRepository.findByUuidWithHierarchy(uuid)
@@ -111,6 +119,12 @@ public class SensorService
     public List<Sensor> listarTodos()
     {
         return sensorRepository.findAllWithHierarchy();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Sensor> listarTodos(Pageable pageable)
+    {
+        return sensorRepository.findAllWithHierarchy(pageable);
     }
 
     @Transactional

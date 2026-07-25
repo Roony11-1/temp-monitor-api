@@ -8,6 +8,8 @@ import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.S
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Sucursal;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.repository.SucursalRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,9 +27,19 @@ public class CamaraService
         return camaraRepository.findAll();
     }
 
+    public Page<Camara> listarTodas(Pageable pageable) 
+    {
+        return camaraRepository.findAll(pageable);
+    }
+
     public List<Camara> listarPorSucursal(Long sucursalId) 
     {
         return camaraRepository.findBySucursalId(sucursalId);
+    }
+
+    public Page<Camara> listarPorSucursal(Long sucursalId, Pageable pageable) 
+    {
+        return camaraRepository.findBySucursalId(sucursalId, pageable);
     }
 
     public Camara buscarPorId(Long id) 

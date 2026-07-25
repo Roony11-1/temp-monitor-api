@@ -1,10 +1,13 @@
 package io.github.roony11_1.temp_monitor.modules.empresa.api.rest;
 
+import io.github.roony11_1.temp_monitor.kernel.dto.PageResponse;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.SucursalRequest;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.SucursalResponse;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.application.SucursalService;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Sucursal;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,11 +22,12 @@ public class SucursalController
     private final SucursalService sucursalService;
 
     @GetMapping
-    public List<SucursalResponse> listarTodas() 
+    public PageResponse<SucursalResponse> listarTodas(            @PageableDefault(size = 10000, sort = "id") Pageable pageable) 
     {
-        return sucursalService.listarTodas().stream()
-                .map(SucursalResponse::toResponse)
-                .toList();
+        var page = sucursalService.listarTodas(pageable)
+                .map(SucursalResponse::toResponse);
+
+        return PageResponse.from(page);
     }
 
     @GetMapping("/empresa/{empresaId}")

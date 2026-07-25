@@ -1,10 +1,13 @@
 package io.github.roony11_1.temp_monitor.modules.empresa.api.rest;
 
+import io.github.roony11_1.temp_monitor.kernel.dto.PageResponse;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.EmpresaRequest;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.EmpresaResponse;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.application.EmpresaService;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Empresa;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,11 +22,12 @@ public class EmpresaController
     private final EmpresaService empresaService;
 
     @GetMapping
-    public List<EmpresaResponse> listarTodas() 
+    public PageResponse<EmpresaResponse> listarTodas(            @PageableDefault(size = 10000, sort = "id") Pageable pageable) 
     {
-        return empresaService.listarTodas().stream()
-                .map(EmpresaResponse::toResponse)
-                .toList();
+        var page = empresaService.listarTodas(pageable)
+                .map(EmpresaResponse::toResponse);
+
+        return PageResponse.from(page);
     }
 
     @GetMapping("/{id}")

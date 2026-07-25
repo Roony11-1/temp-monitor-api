@@ -6,6 +6,8 @@ import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.N
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Empresa;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.repository.EmpresaRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,11 @@ public class EmpresaService
     public List<Empresa> listarTodas() 
     {
         return empresaRepository.findAll();
+    }
+
+    public Page<Empresa> listarTodas(Pageable pageable) 
+    {
+        return empresaRepository.findAll(pageable);
     }
 
     public Empresa buscarPorId(Long id) 

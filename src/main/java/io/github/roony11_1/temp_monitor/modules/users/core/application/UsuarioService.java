@@ -15,6 +15,8 @@ import io.github.roony11_1.temp_monitor.modules.users.core.domain.exceptions.Use
 import io.github.roony11_1.temp_monitor.modules.users.core.domain.model.Usuario;
 import io.github.roony11_1.temp_monitor.modules.users.core.domain.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -41,15 +43,33 @@ public class UsuarioService
     }
 
     @Transactional(readOnly = true)
+    public Page<Usuario> listarTodos(Pageable pageable) 
+    {
+        return usuarioRepository.findAll(pageable);
+    }
+
+    @Transactional(readOnly = true)
     public List<Usuario> listarPorEmpresa(Long empresaId) 
     {
         return usuarioRepository.findByEmpresa_Id(empresaId);
     }
 
     @Transactional(readOnly = true)
+    public Page<Usuario> listarPorEmpresa(Long empresaId, Pageable pageable) 
+    {
+        return usuarioRepository.findByEmpresa_Id(empresaId, pageable);
+    }
+
+    @Transactional(readOnly = true)
     public List<Usuario> listarPorSucursal(Long sucursalId) 
     {
         return usuarioRepository.findBySucursal_Id(sucursalId);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Usuario> listarPorSucursal(Long sucursalId, Pageable pageable) 
+    {
+        return usuarioRepository.findBySucursal_Id(sucursalId, pageable);
     }
 
     @Transactional(readOnly = true)

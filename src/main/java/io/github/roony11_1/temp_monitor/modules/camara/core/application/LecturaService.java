@@ -3,6 +3,8 @@ package io.github.roony11_1.temp_monitor.modules.camara.core.application;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,5 +51,11 @@ public class LecturaService
     public List<Lectura> listarPorSensor(UUID sensorUuid)
     {
         return lecturaRepository.findBySensorUuidOrderByTimestampDesc(sensorUuid);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Lectura> listarPorSensor(UUID sensorUuid, Pageable pageable)
+    {
+        return lecturaRepository.findBySensorUuidOrderByTimestampDesc(sensorUuid, pageable);
     }
 }

@@ -1,11 +1,14 @@
 package io.github.roony11_1.temp_monitor.modules.users.api.rest;
 
+import io.github.roony11_1.temp_monitor.kernel.dto.PageResponse;
 import io.github.roony11_1.temp_monitor.modules.users.api.dto.CambiarPasswordRequest;
 import io.github.roony11_1.temp_monitor.modules.users.api.dto.UsuarioRequest;
 import io.github.roony11_1.temp_monitor.modules.users.api.dto.UsuarioResponse;
 import io.github.roony11_1.temp_monitor.modules.users.core.application.UsuarioService;
 import io.github.roony11_1.temp_monitor.modules.users.core.domain.model.Usuario;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -21,11 +24,12 @@ public class UsuarioController
     private final UsuarioService usuarioService;
 
     @GetMapping
-    public List<UsuarioResponse> listarTodos() 
+    public PageResponse<UsuarioResponse> listarTodos(            @PageableDefault(size = 10000, sort = "id") Pageable pageable) 
     {
-        return usuarioService.listarTodos().stream()
-            .map(UsuarioResponse::toResponse)
-            .toList();
+        var page = usuarioService.listarTodos(pageable)
+            .map(UsuarioResponse::toResponse);
+
+        return PageResponse.from(page);
     }
 
     @GetMapping("/empresa/{empresaId}")

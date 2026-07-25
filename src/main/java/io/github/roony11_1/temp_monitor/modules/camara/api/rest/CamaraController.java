@@ -1,10 +1,13 @@
 package io.github.roony11_1.temp_monitor.modules.camara.api.rest;
 
+import io.github.roony11_1.temp_monitor.kernel.dto.PageResponse;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.CamaraRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.CamaraResponse;
 import io.github.roony11_1.temp_monitor.modules.camara.core.application.CamaraService;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Camara;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,11 +22,12 @@ public class CamaraController
     private final CamaraService camaraService;
 
     @GetMapping
-    public List<CamaraResponse> listarTodas() 
+    public PageResponse<CamaraResponse> listarTodas(            @PageableDefault(size = 10000, sort = "id") Pageable pageable) 
     {
-        return camaraService.listarTodas().stream()
-                .map(CamaraResponse::toResponse)
-                .toList();
+        var page = camaraService.listarTodas(pageable)
+                .map(CamaraResponse::toResponse);
+
+        return PageResponse.from(page);
     }
 
     @GetMapping("/sucursal/{sucursalId}")
