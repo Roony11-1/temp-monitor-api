@@ -7,6 +7,7 @@ import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.Ca
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.SucursalNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Sucursal;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.repository.SucursalRepository;
+import io.github.roony11_1.temp_monitor.kernel.specification.FilterSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +32,16 @@ public class CamaraService
     public Page<Camara> listarTodas(Pageable pageable) 
     {
         return camaraRepository.findAll(pageable);
+    }
+
+    public Page<Camara> listarTodas(Pageable pageable, Map<String, String> filters)
+    {
+        if (filters == null || filters.isEmpty()) {
+            return camaraRepository.findAll(pageable);
+        }
+
+        var spec = FilterSpecification.<Camara>from(filters);
+        return camaraRepository.findAll(spec, pageable);
     }
 
     public List<Camara> listarPorSucursal(Long sucursalId) 

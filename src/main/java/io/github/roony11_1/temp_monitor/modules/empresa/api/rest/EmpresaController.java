@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/empresas")
@@ -22,9 +23,11 @@ public class EmpresaController
     private final EmpresaService empresaService;
 
     @GetMapping
-    public PageResponse<EmpresaResponse> listarTodas(            @PageableDefault(size = 10000, sort = "id") Pageable pageable) 
+    public PageResponse<EmpresaResponse> listarTodas(
+            @PageableDefault(size = 10000, sort = "id") Pageable pageable,
+            @RequestParam Map<String, String> filters)
     {
-        var page = empresaService.listarTodas(pageable)
+        var page = empresaService.listarTodas(pageable, filters)
                 .map(EmpresaResponse::toResponse);
 
         return PageResponse.from(page);

@@ -1,6 +1,7 @@
 package io.github.roony11_1.temp_monitor.modules.camara.api.rest;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.data.domain.Pageable;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.github.roony11_1.temp_monitor.kernel.dto.PageResponse;
@@ -32,9 +34,11 @@ public class SensorController
     private final SensorService sensorService;
 
     @GetMapping
-    public ResponseEntity<PageResponse<SensorResponse>> listarTodos(            @PageableDefault(size = 10000, sort = "id") Pageable pageable)
+    public ResponseEntity<PageResponse<SensorResponse>> listarTodos(
+            @PageableDefault(size = 10000, sort = "id") Pageable pageable,
+            @RequestParam Map<String, String> filters)
     {
-        var page = sensorService.listarTodos(pageable)
+        var page = sensorService.listarTodos(pageable, filters)
             .map(SensorResponse::toResponse);
 
         return ResponseEntity.ok(PageResponse.from(page));

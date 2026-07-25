@@ -11,6 +11,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 import java.net.URI;
 import java.util.List;
 
@@ -22,9 +24,11 @@ public class CamaraController
     private final CamaraService camaraService;
 
     @GetMapping
-    public PageResponse<CamaraResponse> listarTodas(            @PageableDefault(size = 10000, sort = "id") Pageable pageable) 
+    public PageResponse<CamaraResponse> listarTodas(
+            @PageableDefault(size = 10000, sort = "id") Pageable pageable,
+            @RequestParam Map<String, String> filters)
     {
-        var page = camaraService.listarTodas(pageable)
+        var page = camaraService.listarTodas(pageable, filters)
                 .map(CamaraResponse::toResponse);
 
         return PageResponse.from(page);

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/sucursales")
@@ -22,9 +23,11 @@ public class SucursalController
     private final SucursalService sucursalService;
 
     @GetMapping
-    public PageResponse<SucursalResponse> listarTodas(            @PageableDefault(size = 10000, sort = "id") Pageable pageable) 
+    public PageResponse<SucursalResponse> listarTodas(
+            @PageableDefault(size = 10000, sort = "id") Pageable pageable,
+            @RequestParam Map<String, String> filters)
     {
-        var page = sucursalService.listarTodas(pageable)
+        var page = sucursalService.listarTodas(pageable, filters)
                 .map(SucursalResponse::toResponse);
 
         return PageResponse.from(page);

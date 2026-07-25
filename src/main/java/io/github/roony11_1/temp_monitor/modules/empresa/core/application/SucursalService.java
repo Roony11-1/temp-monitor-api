@@ -8,6 +8,7 @@ import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Empres
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Sucursal;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.repository.EmpresaRepository;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.repository.SucursalRepository;
+import io.github.roony11_1.temp_monitor.kernel.specification.FilterSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +34,16 @@ public class SucursalService
     public Page<Sucursal> listarTodas(Pageable pageable) 
     {
         return sucursalRepository.findAll(pageable);
+    }
+
+    public Page<Sucursal> listarTodas(Pageable pageable, Map<String, String> filters)
+    {
+        if (filters == null || filters.isEmpty()) {
+            return sucursalRepository.findAll(pageable);
+        }
+
+        var spec = FilterSpecification.<Sucursal>from(filters);
+        return sucursalRepository.findAll(spec, pageable);
     }
 
     public List<Sucursal> listarPorEmpresa(Long empresaId) 

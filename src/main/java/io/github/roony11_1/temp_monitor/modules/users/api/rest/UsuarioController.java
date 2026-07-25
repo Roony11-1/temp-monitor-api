@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -24,9 +25,11 @@ public class UsuarioController
     private final UsuarioService usuarioService;
 
     @GetMapping
-    public PageResponse<UsuarioResponse> listarTodos(            @PageableDefault(size = 10000, sort = "id") Pageable pageable) 
+    public PageResponse<UsuarioResponse> listarTodos(
+            @PageableDefault(size = 10000, sort = "id") Pageable pageable,
+            @RequestParam Map<String, String> filters)
     {
-        var page = usuarioService.listarTodos(pageable)
+        var page = usuarioService.listarTodos(pageable, filters)
             .map(UsuarioResponse::toResponse);
 
         return PageResponse.from(page);

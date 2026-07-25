@@ -1,5 +1,6 @@
 package io.github.roony11_1.temp_monitor.modules.users.core.application;
 
+import io.github.roony11_1.temp_monitor.kernel.specification.FilterSpecification;
 import io.github.roony11_1.temp_monitor.kernel.security.crypto.HashService;
 import io.github.roony11_1.temp_monitor.kernel.security.model.Rol;
 import io.github.roony11_1.temp_monitor.kernel.security.model.TokenUser;
@@ -26,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +48,17 @@ public class UsuarioService
     public Page<Usuario> listarTodos(Pageable pageable) 
     {
         return usuarioRepository.findAll(pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Usuario> listarTodos(Pageable pageable, Map<String, String> filters)
+    {
+        if (filters == null || filters.isEmpty()) {
+            return usuarioRepository.findAll(pageable);
+        }
+
+        var spec = FilterSpecification.<Usuario>from(filters);
+        return usuarioRepository.findAll(spec, pageable);
     }
 
     @Transactional(readOnly = true)

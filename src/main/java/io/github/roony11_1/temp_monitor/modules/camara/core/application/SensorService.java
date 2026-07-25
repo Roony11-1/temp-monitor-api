@@ -1,7 +1,9 @@
 package io.github.roony11_1.temp_monitor.modules.camara.core.application;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -13,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import io.github.roony11_1.temp_monitor.kernel.security.crypto.ApiKeyGenerator;
 import io.github.roony11_1.temp_monitor.kernel.security.crypto.HashService;
+import io.github.roony11_1.temp_monitor.kernel.specification.FilterSpecification;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.ActualizarSensorRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.AsignarSensorRequest;
 
@@ -125,6 +128,37 @@ public class SensorService
     public Page<Sensor> listarTodos(Pageable pageable)
     {
         return sensorRepository.findAllWithHierarchy(pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Sensor> listarTodos(Pageable pageable, Map<String, String> filters)
+    {
+        if (filters == null || filters.isEmpty()) {
+            return sensorRepository.findAllWithHierarchy(pageable);
+        }
+
+        Map<String, String> cleaned = new HashMap<>(filters);
+        cleaned.remove("page");
+        cleaned.remove("size");
+        cleaned.remove("sort");
+
+        if (cleaned.isEmpty()) {
+            return sensorRepository.findAllWithHierarchy(pageable);
+        }
+
+        Map<String, String> mapped = new HashMap<>();
+        for (var entry : cleaned.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            switch (key) {
+                case "empresaNombre" -> mapped.put("camara.sucursal.empresa.nombre", value);
+                case "sucursalNombre" -> mapped.put("camara.sucursal.nombre", value);
+                default -> mapped.put(key, value);
+            }
+        }
+
+        var spec = FilterSpecification.<Sensor>from(mapped);
+        return sensorRepository.findAll(spec, pageable);
     }
 
     @Transactional

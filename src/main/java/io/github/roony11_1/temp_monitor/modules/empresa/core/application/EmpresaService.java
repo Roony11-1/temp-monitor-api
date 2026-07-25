@@ -5,6 +5,7 @@ import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.E
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.NombreEmpresaAlreadyExistsException;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Empresa;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.repository.EmpresaRepository;
+import io.github.roony11_1.temp_monitor.kernel.specification.FilterSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +29,16 @@ public class EmpresaService
     public Page<Empresa> listarTodas(Pageable pageable) 
     {
         return empresaRepository.findAll(pageable);
+    }
+
+    public Page<Empresa> listarTodas(Pageable pageable, Map<String, String> filters)
+    {
+        if (filters == null || filters.isEmpty()) {
+            return empresaRepository.findAll(pageable);
+        }
+
+        var spec = FilterSpecification.<Empresa>from(filters);
+        return empresaRepository.findAll(spec, pageable);
     }
 
     public Empresa buscarPorId(Long id) 
