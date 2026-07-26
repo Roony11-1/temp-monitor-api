@@ -29,8 +29,7 @@ public class UsuarioController
             @PageableDefault(size = 10000, sort = "id") Pageable pageable,
             @RequestParam Map<String, String> filters)
     {
-        var page = usuarioService.listarTodos(pageable, filters)
-            .map(UsuarioResponse::toResponse);
+        var page = usuarioService.listarTodos(pageable, filters);
 
         return PageResponse.from(page);
     }

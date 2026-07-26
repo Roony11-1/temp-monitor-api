@@ -12,6 +12,7 @@ import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.E
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.SucursalNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.users.api.dto.UsuarioRequest;
 import io.github.roony11_1.temp_monitor.modules.users.core.domain.exceptions.EmailAlreadyExistsException;
+import io.github.roony11_1.temp_monitor.modules.users.api.dto.UsuarioResponse;
 import io.github.roony11_1.temp_monitor.modules.users.core.domain.exceptions.UserNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.users.core.domain.model.Usuario;
 import io.github.roony11_1.temp_monitor.modules.users.core.domain.repository.UsuarioRepository;
@@ -51,14 +52,18 @@ public class UsuarioService
     }
 
     @Transactional(readOnly = true)
-    public Page<Usuario> listarTodos(Pageable pageable, Map<String, String> filters)
+    public Page<UsuarioResponse> listarTodos(Pageable pageable, Map<String, String> filters)
     {
+        Page<Usuario> page;
+
         if (filters == null || filters.isEmpty()) {
-            return usuarioRepository.findAll(pageable);
+            page = usuarioRepository.findAll(pageable);
+        } else {
+            var spec = FilterSpecification.<Usuario>from(filters);
+            page = usuarioRepository.findAll(spec, pageable);
         }
 
-        var spec = FilterSpecification.<Usuario>from(filters);
-        return usuarioRepository.findAll(spec, pageable);
+        return page.map(UsuarioResponse::toResponse);
     }
 
     @Transactional(readOnly = true)

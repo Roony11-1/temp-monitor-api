@@ -38,8 +38,7 @@ public class SensorController
             @PageableDefault(size = 10000, sort = "id") Pageable pageable,
             @RequestParam Map<String, String> filters)
     {
-        var page = sensorService.listarTodos(pageable, filters)
-            .map(SensorResponse::toResponse);
+        var page = sensorService.listarTodos(pageable, filters);
 
         return ResponseEntity.ok(PageResponse.from(page));
     }

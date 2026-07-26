@@ -18,9 +18,9 @@ import io.github.roony11_1.temp_monitor.kernel.security.crypto.HashService;
 import io.github.roony11_1.temp_monitor.kernel.specification.FilterSpecification;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.ActualizarSensorRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.AsignarSensorRequest;
-
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.RegistroSensorRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.RegistroSensorResponse;
+import io.github.roony11_1.temp_monitor.modules.camara.api.dto.SensorResponse;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.ApiKeyInvalidaException;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.CamaraNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.SensorAlreadyExistsException;
@@ -131,34 +131,38 @@ public class SensorService
     }
 
     @Transactional(readOnly = true)
-    public Page<Sensor> listarTodos(Pageable pageable, Map<String, String> filters)
+    public Page<SensorResponse> listarTodos(Pageable pageable, Map<String, String> filters)
     {
+        Page<Sensor> page;
+
         if (filters == null || filters.isEmpty()) {
-            return sensorRepository.findAllWithHierarchy(pageable);
-        }
+            page = sensorRepository.findAllWithHierarchy(pageable);
+        } else {
+            Map<String, String> cleaned = new HashMap<>(filters);
+            cleaned.remove("page");
+            cleaned.remove("size");
+            cleaned.remove("sort");
 
-        Map<String, String> cleaned = new HashMap<>(filters);
-        cleaned.remove("page");
-        cleaned.remove("size");
-        cleaned.remove("sort");
+            if (cleaned.isEmpty()) {
+                page = sensorRepository.findAllWithHierarchy(pageable);
+            } else {
+                Map<String, String> mapped = new HashMap<>();
+                for (var entry : cleaned.entrySet()) {
+                    String key = entry.getKey();
+                    String value = entry.getValue();
+                    switch (key) {
+                        case "empresaNombre" -> mapped.put("camara.sucursal.empresa.nombre", value);
+                        case "sucursalNombre" -> mapped.put("camara.sucursal.nombre", value);
+                        default -> mapped.put(key, value);
+                    }
+                }
 
-        if (cleaned.isEmpty()) {
-            return sensorRepository.findAllWithHierarchy(pageable);
-        }
-
-        Map<String, String> mapped = new HashMap<>();
-        for (var entry : cleaned.entrySet()) {
-            String key = entry.getKey();
-            String value = entry.getValue();
-            switch (key) {
-                case "empresaNombre" -> mapped.put("camara.sucursal.empresa.nombre", value);
-                case "sucursalNombre" -> mapped.put("camara.sucursal.nombre", value);
-                default -> mapped.put(key, value);
+                var spec = FilterSpecification.<Sensor>from(mapped);
+                page = sensorRepository.findAll(spec, pageable);
             }
         }
 
-        var spec = FilterSpecification.<Sensor>from(mapped);
-        return sensorRepository.findAll(spec, pageable);
+        return page.map(SensorResponse::toResponse);
     }
 
     @Transactional
