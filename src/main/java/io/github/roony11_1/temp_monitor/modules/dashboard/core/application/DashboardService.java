@@ -2,7 +2,8 @@ package io.github.roony11_1.temp_monitor.modules.dashboard.core.application;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -58,8 +59,13 @@ public class DashboardService
 
     private List<TemperaturePoint> obtenerTemperatura24h()
     {
-        List<TemperaturePoint> puntos = new ArrayList<>();
+        Instant since = Instant.now().minus(Duration.ofHours(24));
+        List<io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Lectura> lecturas = lecturaRepository.findUltimas24h(since);
 
-        return puntos;
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM HH:mm").withZone(ZoneId.systemDefault());
+
+        return lecturas.stream()
+            .map(l -> new TemperaturePoint(fmt.format(l.getTimestamp()), l.getTemperatura()))
+            .toList();
     }
 }

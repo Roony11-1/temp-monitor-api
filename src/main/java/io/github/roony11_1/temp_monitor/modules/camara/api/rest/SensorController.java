@@ -84,4 +84,20 @@ public class SensorController
         
         return ResponseEntity.ok(estado);
     }
+
+    @PostMapping("/{uuid}/renew-api-key")
+    public ResponseEntity<RegistroSensorResponse> renewApiKey(@PathVariable UUID uuid)
+    {
+        var response = sensorService.renewApiKey(uuid);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/renew-api-key-by-mac")
+    public ResponseEntity<RegistroSensorResponse> renewApiKeyByMac(@RequestBody RegistroSensorRequest request)
+    {
+        var response = sensorService.renewApiKeyByMac(request.getMacAddress());
+
+        return ResponseEntity.ok(response);
+    }
 }

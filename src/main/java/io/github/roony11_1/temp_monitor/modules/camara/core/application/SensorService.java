@@ -215,4 +215,38 @@ public class SensorService
         sensor.setUltimoContacto(Instant.now());
         sensorRepository.save(sensor);
     }
+
+    @Transactional
+    public RegistroSensorResponse renewApiKey(UUID uuid)
+    {
+        Sensor sensor = sensorRepository.findByUuid(uuid)
+            .orElseThrow(() -> new SensorNotFoundException("UUID " + uuid));
+
+        String newApiKey = apiKeyGenerator.generate();
+        sensor.setApiKeyHash(hashService.hash(newApiKey));
+        var saved = sensorRepository.save(sensor);
+
+        return RegistroSensorResponse.builder()
+            .uuid(saved.getUuid())
+            .estado(saved.getEstado())
+            .apiKey(newApiKey)
+            .build();
+    }
+
+    @Transactional
+    public RegistroSensorResponse renewApiKeyByMac(String macAddress)
+    {
+        Sensor sensor = sensorRepository.findByMacAddress(macAddress)
+            .orElseThrow(() -> new SensorNotFoundException("MAC " + macAddress));
+
+        String newApiKey = apiKeyGenerator.generate();
+        sensor.setApiKeyHash(hashService.hash(newApiKey));
+        var saved = sensorRepository.save(sensor);
+
+        return RegistroSensorResponse.builder()
+            .uuid(saved.getUuid())
+            .estado(saved.getEstado())
+            .apiKey(newApiKey)
+            .build();
+    }
 }

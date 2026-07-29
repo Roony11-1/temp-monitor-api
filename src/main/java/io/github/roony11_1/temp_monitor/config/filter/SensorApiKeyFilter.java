@@ -90,6 +90,7 @@ public class SensorApiKeyFilter extends OncePerRequestFilter
     {
         String path = request.getRequestURI();
         return path.equals("/api/sensores/registrar")
+            || path.equals("/api/sensores/renew-api-key-by-mac")
             || path.startsWith("/auth/")
             || path.startsWith("/actuator/");
     }
