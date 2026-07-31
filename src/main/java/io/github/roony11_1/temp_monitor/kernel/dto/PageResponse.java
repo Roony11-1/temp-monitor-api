@@ -9,15 +9,15 @@ public record PageResponse<T>(
     int page,
     int pageSize,
     long total,
-    int totalPages
-) {
-    public static <T> PageResponse<T> from(Page<T> page) {
+    int totalPages) 
+{
+    public static <T> PageResponse<T> from(Page<T> page) 
+    {
         return new PageResponse<>(
             page.getContent(),
             page.getNumber() + 1,
             page.getSize(),
             page.getTotalElements(),
-            page.getTotalPages()
-        );
+            page.getTotalPages());
     }
 }

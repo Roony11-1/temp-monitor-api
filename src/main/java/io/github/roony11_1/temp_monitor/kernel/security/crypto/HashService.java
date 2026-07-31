@@ -22,6 +22,7 @@ public class HashService
     {
         if (password == null || hash == null)
             return false;
+        
         return passwordEncoder.matches(password, hash);
     }
 }
