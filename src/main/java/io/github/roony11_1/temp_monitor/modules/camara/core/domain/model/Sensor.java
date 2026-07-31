@@ -62,4 +62,9 @@ public class Sensor
 
     @UpdateTimestamp
     private Instant updatedAt;
+
+    public boolean puedeRegistrarLectura()
+    {
+        return this.getEstado() == EstadoSensor.DESHABILITADO || this.getEstado() == EstadoSensor.PENDIENTE;
+    }
 }

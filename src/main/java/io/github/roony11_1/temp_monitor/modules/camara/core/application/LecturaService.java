@@ -32,20 +32,22 @@ public class LecturaService
         Sensor sensor = sensorRepository.findByUuid(sensorUuid)
             .orElseThrow(() -> new SensorNotFoundException("UUID " + sensorUuid));
 
-        if (sensor.getEstado() == EstadoSensor.DESHABILITADO || sensor.getEstado() == EstadoSensor.PENDIENTE)
+        if (sensor.puedeRegistrarLectura())
         {
             throw new SensorDeshabilitadoException(sensorUuid.toString());
         }
 
+        var now = Instant.now();
+
         Lectura lectura = Lectura.builder()
             .sensorUuid(sensorUuid)
             .temperatura(request.getTemperatura())
+            .timestamp(now)
             .build();
 
         lecturaRepository.save(lectura);
         
-        sensor.setUltimoContacto(lectura.getTimestamp());
-        sensorRepository.save(sensor);
+        sensor.setUltimoContacto(now);
     }
 
     @Transactional(readOnly = true)
