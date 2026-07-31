@@ -15,7 +15,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -100,7 +99,7 @@ public class SucursalService
             sucursal.setEmpresa(empresa);
         }
 
-        return sucursalRepository.save(sucursal);
+        return sucursal;
     }
 
     @Transactional
@@ -108,8 +107,6 @@ public class SucursalService
     {
         Sucursal sucursal = buscarPorId(id);
         sucursal.setActivo(true);
-        sucursal.setUpdatedAt(Instant.now());
-        sucursalRepository.save(sucursal);
     }
 
     @Transactional
@@ -117,8 +114,6 @@ public class SucursalService
     {
         Sucursal sucursal = buscarPorId(id);
         sucursal.setActivo(false);
-        sucursal.setUpdatedAt(Instant.now());
-        sucursalRepository.save(sucursal);
     }
 
     @Transactional

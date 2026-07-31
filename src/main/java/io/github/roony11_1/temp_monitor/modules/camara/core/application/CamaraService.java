@@ -2,6 +2,7 @@ package io.github.roony11_1.temp_monitor.modules.camara.core.application;
 
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.CamaraRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.CamaraNotFoundException;
+import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.RangoTemperaturaInvalidoException;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Camara;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.CamaraRepository;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.SucursalNotFoundException;
@@ -63,6 +64,8 @@ public class CamaraService
     @Transactional
     public Camara crear(CamaraRequest request) 
     {
+        validarRango(request.getTemperaturaMin(), request.getTemperaturaMax());
+
         Sucursal sucursal = sucursalRepository.findById(request.getSucursalId())
                 .orElseThrow(() -> new SucursalNotFoundException("ID " + request.getSucursalId()));
 
@@ -70,6 +73,8 @@ public class CamaraService
                 .nombre(request.getNombre())
                 .descripcion(request.getDescripcion())
                 .sucursal(sucursal)
+                .temperaturaMin(request.getTemperaturaMin())
+                .temperaturaMax(request.getTemperaturaMax())
                 .activo(true)
                 .build();
 
@@ -79,10 +84,14 @@ public class CamaraService
     @Transactional
     public Camara actualizar(Long id, CamaraRequest request) 
     {
+        validarRango(request.getTemperaturaMin(), request.getTemperaturaMax());
+
         Camara camara = buscarPorId(id);
 
         camara.setNombre(request.getNombre());
         camara.setDescripcion(request.getDescripcion());
+        camara.setTemperaturaMin(request.getTemperaturaMin());
+        camara.setTemperaturaMax(request.getTemperaturaMax());
         
         if (request.getSucursalId() != null) 
         {
@@ -92,7 +101,7 @@ public class CamaraService
             camara.setSucursal(sucursal);
         }
 
-        return camaraRepository.save(camara);
+        return camara;
     }
 
     @Transactional
@@ -101,8 +110,6 @@ public class CamaraService
         Camara camara = buscarPorId(id);
 
         camara.setActivo(true);
-
-        camaraRepository.save(camara);
     }
 
     @Transactional
@@ -111,8 +118,14 @@ public class CamaraService
         Camara camara = buscarPorId(id);
 
         camara.setActivo(false);
+    }
 
-        camaraRepository.save(camara);
+    private void validarRango(Double min, Double max) 
+    {
+        if (min != null && max != null && min >= max) 
+        {
+            throw new RangoTemperaturaInvalidoException();
+        }
     }
 
     @Transactional

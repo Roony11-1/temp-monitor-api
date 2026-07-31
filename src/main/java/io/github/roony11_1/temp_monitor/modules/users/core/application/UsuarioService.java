@@ -25,7 +25,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -201,8 +200,7 @@ public class UsuarioService
             usuario.setRoles(request.getRoles());
         }
 
-        usuario.setUpdatedAt(Instant.now());
-        return usuarioRepository.save(usuario);
+        return usuario;
     }
 
     @Transactional
@@ -210,8 +208,6 @@ public class UsuarioService
     {
         Usuario usuario = buscarPorId(id);
         usuario.setPasswordHash(passwordHasher.hash(nuevaPassword));
-        usuario.setUpdatedAt(Instant.now());
-        usuarioRepository.save(usuario);
     }
 
     @Transactional
@@ -219,8 +215,6 @@ public class UsuarioService
     {
         Usuario usuario = buscarPorId(id);
         usuario.setActivo(true);
-        usuario.setUpdatedAt(Instant.now());
-        usuarioRepository.save(usuario);
     }
 
     @Transactional
@@ -228,8 +222,6 @@ public class UsuarioService
     {
         Usuario usuario = buscarPorId(id);
         usuario.setActivo(false);
-        usuario.setUpdatedAt(Instant.now());
-        usuarioRepository.save(usuario);
     }
 
     @Transactional

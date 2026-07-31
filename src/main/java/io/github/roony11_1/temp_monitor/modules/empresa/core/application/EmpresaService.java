@@ -68,7 +68,7 @@ public class EmpresaService
         empresa.setTelefono(request.getTelefono());
         empresa.setEmail(request.getEmail());
 
-        return empresaRepository.save(empresa);
+        return empresa;
     }
 
     @Transactional
@@ -77,8 +77,6 @@ public class EmpresaService
         Empresa empresa = buscarPorId(id);
 
         empresa.setActivo(true);
-
-        empresaRepository.save(empresa);
     }
 
     @Transactional
@@ -87,8 +85,6 @@ public class EmpresaService
         Empresa empresa = buscarPorId(id);
 
         empresa.setActivo(false);
-
-        empresaRepository.save(empresa);
     }
 
     @Transactional

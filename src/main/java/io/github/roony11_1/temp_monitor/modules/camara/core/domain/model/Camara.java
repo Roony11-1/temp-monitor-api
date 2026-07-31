@@ -29,6 +29,10 @@ public class Camara
 
     private String descripcion;
 
+    private Double temperaturaMin;
+
+    private Double temperaturaMax;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sucursal_id", nullable = false)
     @ToString.Exclude

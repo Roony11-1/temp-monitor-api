@@ -8,6 +8,6 @@ public class CamaraRequest
     private String nombre;
     private String descripcion;
     private Long sucursalId;
-    private Double temperaturaMinima;
-    private Double temperaturaMaxima;
+    private Double temperaturaMin;
+    private Double temperaturaMax;
 }

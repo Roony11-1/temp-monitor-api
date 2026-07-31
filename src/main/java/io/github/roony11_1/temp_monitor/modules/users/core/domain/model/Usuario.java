@@ -1,5 +1,8 @@
 package io.github.roony11_1.temp_monitor.modules.users.core.domain.model;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -51,10 +54,12 @@ public class Usuario implements TokenUser
     @ToString.Exclude
     private Sucursal sucursal;
 
-    @Builder.Default
-    private Instant createdAt = Instant.now();
+    @CreationTimestamp
+    private Instant createdAt;
 
+    @UpdateTimestamp
     private Instant updatedAt;
+
     private Instant lastLogin;
 
     @Builder.Default

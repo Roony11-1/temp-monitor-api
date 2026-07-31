@@ -45,10 +45,10 @@ public class DataSeeder implements CommandLineRunner
         var sur    = sucursalRepository.save(Sucursal.builder().nombre("Sucursal Sur").direccion("Ruta 8 km 15").telefono("555-0201").empresa(foodInc).build());
 
         // Cámaras frigoríficas
-        camaraRepository.save(Camara.builder().nombre("Cámara Frigorífica 1").descripcion("Cámara principal de congelados").sucursal(centro).build());
-        camaraRepository.save(Camara.builder().nombre("Cámara Frigorífica 2").descripcion("Cámara de refrigerados").sucursal(centro).build());
-        camaraRepository.save(Camara.builder().nombre("Cámara Frigorífica Norte").descripcion("Cámara de congelados").sucursal(norte).build());
-        camaraRepository.save(Camara.builder().nombre("Cámara Frigorífica Sur").descripcion("Cámara de refrigerados y lácteos").sucursal(sur).build());
+        camaraRepository.save(Camara.builder().nombre("Cámara Frigorífica 1").descripcion("Cámara principal de congelados").sucursal(centro).temperaturaMin(-18.0).temperaturaMax(-15.0).build());
+        camaraRepository.save(Camara.builder().nombre("Cámara Frigorífica 2").descripcion("Cámara de refrigerados").sucursal(centro).temperaturaMin(3.0).temperaturaMax(7.0).build());
+        camaraRepository.save(Camara.builder().nombre("Cámara Frigorífica Norte").descripcion("Cámara de congelados").sucursal(norte).temperaturaMin(-18.0).temperaturaMax(-15.0).build());
+        camaraRepository.save(Camara.builder().nombre("Cámara Frigorífica Sur").descripcion("Cámara de refrigerados y lácteos").sucursal(sur).temperaturaMin(3.0).temperaturaMax(7.0).build());
 
         var pass = "admin123";
 

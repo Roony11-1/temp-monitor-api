@@ -90,7 +90,7 @@ public class SensorService
         sensor.setCamara(camara);
         sensor.setEstado(EstadoSensor.ACTIVO);
 
-        return sensorRepository.save(sensor);
+        return sensor;
     }
 
     public Sensor buscarPorId(Long id)
@@ -192,12 +192,10 @@ public class SensorService
             sensor.setEstado(request.getEstado());
         }
 
-        var saved = sensorRepository.save(sensor);
+        Hibernate.initialize(sensor.getCamara().getSucursal());
+        Hibernate.initialize(sensor.getCamara().getSucursal().getEmpresa());
         
-        Hibernate.initialize(saved.getCamara().getSucursal());
-        Hibernate.initialize(saved.getCamara().getSucursal().getEmpresa());
-        
-        return saved;
+        return sensor;
     }
 
     public EstadoSensor consultarEstado(UUID uuid)
@@ -213,7 +211,6 @@ public class SensorService
         Sensor sensor = sensorRepository.findByUuid(uuid)
             .orElseThrow(() -> new SensorNotFoundException("UUID " + uuid));
         sensor.setUltimoContacto(Instant.now());
-        sensorRepository.save(sensor);
     }
 
     @Transactional
@@ -224,11 +221,10 @@ public class SensorService
 
         String newApiKey = apiKeyGenerator.generate();
         sensor.setApiKeyHash(hashService.hash(newApiKey));
-        var saved = sensorRepository.save(sensor);
 
         return RegistroSensorResponse.builder()
-            .uuid(saved.getUuid())
-            .estado(saved.getEstado())
+            .uuid(sensor.getUuid())
+            .estado(sensor.getEstado())
             .apiKey(newApiKey)
             .build();
     }
@@ -241,11 +237,10 @@ public class SensorService
 
         String newApiKey = apiKeyGenerator.generate();
         sensor.setApiKeyHash(hashService.hash(newApiKey));
-        var saved = sensorRepository.save(sensor);
 
         return RegistroSensorResponse.builder()
-            .uuid(saved.getUuid())
-            .estado(saved.getEstado())
+            .uuid(sensor.getUuid())
+            .estado(sensor.getEstado())
             .apiKey(newApiKey)
             .build();
     }

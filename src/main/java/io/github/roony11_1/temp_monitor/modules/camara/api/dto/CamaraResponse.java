@@ -13,6 +13,8 @@ public class CamaraResponse
     private String nombre;
     private String descripcion;
     private Long sucursalId;
+    private Double temperaturaMin;
+    private Double temperaturaMax;
     private boolean activo;
     private Instant createdAt;
     private Instant updatedAt;
@@ -24,6 +26,8 @@ public class CamaraResponse
         response.setNombre(camara.getNombre());
         response.setDescripcion(camara.getDescripcion());
         response.setSucursalId(camara.getSucursal().getId());
+        response.setTemperaturaMin(camara.getTemperaturaMin());
+        response.setTemperaturaMax(camara.getTemperaturaMax());
         response.setActivo(camara.isActivo());
         response.setCreatedAt(camara.getCreatedAt());
         response.setUpdatedAt(camara.getUpdatedAt());

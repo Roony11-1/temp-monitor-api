@@ -11,4 +11,10 @@ public final class CamaraErrorCategories
         @Override public String name() { return "CAMARA_NOT_FOUND"; }
         @Override public String description() { return "Cámara no encontrada"; }
     };
+
+    public static final ErrorCategory RANGO_TEMPERATURA_INVALIDO = new ErrorCategory() 
+    {
+        @Override public String name() { return "RANGO_TEMPERATURA_INVALIDO"; }
+        @Override public String description() { return "Rango de temperatura inválido"; }
+    };
 }
