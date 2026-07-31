@@ -1,10 +1,14 @@
 package io.github.roony11_1.temp_monitor.modules.camara.core.application;
 
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.CamaraRequest;
+import io.github.roony11_1.temp_monitor.modules.camara.api.dto.CamaraTemperaturaResponse;
+import io.github.roony11_1.temp_monitor.modules.camara.api.dto.UltimaLecturaSensorResponse;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.CamaraNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.RangoTemperaturaInvalidoException;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Camara;
+import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.EstadoSensor;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.CamaraRepository;
+import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.LecturaRepository;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.SucursalNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Sucursal;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.repository.SucursalRepository;
@@ -15,6 +19,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -22,8 +28,11 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class CamaraService 
 {
+    private static final Duration VENTANA_TEMPERATURA = Duration.ofMinutes(15);
+
     private final CamaraRepository camaraRepository;
     private final SucursalRepository sucursalRepository;
+    private final LecturaRepository lecturaRepository;
 
     public List<Camara> listarTodas() 
     {
@@ -134,5 +143,37 @@ public class CamaraService
         var camara = buscarPorId(id);
 
         camaraRepository.delete(camara);
+    }
+
+    @Transactional(readOnly = true)
+    public CamaraTemperaturaResponse obtenerTemperatura(Long id)
+    {
+        buscarPorId(id);
+
+        Instant since = Instant.now().minus(VENTANA_TEMPERATURA);
+
+        Double promedio = lecturaRepository.calcularPromedioPorCamara(id, since, EstadoSensor.ACTIVO);
+        long sensoresConDatos = lecturaRepository.contarSensoresConDatosPorCamara(id, since, EstadoSensor.ACTIVO);
+        Instant ultimaLectura = lecturaRepository.findUltimaLecturaPorCamara(id).orElse(null);
+
+        return CamaraTemperaturaResponse.builder()
+                .promedio(promedio != null ? Math.round(promedio * 10.0) / 10.0 : null)
+                .sensoresConDatos(sensoresConDatos)
+                .ultimaLectura(ultimaLectura)
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public List<UltimaLecturaSensorResponse> obtenerUltimasMedidas(Long id)
+    {
+        buscarPorId(id);
+
+        return lecturaRepository.findUltimaPorSensorDeCamara(id).stream()
+                .map(l -> UltimaLecturaSensorResponse.builder()
+                        .sensorUuid(l.getSensorUuid())
+                        .temperatura(l.getTemperatura())
+                        .timestamp(l.getTimestamp())
+                        .build())
+                .toList();
     }
 }
