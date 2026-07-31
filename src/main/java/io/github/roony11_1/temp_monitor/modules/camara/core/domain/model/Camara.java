@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -31,6 +33,11 @@ public class Camara
     @JoinColumn(name = "sucursal_id", nullable = false)
     @ToString.Exclude
     private Sucursal sucursal;
+
+    @OneToMany(mappedBy = "camara", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @Builder.Default
+    private final List<Sensor> sensores = new ArrayList<>();
 
     @Builder.Default
     private boolean activo = true;

@@ -52,11 +52,6 @@ public class Sensor
     @ToString.Exclude
     private Camara camara;
 
-    @OneToMany(mappedBy = "camara", fetch = FetchType.LAZY)
-    @ToString.Exclude
-    @Builder.Default
-    private final List<Sensor> sensores = new ArrayList<>();
-
     private Instant ultimoContacto;
 
     @Builder.Default
