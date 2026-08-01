@@ -36,21 +36,15 @@ public class UsuarioController
     }
 
     @GetMapping("/empresa/{empresaId}")
-    public List<UsuarioResponse> listarPorEmpresa(@PathVariable Long empresaId) 
+    public List<UsuarioSummaryResponse> listarPorEmpresa(@PathVariable Long empresaId) 
     {
-        return usuarioService.listarPorEmpresa(empresaId).stream()
-            .map(UsuarioResponse::toResponse)
-            .toList();
+        return usuarioService.listarPorEmpresaSummary(empresaId);
     }
 
     @GetMapping("/sucursal/{sucursalId}")
-    public List<UsuarioResponse> listarPorSucursal(@PathVariable Long sucursalId) 
+    public List<UsuarioSummaryResponse> listarPorSucursal(@PathVariable Long sucursalId) 
     {
-        var response = usuarioService.listarPorSucursal(sucursalId).stream()
-            .map(UsuarioResponse::toResponse)
-            .toList();
-
-        return response;
+        return usuarioService.listarPorSucursalSummary(sucursalId);
     }
 
     @GetMapping("/{id}")

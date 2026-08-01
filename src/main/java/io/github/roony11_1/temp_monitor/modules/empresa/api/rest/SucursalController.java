@@ -34,11 +34,9 @@ public class SucursalController
     }
 
     @GetMapping("/empresa/{empresaId}")
-    public List<SucursalResponse> listarPorEmpresa(@PathVariable Long empresaId) 
+    public List<SucursalSummaryResponse> listarPorEmpresa(@PathVariable Long empresaId) 
     {
-        return sucursalService.listarPorEmpresa(empresaId).stream()
-                .map(SucursalResponse::toResponse)
-                .toList();
+        return sucursalService.listarPorEmpresaSummary(empresaId);
     }
 
     @GetMapping("/{id}")

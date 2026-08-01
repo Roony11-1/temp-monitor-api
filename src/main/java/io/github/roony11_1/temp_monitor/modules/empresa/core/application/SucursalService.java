@@ -53,6 +53,14 @@ public class SucursalService
         return sucursalRepository.findByEmpresaId(empresaId);
     }
 
+    @Transactional(readOnly = true)
+    public List<SucursalSummaryResponse> listarPorEmpresaSummary(Long empresaId) 
+    {
+        return sucursalRepository.findByEmpresaId(empresaId).stream()
+                .map(sucursalMapper::toSummaryResponse)
+                .toList();
+    }
+
     public Page<Sucursal> listarPorEmpresa(Long empresaId, Pageable pageable) 
     {
         return sucursalRepository.findByEmpresaId(empresaId, pageable);

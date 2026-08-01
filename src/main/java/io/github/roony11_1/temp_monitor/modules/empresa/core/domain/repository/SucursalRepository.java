@@ -12,6 +12,7 @@ import java.util.List;
 
 public interface SucursalRepository extends JpaRepository<Sucursal, Long>, JpaSpecificationExecutor<Sucursal> 
 {
+    @EntityGraph(attributePaths = "empresa")
     List<Sucursal> findByEmpresaId(Long empresaId);
 
     Page<Sucursal> findByEmpresaId(Long empresaId, Pageable pageable);

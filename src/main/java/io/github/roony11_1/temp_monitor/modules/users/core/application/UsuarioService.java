@@ -70,6 +70,14 @@ public class UsuarioService
     }
 
     @Transactional(readOnly = true)
+    public List<UsuarioSummaryResponse> listarPorEmpresaSummary(Long empresaId) 
+    {
+        return usuarioRepository.findByEmpresa_Id(empresaId).stream()
+                .map(usuarioMapper::toSummaryResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public Page<Usuario> listarPorEmpresa(Long empresaId, Pageable pageable) 
     {
         return usuarioRepository.findByEmpresa_Id(empresaId, pageable);
@@ -79,6 +87,14 @@ public class UsuarioService
     public List<Usuario> listarPorSucursal(Long sucursalId) 
     {
         return usuarioRepository.findBySucursal_Id(sucursalId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<UsuarioSummaryResponse> listarPorSucursalSummary(Long sucursalId) 
+    {
+        return usuarioRepository.findBySucursal_Id(sucursalId).stream()
+                .map(usuarioMapper::toSummaryResponse)
+                .toList();
     }
 
     @Transactional(readOnly = true)
