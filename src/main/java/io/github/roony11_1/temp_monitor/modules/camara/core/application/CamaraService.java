@@ -14,6 +14,7 @@ import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.Le
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.SucursalNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Sucursal;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.repository.SucursalRepository;
+import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.specification.FilterSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -36,7 +37,7 @@ public class CamaraService
     private final SucursalRepository sucursalRepository;
     private final LecturaRepository lecturaRepository;
 
-    private final CamaraMapper camaraMapper;
+    private final EntityMapper<Camara, CamaraSummaryResponse> camaraMapper;
 
     public List<Camara> listarTodas() 
     {
