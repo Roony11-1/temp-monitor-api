@@ -24,8 +24,5 @@ public class SensorSummaryResponse
     private String sucursalNombre;
     private Long empresaId;
     private String empresaNombre;
-    private Instant ultimoContacto;
     private EstadoSensor estado;
-    private Instant createdAt;
-    private Instant updatedAt;
 }

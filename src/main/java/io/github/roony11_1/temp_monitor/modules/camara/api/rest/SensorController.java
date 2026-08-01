@@ -78,6 +78,14 @@ public class SensorController
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{uuid}")
+    public ResponseEntity<SensorResponse> buscarPorUuid(@PathVariable UUID uuid)
+    {
+        var response = SensorResponse.toResponse(sensorService.buscarPorUuid(uuid));
+
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/{uuid}/estado")
     public ResponseEntity<EstadoSensor> consultarEstado(@PathVariable UUID uuid)
     {

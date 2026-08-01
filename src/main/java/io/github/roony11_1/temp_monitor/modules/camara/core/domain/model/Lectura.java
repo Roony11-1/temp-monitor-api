@@ -10,6 +10,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,7 +18,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "lecturas")
+@Table(name = "lecturas", indexes = {
+    @Index(name = "idx_lecturas_sensor_uuid_timestamp", columnList = "sensorUuid, timestamp")
+})
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

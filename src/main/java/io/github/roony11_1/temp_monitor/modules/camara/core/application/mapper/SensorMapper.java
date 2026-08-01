@@ -22,10 +22,7 @@ public class SensorMapper implements EntityMapper<Sensor, SensorSummaryResponse>
             .sucursalNombre(entity.getCamara() != null ? entity.getCamara().getSucursal().getNombre() : null)
             .empresaId(entity.getCamara() != null ? entity.getCamara().getSucursal().getEmpresa().getId() : null)
             .empresaNombre(entity.getCamara() != null ? entity.getCamara().getSucursal().getEmpresa().getNombre() : null)
-            .ultimoContacto(entity.getUltimoContacto())
             .estado(entity.getEstado())
-            .createdAt(entity.getCreatedAt())
-            .updatedAt(entity.getUpdatedAt())
             .build();
     }
 }

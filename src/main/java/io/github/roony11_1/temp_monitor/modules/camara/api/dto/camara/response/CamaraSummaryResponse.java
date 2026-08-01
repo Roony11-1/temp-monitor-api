@@ -14,6 +14,7 @@ public class CamaraSummaryResponse
     private Long id;
     private String nombre;
     private String descripcion;
+    private Long sucursalId;
     private String sucursal;
     private Double temperaturaMin;
     private Double temperaturaMax;

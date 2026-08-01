@@ -23,8 +23,6 @@ public class UsuarioMapper implements EntityMapper<Usuario, UsuarioSummaryRespon
             .sucursalId(entity.getSucursalId())
             .roles(entity.getRoles().stream().map(Enum::name).toList())
             .activo(entity.isActivo())
-            .createdAt(entity.getCreatedAt())
-            .lastLogin(entity.getLastLogin())
             .build();
     }
 }

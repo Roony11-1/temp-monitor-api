@@ -24,6 +24,4 @@ public class UsuarioSummaryResponse
     private Long sucursalId;
     private List<String> roles;
     private boolean activo;
-    private Instant createdAt;
-    private Instant lastLogin;
 }

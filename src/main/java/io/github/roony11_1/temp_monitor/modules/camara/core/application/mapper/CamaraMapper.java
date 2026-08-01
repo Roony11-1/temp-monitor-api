@@ -16,6 +16,7 @@ public class CamaraMapper implements EntityMapper<Camara, CamaraSummaryResponse>
             .id(entity.getId())
             .nombre(entity.getNombre())
             .descripcion(entity.getDescripcion())
+            .sucursalId(entity.getSucursal().getId())
             .sucursal(entity.getSucursal().getNombre())
             .temperaturaMin(entity.getTemperaturaMin())
             .temperaturaMax(entity.getTemperaturaMax())
