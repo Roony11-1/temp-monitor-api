@@ -3,6 +3,7 @@ package io.github.roony11_1.temp_monitor.modules.empresa.api.rest;
 import io.github.roony11_1.temp_monitor.kernel.dto.PageResponse;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.EmpresaRequest;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.EmpresaResponse;
+import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.EmpresaSummaryResponse;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.application.EmpresaService;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Empresa;
 import lombok.RequiredArgsConstructor;
@@ -23,12 +24,11 @@ public class EmpresaController
     private final EmpresaService empresaService;
 
     @GetMapping
-    public PageResponse<EmpresaResponse> listarTodas(
+    public PageResponse<EmpresaSummaryResponse> listarTodas(
             @PageableDefault(size = 10000, sort = "id") Pageable pageable,
             @RequestParam Map<String, String> filters)
     {
-        var page = empresaService.listarTodas(pageable, filters)
-                .map(EmpresaResponse::toResponse);
+        var page = empresaService.listarTodas(pageable, filters);
 
         return PageResponse.from(page);
     }

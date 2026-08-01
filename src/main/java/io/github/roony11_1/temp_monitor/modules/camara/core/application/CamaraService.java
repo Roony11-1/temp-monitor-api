@@ -15,7 +15,7 @@ import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.S
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Sucursal;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.repository.SucursalRepository;
 import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
-import io.github.roony11_1.temp_monitor.kernel.specification.FilterSpecification;
+import io.github.roony11_1.temp_monitor.kernel.specification.FilterSpecificationBuilder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -52,7 +52,9 @@ public class CamaraService
     @Transactional(readOnly = true)
     public Page<CamaraSummaryResponse> listarTodas(Pageable pageable, Map<String, String> filters)
     {
-        var spec = FilterSpecification.<Camara>from(filters);
+        var spec = new FilterSpecificationBuilder<Camara>()
+                .withConditions(filters)
+                .build();
         return camaraRepository.findAll(spec, pageable)
                 .map(camaraMapper::toSummaryResponse);
     }

@@ -22,6 +22,7 @@ import io.github.roony11_1.temp_monitor.modules.camara.api.dto.AsignarSensorRequ
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.RegistroSensorRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.RegistroSensorResponse;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.SensorResponse;
+import io.github.roony11_1.temp_monitor.modules.camara.api.dto.SensorSummaryResponse;
 import io.github.roony11_1.temp_monitor.modules.camara.core.application.SensorService;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.EstadoSensor;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +35,7 @@ public class SensorController
     private final SensorService sensorService;
 
     @GetMapping
-    public ResponseEntity<PageResponse<SensorResponse>> listarTodos(
+    public ResponseEntity<PageResponse<SensorSummaryResponse>> listarTodos(
             @PageableDefault(size = 10000, sort = "id") Pageable pageable,
             @RequestParam Map<String, String> filters)
     {

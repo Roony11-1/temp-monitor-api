@@ -1,6 +1,7 @@
 package io.github.roony11_1.temp_monitor.modules.users.core.application;
 
-import io.github.roony11_1.temp_monitor.kernel.specification.FilterSpecification;
+import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
+import io.github.roony11_1.temp_monitor.kernel.specification.FilterSpecificationBuilder;
 import io.github.roony11_1.temp_monitor.kernel.security.crypto.HashService;
 import io.github.roony11_1.temp_monitor.kernel.security.model.Rol;
 import io.github.roony11_1.temp_monitor.kernel.security.model.TokenUser;
@@ -11,6 +12,7 @@ import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.repository.S
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.EmpresaNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.SucursalNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.users.api.dto.UsuarioRequest;
+import io.github.roony11_1.temp_monitor.modules.users.api.dto.UsuarioSummaryResponse;
 import io.github.roony11_1.temp_monitor.modules.users.core.domain.exceptions.EmailAlreadyExistsException;
 import io.github.roony11_1.temp_monitor.modules.users.api.dto.UsuarioResponse;
 import io.github.roony11_1.temp_monitor.modules.users.core.domain.exceptions.UserNotFoundException;
@@ -37,6 +39,7 @@ public class UsuarioService
     private final EmpresaRepository empresaRepository;
     private final SucursalRepository sucursalRepository;
     private final HashService passwordHasher;
+    private final EntityMapper<Usuario, UsuarioSummaryResponse> usuarioMapper;
 
     @Transactional(readOnly = true)
     public List<Usuario> listarTodos() 
@@ -51,18 +54,13 @@ public class UsuarioService
     }
 
     @Transactional(readOnly = true)
-    public Page<UsuarioResponse> listarTodos(Pageable pageable, Map<String, String> filters)
+    public Page<UsuarioSummaryResponse> listarTodos(Pageable pageable, Map<String, String> filters)
     {
-        Page<Usuario> page;
-
-        if (filters == null || filters.isEmpty()) {
-            page = usuarioRepository.findAll(pageable);
-        } else {
-            var spec = FilterSpecification.<Usuario>from(filters);
-            page = usuarioRepository.findAll(spec, pageable);
-        }
-
-        return page.map(UsuarioResponse::toResponse);
+        var spec = new FilterSpecificationBuilder<Usuario>()
+                .withConditions(filters)
+                .build();
+        return usuarioRepository.findAll(spec, pageable)
+                .map(usuarioMapper::toSummaryResponse);
     }
 
     @Transactional(readOnly = true)

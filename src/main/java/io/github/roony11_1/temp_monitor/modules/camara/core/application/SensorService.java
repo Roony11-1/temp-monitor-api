@@ -13,14 +13,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.security.crypto.ApiKeyGenerator;
 import io.github.roony11_1.temp_monitor.kernel.security.crypto.HashService;
-import io.github.roony11_1.temp_monitor.kernel.specification.FilterSpecification;
+import io.github.roony11_1.temp_monitor.kernel.specification.FilterSpecificationBuilder;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.ActualizarSensorRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.AsignarSensorRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.RegistroSensorRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.RegistroSensorResponse;
-import io.github.roony11_1.temp_monitor.modules.camara.api.dto.SensorResponse;
+import io.github.roony11_1.temp_monitor.modules.camara.api.dto.SensorSummaryResponse;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.ApiKeyInvalidaException;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.CamaraNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.SensorAlreadyExistsException;
@@ -40,6 +41,7 @@ public class SensorService
     private final CamaraRepository camaraRepository;
     private final HashService hashService;
     private final ApiKeyGenerator apiKeyGenerator;
+    private final EntityMapper<Sensor, SensorSummaryResponse> sensorMapper;
 
     public Optional<Sensor> authenticateByUuidAndApiKey(UUID uuid, String apiKey) 
     {
@@ -131,38 +133,28 @@ public class SensorService
     }
 
     @Transactional(readOnly = true)
-    public Page<SensorResponse> listarTodos(Pageable pageable, Map<String, String> filters)
+    public Page<SensorSummaryResponse> listarTodos(Pageable pageable, Map<String, String> filters)
     {
-        Page<Sensor> page;
+        Map<String, String> mapped = new HashMap<>();
 
-        if (filters == null || filters.isEmpty()) {
-            page = sensorRepository.findAllWithHierarchy(pageable);
-        } else {
-            Map<String, String> cleaned = new HashMap<>(filters);
-            cleaned.remove("page");
-            cleaned.remove("size");
-            cleaned.remove("sort");
-
-            if (cleaned.isEmpty()) {
-                page = sensorRepository.findAllWithHierarchy(pageable);
-            } else {
-                Map<String, String> mapped = new HashMap<>();
-                for (var entry : cleaned.entrySet()) {
-                    String key = entry.getKey();
-                    String value = entry.getValue();
-                    switch (key) {
-                        case "empresaNombre" -> mapped.put("camara.sucursal.empresa.nombre", value);
-                        case "sucursalNombre" -> mapped.put("camara.sucursal.nombre", value);
-                        default -> mapped.put(key, value);
-                    }
+        if (filters != null)
+        {
+            for (var entry : filters.entrySet()) {
+                String key = entry.getKey();
+                String value = entry.getValue();
+                switch (key) {
+                    case "empresaNombre" -> mapped.put("camara.sucursal.empresa.nombre", value);
+                    case "sucursalNombre" -> mapped.put("camara.sucursal.nombre", value);
+                    default -> mapped.put(key, value);
                 }
-
-                var spec = FilterSpecification.<Sensor>from(mapped);
-                page = sensorRepository.findAll(spec, pageable);
             }
         }
 
-        return page.map(SensorResponse::toResponse);
+        var spec = new FilterSpecificationBuilder<Sensor>()
+                .withConditions(mapped)
+                .build();
+        return sensorRepository.findAll(spec, pageable)
+                .map(sensorMapper::toSummaryResponse);
     }
 
     @Transactional

@@ -1,11 +1,13 @@
 package io.github.roony11_1.temp_monitor.modules.empresa.core.application;
 
+import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
+import io.github.roony11_1.temp_monitor.kernel.specification.FilterSpecificationBuilder;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.EmpresaRequest;
+import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.EmpresaSummaryResponse;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.EmpresaNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.NombreEmpresaAlreadyExistsException;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Empresa;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.repository.EmpresaRepository;
-import io.github.roony11_1.temp_monitor.kernel.specification.FilterSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +22,7 @@ import java.util.Map;
 public class EmpresaService 
 {
     private final EmpresaRepository empresaRepository;
+    private final EntityMapper<Empresa, EmpresaSummaryResponse> empresaMapper;
 
     public List<Empresa> listarTodas() 
     {
@@ -31,14 +34,14 @@ public class EmpresaService
         return empresaRepository.findAll(pageable);
     }
 
-    public Page<Empresa> listarTodas(Pageable pageable, Map<String, String> filters)
+    @Transactional(readOnly = true)
+    public Page<EmpresaSummaryResponse> listarTodas(Pageable pageable, Map<String, String> filters)
     {
-        if (filters == null || filters.isEmpty()) {
-            return empresaRepository.findAll(pageable);
-        }
-
-        var spec = FilterSpecification.<Empresa>from(filters);
-        return empresaRepository.findAll(spec, pageable);
+        var spec = new FilterSpecificationBuilder<Empresa>()
+                .withConditions(filters)
+                .build();
+        return empresaRepository.findAll(spec, pageable)
+                .map(empresaMapper::toSummaryResponse);
     }
 
     public Empresa buscarPorId(Long id) 

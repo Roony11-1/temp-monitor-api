@@ -4,6 +4,7 @@ import io.github.roony11_1.temp_monitor.kernel.dto.PageResponse;
 import io.github.roony11_1.temp_monitor.modules.users.api.dto.CambiarPasswordRequest;
 import io.github.roony11_1.temp_monitor.modules.users.api.dto.UsuarioRequest;
 import io.github.roony11_1.temp_monitor.modules.users.api.dto.UsuarioResponse;
+import io.github.roony11_1.temp_monitor.modules.users.api.dto.UsuarioSummaryResponse;
 import io.github.roony11_1.temp_monitor.modules.users.core.application.UsuarioService;
 import io.github.roony11_1.temp_monitor.modules.users.core.domain.model.Usuario;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,7 @@ public class UsuarioController
     private final UsuarioService usuarioService;
 
     @GetMapping
-    public PageResponse<UsuarioResponse> listarTodos(
+    public PageResponse<UsuarioSummaryResponse> listarTodos(
             @PageableDefault(size = 10000, sort = "id") Pageable pageable,
             @RequestParam Map<String, String> filters)
     {

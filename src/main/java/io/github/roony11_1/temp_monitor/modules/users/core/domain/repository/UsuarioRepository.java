@@ -3,6 +3,8 @@ package io.github.roony11_1.temp_monitor.modules.users.core.domain.repository;
 import io.github.roony11_1.temp_monitor.modules.users.core.domain.model.Usuario;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -37,6 +39,10 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long>, JpaSpec
            countQuery = "SELECT COUNT(u) FROM Usuario u")
     @Override
     Page<Usuario> findAll(Pageable pageable);
+
+    @Override
+    @EntityGraph(attributePaths = {"empresa", "sucursal"})
+    Page<Usuario> findAll(Specification<Usuario> spec, Pageable pageable);
 
     @Query("SELECT u FROM Usuario u LEFT JOIN FETCH u.empresa LEFT JOIN FETCH u.sucursal WHERE u.id = :id")
     @Override

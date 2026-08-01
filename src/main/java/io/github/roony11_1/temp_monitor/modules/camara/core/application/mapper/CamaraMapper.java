@@ -9,7 +9,6 @@ import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Camara;
 @Component
 public class CamaraMapper implements EntityMapper<Camara, CamaraSummaryResponse>
 {
-
     @Override
     public CamaraSummaryResponse toSummaryResponse(Camara entity) 
     {
@@ -23,5 +22,4 @@ public class CamaraMapper implements EntityMapper<Camara, CamaraSummaryResponse>
             .estado(entity.isActivo())
             .build();
     }
-    
 }

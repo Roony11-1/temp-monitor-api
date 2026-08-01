@@ -3,6 +3,7 @@ package io.github.roony11_1.temp_monitor.modules.empresa.api.rest;
 import io.github.roony11_1.temp_monitor.kernel.dto.PageResponse;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.SucursalRequest;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.SucursalResponse;
+import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.SucursalSummaryResponse;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.application.SucursalService;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Sucursal;
 import lombok.RequiredArgsConstructor;
@@ -23,12 +24,11 @@ public class SucursalController
     private final SucursalService sucursalService;
 
     @GetMapping
-    public PageResponse<SucursalResponse> listarTodas(
+    public PageResponse<SucursalSummaryResponse> listarTodas(
             @PageableDefault(size = 10000, sort = "id") Pageable pageable,
             @RequestParam Map<String, String> filters)
     {
-        var page = sucursalService.listarTodas(pageable, filters)
-                .map(SucursalResponse::toResponse);
+        var page = sucursalService.listarTodas(pageable, filters);
 
         return PageResponse.from(page);
     }

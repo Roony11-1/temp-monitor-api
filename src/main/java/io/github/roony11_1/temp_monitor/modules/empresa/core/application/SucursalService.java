@@ -1,6 +1,9 @@
 package io.github.roony11_1.temp_monitor.modules.empresa.core.application;
 
+import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
+import io.github.roony11_1.temp_monitor.kernel.specification.FilterSpecificationBuilder;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.SucursalRequest;
+import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.SucursalSummaryResponse;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.EmpresaNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.NombreSucursalAlreadyExistsException;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.SucursalNotFoundException;
@@ -8,7 +11,6 @@ import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Empres
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Sucursal;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.repository.EmpresaRepository;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.repository.SucursalRepository;
-import io.github.roony11_1.temp_monitor.kernel.specification.FilterSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +26,7 @@ public class SucursalService
 {
     private final SucursalRepository sucursalRepository;
     private final EmpresaRepository empresaRepository;
+    private final EntityMapper<Sucursal, SucursalSummaryResponse> sucursalMapper;
 
     public List<Sucursal> listarTodas() 
     {
@@ -35,14 +38,14 @@ public class SucursalService
         return sucursalRepository.findAll(pageable);
     }
 
-    public Page<Sucursal> listarTodas(Pageable pageable, Map<String, String> filters)
+    @Transactional(readOnly = true)
+    public Page<SucursalSummaryResponse> listarTodas(Pageable pageable, Map<String, String> filters)
     {
-        if (filters == null || filters.isEmpty()) {
-            return sucursalRepository.findAll(pageable);
-        }
-
-        var spec = FilterSpecification.<Sucursal>from(filters);
-        return sucursalRepository.findAll(spec, pageable);
+        var spec = new FilterSpecificationBuilder<Sucursal>()
+                .withConditions(filters)
+                .build();
+        return sucursalRepository.findAll(spec, pageable)
+                .map(sucursalMapper::toSummaryResponse);
     }
 
     public List<Sucursal> listarPorEmpresa(Long empresaId) 

@@ -7,6 +7,8 @@ import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -31,6 +33,10 @@ public interface SensorRepository extends JpaRepository<Sensor, Long>, JpaSpecif
     @Query(value = "SELECT s FROM Sensor s LEFT JOIN FETCH s.camara c LEFT JOIN FETCH c.sucursal sc LEFT JOIN FETCH sc.empresa",
            countQuery = "SELECT COUNT(s) FROM Sensor s")
     Page<Sensor> findAllWithHierarchy(Pageable pageable);
+
+    @Override
+    @EntityGraph(attributePaths = {"camara", "camara.sucursal", "camara.sucursal.empresa"})
+    Page<Sensor> findAll(Specification<Sensor> spec, Pageable pageable);
 
     @Query("SELECT s FROM Sensor s LEFT JOIN FETCH s.camara c LEFT JOIN FETCH c.sucursal sc LEFT JOIN FETCH sc.empresa WHERE s.uuid = :uuid")
     Optional<Sensor> findByUuidWithHierarchy(UUID uuid);
