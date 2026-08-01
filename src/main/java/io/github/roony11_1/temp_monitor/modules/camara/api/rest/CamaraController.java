@@ -5,6 +5,7 @@ import io.github.roony11_1.temp_monitor.modules.camara.api.dto.CamaraRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.CamaraResponse;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.CamaraTemperaturaResponse;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.UltimaLecturaSensorResponse;
+import io.github.roony11_1.temp_monitor.modules.camara.api.dto.camara.response.CamaraSummaryResponse;
 import io.github.roony11_1.temp_monitor.modules.camara.core.application.CamaraService;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Camara;
 import lombok.RequiredArgsConstructor;
@@ -26,12 +27,11 @@ public class CamaraController
     private final CamaraService camaraService;
 
     @GetMapping
-    public PageResponse<CamaraResponse> listarTodas(
+    public PageResponse<CamaraSummaryResponse> listarTodas(
             @PageableDefault(size = 10000, sort = "id") Pageable pageable,
             @RequestParam Map<String, String> filters)
     {
-        var page = camaraService.listarTodas(pageable, filters)
-                .map(CamaraResponse::toResponse);
+        var page = camaraService.listarTodas(pageable, filters);
 
         return PageResponse.from(page);
     }

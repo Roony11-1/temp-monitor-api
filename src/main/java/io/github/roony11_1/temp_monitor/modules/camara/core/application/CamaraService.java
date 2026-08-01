@@ -3,6 +3,8 @@ package io.github.roony11_1.temp_monitor.modules.camara.core.application;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.CamaraRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.CamaraTemperaturaResponse;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.UltimaLecturaSensorResponse;
+import io.github.roony11_1.temp_monitor.modules.camara.api.dto.camara.response.CamaraSummaryResponse;
+import io.github.roony11_1.temp_monitor.modules.camara.core.application.mapper.CamaraMapper;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.CamaraNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.RangoTemperaturaInvalidoException;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Camara;
@@ -34,6 +36,8 @@ public class CamaraService
     private final SucursalRepository sucursalRepository;
     private final LecturaRepository lecturaRepository;
 
+    private final CamaraMapper camaraMapper;
+
     public List<Camara> listarTodas() 
     {
         return camaraRepository.findAll();
@@ -44,14 +48,12 @@ public class CamaraService
         return camaraRepository.findAll(pageable);
     }
 
-    public Page<Camara> listarTodas(Pageable pageable, Map<String, String> filters)
+    @Transactional(readOnly = true)
+    public Page<CamaraSummaryResponse> listarTodas(Pageable pageable, Map<String, String> filters)
     {
-        if (filters == null || filters.isEmpty()) {
-            return camaraRepository.findAll(pageable);
-        }
-
         var spec = FilterSpecification.<Camara>from(filters);
-        return camaraRepository.findAll(spec, pageable);
+        return camaraRepository.findAll(spec, pageable)
+                .map(camaraMapper::toSummaryResponse);
     }
 
     public List<Camara> listarPorSucursal(Long sucursalId) 
