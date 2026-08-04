@@ -1,7 +1,6 @@
 package io.github.roony11_1.temp_monitor.modules.camara.core.application;
 
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -37,6 +36,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SensorService 
 {
+    private static final Map<String, String> FILTER_ALIASES = Map.of(
+            "empresaNombre", "camara.sucursal.empresa.nombre",
+            "sucursalNombre", "camara.sucursal.nombre");
+
     private final SensorRepository sensorRepository;
     private final CamaraRepository camaraRepository;
     private final HashService hashService;
@@ -135,23 +138,9 @@ public class SensorService
     @Transactional(readOnly = true)
     public Page<SensorSummaryResponse> listarTodos(Pageable pageable, Map<String, String> filters)
     {
-        Map<String, String> mapped = new HashMap<>();
-
-        if (filters != null)
-        {
-            for (var entry : filters.entrySet()) {
-                String key = entry.getKey();
-                String value = entry.getValue();
-                switch (key) {
-                    case "empresaNombre" -> mapped.put("camara.sucursal.empresa.nombre", value);
-                    case "sucursalNombre" -> mapped.put("camara.sucursal.nombre", value);
-                    default -> mapped.put(key, value);
-                }
-            }
-        }
-
         var spec = new FilterSpecificationBuilder<Sensor>()
-                .withConditions(mapped)
+                .withAliases(FILTER_ALIASES)
+                .withConditions(filters)
                 .build();
         return sensorRepository.findAll(spec, pageable)
                 .map(sensorMapper::toSummaryResponse);

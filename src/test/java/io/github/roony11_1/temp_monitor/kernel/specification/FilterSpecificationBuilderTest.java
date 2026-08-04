@@ -185,6 +185,38 @@ class FilterSpecificationBuilderTest {
     }
 
     @Test
+    void withAliasesTraduceKeysPublicasAPaths() {
+        var spec = new FilterSpecificationBuilder<Object>()
+                .withAliases(Map.of("sucursal", "sucursal.nombre"))
+                .withConditions(Map.of("sucursal", "Central"))
+                .build();
+
+        Path<Object> nombre = stubPath("sucursal.nombre", String.class);
+        when(cb.equal(nombre, "Central")).thenReturn(predicate);
+        when(cb.and(any(Predicate[].class))).thenReturn(predicate);
+
+        spec.toPredicate(root, query, cb);
+
+        verify(cb).equal(nombre, "Central");
+    }
+
+    @Test
+    void withAliasesSinMapeoUsaLaKeyDirecta() {
+        var spec = new FilterSpecificationBuilder<Object>()
+                .withAliases(Map.of("sucursal", "sucursal.nombre"))
+                .withConditions(Map.of("nombre", "Congelados"))
+                .build();
+
+        Path<Object> nombre = stubPath("nombre", String.class);
+        when(cb.equal(nombre, "Congelados")).thenReturn(predicate);
+        when(cb.and(any(Predicate[].class))).thenReturn(predicate);
+
+        spec.toPredicate(root, query, cb);
+
+        verify(cb).equal(nombre, "Congelados");
+    }
+
+    @Test
     void neGeneraNotEqual() {
         var spec = new FilterSpecificationBuilder<Object>()
                 .withCondition(new FilterCondition("nombre", FilterOperator.NE, "X"))

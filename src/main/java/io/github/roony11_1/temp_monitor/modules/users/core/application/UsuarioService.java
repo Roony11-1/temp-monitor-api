@@ -35,6 +35,10 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class UsuarioService 
 {
+    private static final Map<String, String> FILTER_ALIASES = Map.of(
+            "empresa", "empresa.nombre",
+            "sucursal", "sucursal.nombre");
+
     private final UsuarioRepository usuarioRepository;
     private final EmpresaRepository empresaRepository;
     private final SucursalRepository sucursalRepository;
@@ -57,6 +61,7 @@ public class UsuarioService
     public Page<UsuarioSummaryResponse> listarTodos(Pageable pageable, Map<String, String> filters)
     {
         var spec = new FilterSpecificationBuilder<Usuario>()
+                .withAliases(FILTER_ALIASES)
                 .withConditions(filters)
                 .build();
         return usuarioRepository.findAll(spec, pageable)

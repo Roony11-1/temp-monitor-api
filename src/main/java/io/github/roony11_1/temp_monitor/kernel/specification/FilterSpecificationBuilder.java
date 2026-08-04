@@ -14,6 +14,7 @@ import java.util.Set;
 public class FilterSpecificationBuilder<T> 
 {
     private final List<FilterCondition> conditions = new ArrayList<>();
+    private Map<String, String> aliases = Map.of();
     
     public FilterSpecificationBuilder<T> withCondition(FilterCondition condition) 
     {
@@ -27,6 +28,15 @@ public class FilterSpecificationBuilder<T>
         return this;
     }
     
+    public FilterSpecificationBuilder<T> withAliases(Map<String, String> aliases) 
+    {
+        if (aliases != null) 
+        {
+            this.aliases = aliases;
+        }
+        return this;
+    }
+    
     public FilterSpecificationBuilder<T> withConditions(Map<String, String> filters) 
     {
         if (filters != null) 
@@ -36,7 +46,8 @@ public class FilterSpecificationBuilder<T>
             {
                 if (!excludedParams.contains(entry.getKey())) 
                 {
-                    FilterParser.parseAndAdd(entry.getKey(), entry.getValue(), conditions);
+                    String field = aliases.getOrDefault(entry.getKey(), entry.getKey());
+                    FilterParser.parseAndAdd(field, entry.getValue(), conditions);
                 }
             }
         }

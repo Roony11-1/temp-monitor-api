@@ -1,6 +1,5 @@
 package io.github.roony11_1.temp_monitor.modules.camara.api.dto;
 
-import java.time.Instant;
 import java.util.UUID;
 
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.EstadoSensor;

@@ -33,6 +33,10 @@ public class CamaraService
 {
     private static final Duration VENTANA_TEMPERATURA = Duration.ofMinutes(15);
 
+    private static final Map<String, String> FILTER_ALIASES = Map.of(
+            "sucursal", "sucursal.nombre",
+            "estado", "activo");
+
     private final CamaraRepository camaraRepository;
     private final SucursalRepository sucursalRepository;
     private final LecturaRepository lecturaRepository;
@@ -53,6 +57,7 @@ public class CamaraService
     public Page<CamaraSummaryResponse> listarTodas(Pageable pageable, Map<String, String> filters)
     {
         var spec = new FilterSpecificationBuilder<Camara>()
+                .withAliases(FILTER_ALIASES)
                 .withConditions(filters)
                 .build();
         return camaraRepository.findAll(spec, pageable)

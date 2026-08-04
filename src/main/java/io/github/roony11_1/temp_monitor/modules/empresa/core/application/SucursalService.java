@@ -24,6 +24,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class SucursalService 
 {
+    private static final Map<String, String> FILTER_ALIASES = Map.of(
+            "empresa", "empresa.nombre");
+
     private final SucursalRepository sucursalRepository;
     private final EmpresaRepository empresaRepository;
     private final EntityMapper<Sucursal, SucursalSummaryResponse> sucursalMapper;
@@ -42,6 +45,7 @@ public class SucursalService
     public Page<SucursalSummaryResponse> listarTodas(Pageable pageable, Map<String, String> filters)
     {
         var spec = new FilterSpecificationBuilder<Sucursal>()
+                .withAliases(FILTER_ALIASES)
                 .withConditions(filters)
                 .build();
         return sucursalRepository.findAll(spec, pageable)
