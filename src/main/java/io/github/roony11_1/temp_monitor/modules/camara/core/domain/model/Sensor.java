@@ -65,6 +65,10 @@ public class Sensor
 
     public boolean puedeRegistrarLectura()
     {
+        if (this.getCamara() == null)
+        {
+            return true;
+        }
         return this.getEstado() == EstadoSensor.DESHABILITADO || this.getEstado() == EstadoSensor.PENDIENTE;
     }
 }

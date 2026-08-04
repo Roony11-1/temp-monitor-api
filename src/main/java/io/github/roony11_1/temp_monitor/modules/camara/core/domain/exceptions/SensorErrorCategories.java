@@ -24,6 +24,12 @@ public final class SensorErrorCategories
         @Override public String description() { return "El sensor está deshabilitado"; }
     };
 
+    public static final ErrorCategory SENSOR_SIN_CAMARA = new ErrorCategory() 
+    {
+        @Override public String name() { return "SENSOR_SIN_CAMARA"; }
+        @Override public String description() { return "El sensor no tiene una cámara asignada"; }
+    };
+
     public static final ErrorCategory SENSOR_API_KEY_INVALIDA = new ErrorCategory() 
     {
         @Override public String name() { return "SENSOR_API_KEY_INVALIDA"; }

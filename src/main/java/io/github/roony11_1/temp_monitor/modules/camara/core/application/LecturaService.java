@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.RegistrarLecturaRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.SensorDeshabilitadoException;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.SensorNotFoundException;
+import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.SensorSinCamaraException;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Lectura;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Sensor;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.LecturaRepository;
@@ -30,6 +31,11 @@ public class LecturaService
     {
         Sensor sensor = sensorRepository.findByUuid(sensorUuid)
             .orElseThrow(() -> new SensorNotFoundException("UUID " + sensorUuid));
+
+        if (sensor.getCamara() == null)
+        {
+            throw new SensorSinCamaraException(sensorUuid.toString());
+        }
 
         if (sensor.puedeRegistrarLectura())
         {

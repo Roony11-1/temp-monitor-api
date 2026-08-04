@@ -36,6 +36,7 @@ public class ErrorHttpConfig
         HttpStatusRegistry.register(SensorErrorCategories.SENSOR_NOT_FOUND, 404);
         HttpStatusRegistry.register(SensorErrorCategories.SENSOR_ALREADY_EXISTS, 409);
         HttpStatusRegistry.register(SensorErrorCategories.SENSOR_DESHABILITADO, 423);
+        HttpStatusRegistry.register(SensorErrorCategories.SENSOR_SIN_CAMARA, 423);
         HttpStatusRegistry.register(SensorErrorCategories.SENSOR_API_KEY_INVALIDA, 400);
     }
 }
