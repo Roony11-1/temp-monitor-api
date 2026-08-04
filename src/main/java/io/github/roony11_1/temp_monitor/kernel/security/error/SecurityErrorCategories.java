@@ -17,4 +17,16 @@ public final class SecurityErrorCategories
         @Override public String name() { return "INVALID_TOKEN_USER"; }
         @Override public String description() { return "El usuario del token no es válido"; }
     };
+
+    public static final ErrorCategory ACCESS_DENIED = new ErrorCategory() 
+    {
+        @Override public String name() { return "ACCESS_DENIED"; }
+        @Override public String description() { return "Acceso denegado al recurso"; }
+    };
+
+    public static final ErrorCategory AUTHENTICATION_REQUIRED = new ErrorCategory() 
+    {
+        @Override public String name() { return "AUTHENTICATION_REQUIRED"; }
+        @Override public String description() { return "Autenticación requerida"; }
+    };
 }

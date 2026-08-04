@@ -1,6 +1,8 @@
 package io.github.roony11_1.temp_monitor.modules.users.core.application;
 
 import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
+import io.github.roony11_1.temp_monitor.kernel.security.exception.AccesoDenegadoException;
+import io.github.roony11_1.temp_monitor.kernel.security.exception.NoAutenticadoException;
 import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
 import io.github.roony11_1.temp_monitor.kernel.specification.FilterSpecificationBuilder;
 import io.github.roony11_1.temp_monitor.kernel.security.crypto.HashService;
@@ -23,7 +25,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -143,18 +144,18 @@ public class UsuarioService
             {
                 if (r == Rol.SUPER_ADMIN || r == Rol.ADMIN_EMPRESA) 
                 {
-                    throw new AccessDeniedException("No puedes crear usuarios con rol " + r);
+                    throw new AccesoDenegadoException("No puedes crear usuarios con rol " + r);
                 }
             }
             // Debe asignar su misma empresa
             if (request.getEmpresaId() == null || !request.getEmpresaId().equals(currentUser.getEmpresaId())) 
             {
-                throw new AccessDeniedException("Solo puedes crear usuarios en tu propia empresa");
+                throw new AccesoDenegadoException("Solo puedes crear usuarios en tu propia empresa");
             }
         } 
         else 
         {
-            throw new AccessDeniedException("No tienes permiso para crear usuarios");
+            throw new AccesoDenegadoException("No tienes permiso para crear usuarios");
         }
 
         Empresa empresa = null;
@@ -187,7 +188,7 @@ public class UsuarioService
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !(auth.getPrincipal() instanceof TokenUser)) 
         {
-            throw new AccessDeniedException("Usuario no autenticado");
+            throw new NoAutenticadoException("Usuario no autenticado");
         }
         return (TokenUser) auth.getPrincipal();
     }

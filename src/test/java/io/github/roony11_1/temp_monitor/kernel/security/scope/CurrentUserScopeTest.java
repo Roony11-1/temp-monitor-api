@@ -1,5 +1,7 @@
 package io.github.roony11_1.temp_monitor.kernel.security.scope;
 
+import io.github.roony11_1.temp_monitor.kernel.security.exception.AccesoDenegadoException;
+import io.github.roony11_1.temp_monitor.kernel.security.exception.NoAutenticadoException;
 import io.github.roony11_1.temp_monitor.kernel.security.model.Rol;
 import io.github.roony11_1.temp_monitor.kernel.security.model.TokenUser;
 import io.github.roony11_1.temp_monitor.kernel.specification.FilterCondition;
@@ -10,7 +12,6 @@ import io.github.roony11_1.temp_monitor.modules.users.core.domain.model.Usuario;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -94,13 +95,13 @@ class CurrentUserScopeTest {
         authenticate(usuario(Rol.USUARIO, null, null));
 
         assertThatThrownBy(() -> scope.scopeCondition("empresa.id", "sucursal.id"))
-                .isInstanceOf(AccessDeniedException.class);
+                .isInstanceOf(AccesoDenegadoException.class);
     }
 
     @Test
-    void sinUsuarioAutenticadoLanzaAccessDenied() {
+    void sinUsuarioAutenticadoLanzaNoAutenticado() {
         assertThatThrownBy(scope::isSuperAdmin)
-                .isInstanceOf(AccessDeniedException.class);
+                .isInstanceOf(NoAutenticadoException.class);
     }
 
     private void authenticate(TokenUser principal) {

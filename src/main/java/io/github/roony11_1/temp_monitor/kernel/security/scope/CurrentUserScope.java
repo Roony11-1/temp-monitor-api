@@ -1,12 +1,13 @@
 package io.github.roony11_1.temp_monitor.kernel.security.scope;
 
+import io.github.roony11_1.temp_monitor.kernel.security.exception.AccesoDenegadoException;
+import io.github.roony11_1.temp_monitor.kernel.security.exception.NoAutenticadoException;
 import io.github.roony11_1.temp_monitor.kernel.security.model.Rol;
 import io.github.roony11_1.temp_monitor.kernel.security.model.TokenUser;
 import io.github.roony11_1.temp_monitor.kernel.specification.FilterCondition;
 import io.github.roony11_1.temp_monitor.kernel.specification.FilterOperator;
 import io.github.roony11_1.temp_monitor.kernel.specification.FilterSpecificationBuilder;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -30,7 +31,7 @@ public class CurrentUserScope
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !(auth.getPrincipal() instanceof TokenUser user))
         {
-            throw new AccessDeniedException("Usuario no autenticado");
+            throw new NoAutenticadoException("Usuario no autenticado");
         }
         return user;
     }
@@ -60,7 +61,7 @@ public class CurrentUserScope
         {
             return Optional.of(new FilterCondition(empresaPath, FilterOperator.EQ, user.getEmpresaId()));
         }
-        throw new AccessDeniedException("El usuario no tiene un ámbito de acceso asignado");
+        throw new AccesoDenegadoException("El usuario no tiene un ámbito de acceso asignado");
     }
 
     /**
@@ -78,7 +79,7 @@ public class CurrentUserScope
         {
             return Optional.of(new FilterCondition(empresaPath, FilterOperator.EQ, user.getEmpresaId()));
         }
-        throw new AccessDeniedException("El usuario no tiene un ámbito de acceso asignado");
+        throw new AccesoDenegadoException("El usuario no tiene un ámbito de acceso asignado");
     }
 
     /**
@@ -135,7 +136,7 @@ public class CurrentUserScope
     {
         if (!canAccess(sucursalId, empresaId))
         {
-            throw new AccessDeniedException("No tiene acceso al recurso solicitado");
+            throw new AccesoDenegadoException("No tiene acceso al recurso solicitado");
         }
     }
 }
