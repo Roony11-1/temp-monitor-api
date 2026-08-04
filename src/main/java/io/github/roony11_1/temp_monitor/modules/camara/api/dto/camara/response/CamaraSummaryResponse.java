@@ -18,5 +18,6 @@ public class CamaraSummaryResponse
     private String sucursal;
     private Double temperaturaMin;
     private Double temperaturaMax;
+    private Double temperaturaActual;
     private boolean estado;
 }

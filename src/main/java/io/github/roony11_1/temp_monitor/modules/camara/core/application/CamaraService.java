@@ -8,7 +8,9 @@ import io.github.roony11_1.temp_monitor.modules.camara.core.application.mapper.C
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.CamaraNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.RangoTemperaturaInvalidoException;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Camara;
+import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.CamaraLectura;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.EstadoSensor;
+import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.CamaraLecturaRepository;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.CamaraRepository;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.LecturaRepository;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.SucursalNotFoundException;
@@ -31,6 +33,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -45,6 +48,7 @@ public class CamaraService
     private final CamaraRepository camaraRepository;
     private final SucursalRepository sucursalRepository;
     private final LecturaRepository lecturaRepository;
+    private final CamaraLecturaRepository camaraLecturaRepository;
 
     private final EntityMapper<Camara, CamaraSummaryResponse> camaraMapper;
     private final CurrentUserScope currentUserScope;
@@ -66,8 +70,19 @@ public class CamaraService
                 .withAliases(FILTER_ALIASES)
                 .withConditions(filters)
                 .build();
-        return camaraRepository.findAll(scopeSpec().and(userSpec), pageable)
-                .map(camaraMapper::toSummaryResponse);
+
+        var page = camaraRepository.findAll(scopeSpec().and(userSpec), pageable);
+
+        Map<Long, Double> ultimaPorCamara = camaraLecturaRepository
+                .findUltimaPorCamaraIds(page.getContent().stream().map(Camara::getId).toList())
+                .stream()
+                .collect(Collectors.toMap(cl -> cl.getCamara().getId(), CamaraLectura::getPromedio, (a, b) -> a));
+
+        return page.map(camara -> {
+            CamaraSummaryResponse summary = camaraMapper.toSummaryResponse(camara);
+            summary.setTemperaturaActual(ultimaPorCamara.get(camara.getId()));
+            return summary;
+        });
     }
 
     public List<Camara> listarPorSucursal(Long sucursalId)

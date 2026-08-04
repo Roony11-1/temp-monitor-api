@@ -26,6 +26,9 @@ public class CamaraLectura
     @Column(name = "bucket_start", nullable = false)
     private Instant bucketStart;
 
+    @Column(name = "muestreado_en", nullable = false)
+    private Instant muestreadoEn;
+
     private Double promedio;
 
     @Column(name = "conteo_sensores")

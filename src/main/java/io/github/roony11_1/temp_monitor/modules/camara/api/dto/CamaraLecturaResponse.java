@@ -15,6 +15,7 @@ import java.time.Instant;
 public class CamaraLecturaResponse 
 {
     private Instant timestamp;
+    private Instant muestreadoEn;
     private Double promedio;
     private int sensores;
 
@@ -22,6 +23,7 @@ public class CamaraLecturaResponse
     {
         return CamaraLecturaResponse.builder()
             .timestamp(lectura.getBucketStart())
+            .muestreadoEn(lectura.getMuestreadoEn())
             .promedio(lectura.getPromedio())
             .sensores(lectura.getConteoSensores())
             .build();

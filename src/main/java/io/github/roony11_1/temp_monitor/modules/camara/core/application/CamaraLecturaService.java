@@ -1,5 +1,6 @@
 package io.github.roony11_1.temp_monitor.modules.camara.core.application;
 
+import io.github.roony11_1.temp_monitor.config.CamaraMuestreoConfig;
 import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.CamaraNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Camara;
@@ -22,12 +23,17 @@ import java.util.List;
 public class CamaraLecturaService 
 {
     public static final Duration VENTANA_MUESTRA = Duration.ofMinutes(15);
-    public static final Duration CADENCIA_MUESTRA = Duration.ofSeconds(330);
 
     private final CamaraRepository camaraRepository;
     private final CamaraLecturaRepository camaraLecturaRepository;
     private final LecturaRepository lecturaRepository;
     private final CurrentUserScope currentUserScope;
+    private final CamaraMuestreoConfig camaraMuestreoConfig;
+
+    private Duration cadencia()
+    {
+        return Duration.ofSeconds(camaraMuestreoConfig.getCadenciaSegundos());
+    }
 
     @Transactional
     public void muestrear()
@@ -57,6 +63,7 @@ public class CamaraLecturaService
                 .bucketStart(bucketStart)
                 .build());
 
+        muestra.setMuestreadoEn(momento);
         muestra.setPromedio(promedio != null ? promedio : 0.0);
         muestra.setConteoSensores((int) sensores);
 
@@ -73,10 +80,10 @@ public class CamaraLecturaService
         return camaraLecturaRepository.findByCamaraIdAndBucketStartAfterOrderByBucketStartAsc(camaraId, since);
     }
 
-    static Instant bucketStart(Instant momento)
+    private Instant bucketStart(Instant momento)
     {
         long epoch = momento.getEpochSecond();
-        long bucket = epoch - Math.floorMod(epoch, CADENCIA_MUESTRA.toSeconds());
+        long bucket = epoch - Math.floorMod(epoch, camaraMuestreoConfig.getCadenciaSegundos());
         return Instant.ofEpochSecond(bucket);
     }
 }
