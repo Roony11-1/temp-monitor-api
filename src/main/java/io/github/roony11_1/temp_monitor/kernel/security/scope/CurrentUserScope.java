@@ -1,0 +1,141 @@
+package io.github.roony11_1.temp_monitor.kernel.security.scope;
+
+import io.github.roony11_1.temp_monitor.kernel.security.model.Rol;
+import io.github.roony11_1.temp_monitor.kernel.security.model.TokenUser;
+import io.github.roony11_1.temp_monitor.kernel.specification.FilterCondition;
+import io.github.roony11_1.temp_monitor.kernel.specification.FilterOperator;
+import io.github.roony11_1.temp_monitor.kernel.specification.FilterSpecificationBuilder;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+
+import java.util.Optional;
+
+/**
+ * Resuelve el ámbito de acceso del usuario autenticado.
+ *
+ * Política:
+ * - SUPER_ADMIN -> acceso total (sin filtro).
+ * - Usuario con sucursal (ADMIN_SUCURSAL, TECNICO, USUARIO) -> solo su sucursal.
+ * - Usuario con solo empresa (ADMIN_EMPRESA) -> solo su empresa.
+ * - Sin empresa ni sucursal -> denegado.
+ */
+@Component
+public class CurrentUserScope 
+{
+    public TokenUser currentUser()
+    {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !(auth.getPrincipal() instanceof TokenUser user))
+        {
+            throw new AccessDeniedException("Usuario no autenticado");
+        }
+        return user;
+    }
+
+    public boolean isSuperAdmin()
+    {
+        return currentUser().getRoles().contains(Rol.SUPER_ADMIN);
+    }
+
+    /**
+     * Condición de ámbito para entidades anidadas jerárquicamente
+     * (p.ej. Camara, Sucursal, Usuario) donde el súper ve todo y el resto ve
+     * por sucursal si la tiene, si no por empresa.
+     */
+    public Optional<FilterCondition> scopeCondition(String empresaPath, String sucursalPath)
+    {
+        if (isSuperAdmin())
+        {
+            return Optional.empty();
+        }
+        TokenUser user = currentUser();
+        if (user.getSucursalId() != null)
+        {
+            return Optional.of(new FilterCondition(sucursalPath, FilterOperator.EQ, user.getSucursalId()));
+        }
+        if (user.getEmpresaId() != null)
+        {
+            return Optional.of(new FilterCondition(empresaPath, FilterOperator.EQ, user.getEmpresaId()));
+        }
+        throw new AccessDeniedException("El usuario no tiene un ámbito de acceso asignado");
+    }
+
+    /**
+     * Condición de ámbito para el catálogo de Empresas: ambos roles acotados
+     * ven únicamente su propia empresa.
+     */
+    public Optional<FilterCondition> scopeEmpresaOnly(String empresaPath)
+    {
+        if (isSuperAdmin())
+        {
+            return Optional.empty();
+        }
+        TokenUser user = currentUser();
+        if (user.getEmpresaId() != null)
+        {
+            return Optional.of(new FilterCondition(empresaPath, FilterOperator.EQ, user.getEmpresaId()));
+        }
+        throw new AccessDeniedException("El usuario no tiene un ámbito de acceso asignado");
+    }
+
+    /**
+     * Specification de ámbito lista para combinarse con la del usuario.
+     * Devuelve una conjunción (sin filtro) para SUPER_ADMIN.
+     */
+    public <T> Specification<T> scopeSpec(String empresaPath, String sucursalPath)
+    {
+        Optional<FilterCondition> condition = scopeCondition(empresaPath, sucursalPath);
+        if (condition.isEmpty())
+        {
+            return (root, query, cb) -> cb.conjunction();
+        }
+        return new FilterSpecificationBuilder<T>().withCondition(condition.get()).build();
+    }
+
+    /**
+     * Specification de ámbito para el catálogo de Empresas.
+     * Devuelve una conjunción para SUPER_ADMIN.
+     */
+    public <T> Specification<T> scopeEmpresaOnlySpec(String empresaPath)
+    {
+        Optional<FilterCondition> condition = scopeEmpresaOnly(empresaPath);
+        if (condition.isEmpty())
+        {
+            return (root, query, cb) -> cb.conjunction();
+        }
+        return new FilterSpecificationBuilder<T>().withCondition(condition.get()).build();
+    }
+
+    /**
+     * Comprueba acceso puntual sobre una entidad ya cargada.
+     * Los sensores sin cámara (sucursalId/empresaId null) solo los ve SUPER_ADMIN.
+     */
+    public boolean canAccess(Long sucursalId, Long empresaId)
+    {
+        if (isSuperAdmin())
+        {
+            return true;
+        }
+        TokenUser user = currentUser();
+        if (user.getSucursalId() != null)
+        {
+            return sucursalId != null && user.getSucursalId().equals(sucursalId);
+        }
+        if (user.getEmpresaId() != null)
+        {
+            return empresaId != null && user.getEmpresaId().equals(empresaId);
+        }
+        return false;
+    }
+
+    public void assertAccess(Long sucursalId, Long empresaId)
+    {
+        if (!canAccess(sucursalId, empresaId))
+        {
+            throw new AccessDeniedException("No tiene acceso al recurso solicitado");
+        }
+    }
+}

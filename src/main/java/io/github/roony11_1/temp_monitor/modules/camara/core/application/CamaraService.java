@@ -15,10 +15,15 @@ import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.S
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Sucursal;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.repository.SucursalRepository;
 import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
+import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
+import io.github.roony11_1.temp_monitor.kernel.specification.FilterCondition;
+import io.github.roony11_1.temp_monitor.kernel.specification.FilterOperator;
 import io.github.roony11_1.temp_monitor.kernel.specification.FilterSpecificationBuilder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,42 +47,61 @@ public class CamaraService
     private final LecturaRepository lecturaRepository;
 
     private final EntityMapper<Camara, CamaraSummaryResponse> camaraMapper;
+    private final CurrentUserScope currentUserScope;
 
-    public List<Camara> listarTodas() 
+    public List<Camara> listarTodas()
     {
-        return camaraRepository.findAll();
+        return camaraRepository.findAll(scopeSpec(), Sort.unsorted());
     }
 
-    public Page<Camara> listarTodas(Pageable pageable) 
+    public Page<Camara> listarTodas(Pageable pageable)
     {
-        return camaraRepository.findAll(pageable);
+        return camaraRepository.findAll(scopeSpec(), pageable);
     }
 
     @Transactional(readOnly = true)
     public Page<CamaraSummaryResponse> listarTodas(Pageable pageable, Map<String, String> filters)
     {
-        var spec = new FilterSpecificationBuilder<Camara>()
+        var userSpec = new FilterSpecificationBuilder<Camara>()
                 .withAliases(FILTER_ALIASES)
                 .withConditions(filters)
                 .build();
-        return camaraRepository.findAll(spec, pageable)
+        return camaraRepository.findAll(scopeSpec().and(userSpec), pageable)
                 .map(camaraMapper::toSummaryResponse);
     }
 
-    public List<Camara> listarPorSucursal(Long sucursalId) 
+    public List<Camara> listarPorSucursal(Long sucursalId)
     {
-        return camaraRepository.findBySucursalId(sucursalId);
+        return camaraRepository.findAll(scopeSpec().and(bySucursalSpec(sucursalId)), Sort.unsorted());
     }
 
-    public Page<Camara> listarPorSucursal(Long sucursalId, Pageable pageable) 
+    public Page<Camara> listarPorSucursal(Long sucursalId, Pageable pageable)
     {
-        return camaraRepository.findBySucursalId(sucursalId, pageable);
+        return camaraRepository.findAll(scopeSpec().and(bySucursalSpec(sucursalId)), pageable);
     }
 
-    public Camara buscarPorId(Long id) 
+    public Camara buscarPorId(Long id)
     {
-        return camaraRepository.findById(id)
+        return camaraRepository.findOne(scopeSpec().and(byIdSpec(id)))
                 .orElseThrow(() -> new CamaraNotFoundException("ID " + id));
+    }
+
+    private Specification<Camara> scopeSpec()
+    {
+        return currentUserScope.scopeSpec("sucursal.empresa.id", "sucursal.id");
+    }
+
+    private Specification<Camara> byIdSpec(Long id)
+    {
+        return (root, query, cb) -> cb.equal(root.get("id"), id);
+    }
+
+    private Specification<Camara> bySucursalSpec(Long sucursalId)
+    {
+        return new FilterSpecificationBuilder<Camara>()
+                .withCondition(new FilterCondition(
+                        "sucursal.id", FilterOperator.EQ, sucursalId))
+                .build();
     }
 
     @Transactional

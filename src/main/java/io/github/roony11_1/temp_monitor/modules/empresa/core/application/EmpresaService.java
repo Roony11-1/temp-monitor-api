@@ -1,6 +1,7 @@
 package io.github.roony11_1.temp_monitor.modules.empresa.core.application;
 
 import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
+import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
 import io.github.roony11_1.temp_monitor.kernel.specification.FilterSpecificationBuilder;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.EmpresaRequest;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.EmpresaSummaryResponse;
@@ -11,6 +12,7 @@ import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.repository.E
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,7 @@ public class EmpresaService
 {
     private final EmpresaRepository empresaRepository;
     private final EntityMapper<Empresa, EmpresaSummaryResponse> empresaMapper;
+    private final CurrentUserScope currentUserScope;
 
     public List<Empresa> listarTodas() 
     {
@@ -37,16 +40,16 @@ public class EmpresaService
     @Transactional(readOnly = true)
     public Page<EmpresaSummaryResponse> listarTodas(Pageable pageable, Map<String, String> filters)
     {
-        var spec = new FilterSpecificationBuilder<Empresa>()
+        var userSpec = new FilterSpecificationBuilder<Empresa>()
                 .withConditions(filters)
                 .build();
-        return empresaRepository.findAll(spec, pageable)
+        return empresaRepository.findAll(empresaScope().and(userSpec), pageable)
                 .map(empresaMapper::toSummaryResponse);
     }
 
     public Empresa buscarPorId(Long id) 
     {
-        return empresaRepository.findById(id)
+        return empresaRepository.findOne(empresaScope().and(byIdSpec(id)))
                 .orElseThrow(() -> new EmpresaNotFoundException("ID " + id));
     }
 
@@ -96,5 +99,15 @@ public class EmpresaService
         var empresa = buscarPorId(id);
 
         empresaRepository.delete(empresa);
+    }
+
+    private Specification<Empresa> empresaScope()
+    {
+        return currentUserScope.scopeEmpresaOnlySpec("id");
+    }
+
+    private Specification<Empresa> byIdSpec(Long id)
+    {
+        return (root, query, cb) -> cb.equal(root.get("id"), id);
     }
 }

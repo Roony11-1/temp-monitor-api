@@ -1,6 +1,7 @@
 package io.github.roony11_1.temp_monitor.modules.users.core.application;
 
 import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
+import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
 import io.github.roony11_1.temp_monitor.kernel.specification.FilterSpecificationBuilder;
 import io.github.roony11_1.temp_monitor.kernel.security.crypto.HashService;
 import io.github.roony11_1.temp_monitor.kernel.security.model.Rol;
@@ -21,6 +22,7 @@ import io.github.roony11_1.temp_monitor.modules.users.core.domain.repository.Usu
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -44,40 +46,44 @@ public class UsuarioService
     private final SucursalRepository sucursalRepository;
     private final HashService passwordHasher;
     private final EntityMapper<Usuario, UsuarioSummaryResponse> usuarioMapper;
+    private final CurrentUserScope currentUserScope;
 
     @Transactional(readOnly = true)
     public List<Usuario> listarTodos() 
     {
-        return usuarioRepository.findAll();
+        return usuarioRepository.findAll(scopeSpec());
     }
 
     @Transactional(readOnly = true)
     public Page<Usuario> listarTodos(Pageable pageable) 
     {
-        return usuarioRepository.findAll(pageable);
+        return usuarioRepository.findAll(scopeSpec(), pageable);
     }
 
     @Transactional(readOnly = true)
     public Page<UsuarioSummaryResponse> listarTodos(Pageable pageable, Map<String, String> filters)
     {
-        var spec = new FilterSpecificationBuilder<Usuario>()
+        var userSpec = new FilterSpecificationBuilder<Usuario>()
                 .withAliases(FILTER_ALIASES)
                 .withConditions(filters)
                 .build();
-        return usuarioRepository.findAll(spec, pageable)
+        return usuarioRepository.findAll(scopeSpec().and(userSpec), pageable)
                 .map(usuarioMapper::toSummaryResponse);
     }
 
     @Transactional(readOnly = true)
     public List<Usuario> listarPorEmpresa(Long empresaId) 
     {
-        return usuarioRepository.findByEmpresa_Id(empresaId);
+        return usuarioRepository.findByEmpresa_Id(empresaId).stream()
+                .filter(u -> currentUserScope.canAccess(sucursalIdOf(u), empresaIdOf(u)))
+                .toList();
     }
 
     @Transactional(readOnly = true)
     public List<UsuarioSummaryResponse> listarPorEmpresaSummary(Long empresaId) 
     {
         return usuarioRepository.findByEmpresa_Id(empresaId).stream()
+                .filter(u -> currentUserScope.canAccess(sucursalIdOf(u), empresaIdOf(u)))
                 .map(usuarioMapper::toSummaryResponse)
                 .toList();
     }
@@ -85,19 +91,22 @@ public class UsuarioService
     @Transactional(readOnly = true)
     public Page<Usuario> listarPorEmpresa(Long empresaId, Pageable pageable) 
     {
-        return usuarioRepository.findByEmpresa_Id(empresaId, pageable);
+        return usuarioRepository.findAll(scopeSpec().and(byEmpresaSpec(empresaId)), pageable);
     }
 
     @Transactional(readOnly = true)
     public List<Usuario> listarPorSucursal(Long sucursalId) 
     {
-        return usuarioRepository.findBySucursal_Id(sucursalId);
+        return usuarioRepository.findBySucursal_Id(sucursalId).stream()
+                .filter(u -> currentUserScope.canAccess(sucursalId, empresaIdOf(u)))
+                .toList();
     }
 
     @Transactional(readOnly = true)
     public List<UsuarioSummaryResponse> listarPorSucursalSummary(Long sucursalId) 
     {
         return usuarioRepository.findBySucursal_Id(sucursalId).stream()
+                .filter(u -> currentUserScope.canAccess(sucursalId, empresaIdOf(u)))
                 .map(usuarioMapper::toSummaryResponse)
                 .toList();
     }
@@ -105,13 +114,13 @@ public class UsuarioService
     @Transactional(readOnly = true)
     public Page<Usuario> listarPorSucursal(Long sucursalId, Pageable pageable) 
     {
-        return usuarioRepository.findBySucursal_Id(sucursalId, pageable);
+        return usuarioRepository.findAll(scopeSpec().and(bySucursalSpec(sucursalId)), pageable);
     }
 
     @Transactional(readOnly = true)
     public Usuario buscarPorId(Long id) 
     {
-        return usuarioRepository.findById(id)
+        return usuarioRepository.findOne(scopeSpec().and(byIdSpec(id)))
                 .orElseThrow(() -> new UserNotFoundException("ID " + id));
     }
 
@@ -248,5 +257,35 @@ public class UsuarioService
     {
         var usuario = buscarPorId(id);
         usuarioRepository.delete(usuario);
+    }
+
+    private Specification<Usuario> scopeSpec()
+    {
+        return currentUserScope.scopeSpec("empresa.id", "sucursal.id");
+    }
+
+    private Specification<Usuario> byIdSpec(Long id)
+    {
+        return (root, query, cb) -> cb.equal(root.get("id"), id);
+    }
+
+    private Specification<Usuario> byEmpresaSpec(Long empresaId)
+    {
+        return (root, query, cb) -> cb.equal(root.get("empresa").get("id"), empresaId);
+    }
+
+    private Specification<Usuario> bySucursalSpec(Long sucursalId)
+    {
+        return (root, query, cb) -> cb.equal(root.get("sucursal").get("id"), sucursalId);
+    }
+
+    private Long sucursalIdOf(Usuario usuario)
+    {
+        return usuario.getSucursal() != null ? usuario.getSucursal().getId() : null;
+    }
+
+    private Long empresaIdOf(Usuario usuario)
+    {
+        return usuario.getEmpresa() != null ? usuario.getEmpresa().getId() : null;
     }
 }

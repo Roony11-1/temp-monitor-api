@@ -9,12 +9,17 @@ import java.util.UUID;
 import org.hibernate.Hibernate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.security.crypto.ApiKeyGenerator;
 import io.github.roony11_1.temp_monitor.kernel.security.crypto.HashService;
+import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
+import io.github.roony11_1.temp_monitor.kernel.specification.FilterCondition;
+import io.github.roony11_1.temp_monitor.kernel.specification.FilterOperator;
 import io.github.roony11_1.temp_monitor.kernel.specification.FilterSpecificationBuilder;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.ActualizarSensorRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.AsignarSensorRequest;
@@ -30,6 +35,7 @@ import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.EstadoS
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Sensor;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.CamaraRepository;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.SensorRepository;
+import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Sucursal;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -45,6 +51,7 @@ public class SensorService
     private final HashService hashService;
     private final ApiKeyGenerator apiKeyGenerator;
     private final EntityMapper<Sensor, SensorSummaryResponse> sensorMapper;
+    private final CurrentUserScope currentUserScope;
 
     public Optional<Sensor> authenticateByUuidAndApiKey(UUID uuid, String apiKey) 
     {
@@ -107,42 +114,50 @@ public class SensorService
     @Transactional(readOnly = true)
     public List<Sensor> listarPorCamara(Long camaraId)
     {
+        assertCamaraEnScope(camaraId);
         return sensorRepository.findByCamaraIdWithHierarchy(camaraId);
     }
 
     @Transactional(readOnly = true)
     public Page<Sensor> listarPorCamara(Long camaraId, Pageable pageable)
     {
+        assertCamaraEnScope(camaraId);
         return sensorRepository.findByCamaraIdWithHierarchy(camaraId, pageable);
     }
 
     @Transactional(readOnly = true)
     public Sensor buscarPorUuid(UUID uuid)
     {
-        return sensorRepository.findByUuidWithHierarchy(uuid)
+        Sensor sensor = sensorRepository.findByUuidWithHierarchy(uuid)
             .orElseThrow(() -> new SensorNotFoundException("UUID " + uuid));
+
+        currentUserScope.assertAccess(sucursalIdOf(sensor), empresaIdOf(sensor));
+
+        return sensor;
     }
 
     @Transactional(readOnly = true)
     public List<Sensor> listarTodos()
     {
-        return sensorRepository.findAllWithHierarchy();
+        return sensorRepository.findAllWithHierarchy().stream()
+                .filter(s -> currentUserScope.canAccess(sucursalIdOf(s), empresaIdOf(s)))
+                .toList();
     }
 
     @Transactional(readOnly = true)
     public Page<Sensor> listarTodos(Pageable pageable)
     {
-        return sensorRepository.findAllWithHierarchy(pageable);
+        return sensorRepository.findAll(scopeSpec(), pageable);
     }
 
     @Transactional(readOnly = true)
     public Page<SensorSummaryResponse> listarTodos(Pageable pageable, Map<String, String> filters)
     {
-        var spec = new FilterSpecificationBuilder<Sensor>()
+        var userSpec = new FilterSpecificationBuilder<Sensor>()
                 .withAliases(FILTER_ALIASES)
                 .withConditions(filters)
                 .build();
-        return sensorRepository.findAll(spec, pageable)
+        return sensorRepository.findAll(scopeSpec().and(userSpec), pageable)
                 .map(sensorMapper::toSummaryResponse);
     }
 
@@ -224,5 +239,31 @@ public class SensorService
             .estado(sensor.getEstado())
             .apiKey(newApiKey)
             .build();
+    }
+
+    private Specification<Sensor> scopeSpec()
+    {
+        return currentUserScope.scopeSpec("camara.sucursal.empresa.id", "camara.sucursal.id");
+    }
+
+    private void assertCamaraEnScope(Long camaraId)
+    {
+        var byId = (Specification<Camara>) (root, query, cb) -> cb.equal(root.get("id"), camaraId);
+        camaraRepository.findOne(currentUserScope.<Camara>scopeSpec("sucursal.empresa.id", "sucursal.id").and(byId))
+            .orElseThrow(() -> new CamaraNotFoundException("ID " + camaraId));
+    }
+
+    private Long sucursalIdOf(Sensor sensor)
+    {
+        if (sensor.getCamara() == null) return null;
+        Sucursal sucursal = sensor.getCamara().getSucursal();
+        return sucursal != null ? sucursal.getId() : null;
+    }
+
+    private Long empresaIdOf(Sensor sensor)
+    {
+        if (sensor.getCamara() == null) return null;
+        Sucursal sucursal = sensor.getCamara().getSucursal();
+        return sucursal != null && sucursal.getEmpresa() != null ? sucursal.getEmpresa().getId() : null;
     }
 }
