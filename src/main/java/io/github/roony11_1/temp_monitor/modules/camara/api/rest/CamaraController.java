@@ -1,11 +1,13 @@
 package io.github.roony11_1.temp_monitor.modules.camara.api.rest;
 
 import io.github.roony11_1.temp_monitor.kernel.dto.PageResponse;
+import io.github.roony11_1.temp_monitor.modules.camara.api.dto.CamaraLecturaResponse;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.CamaraRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.CamaraResponse;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.CamaraTemperaturaResponse;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.UltimaLecturaSensorResponse;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.camara.response.CamaraSummaryResponse;
+import io.github.roony11_1.temp_monitor.modules.camara.core.application.CamaraLecturaService;
 import io.github.roony11_1.temp_monitor.modules.camara.core.application.CamaraService;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Camara;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 
 import java.net.URI;
@@ -25,6 +29,7 @@ import java.util.List;
 public class CamaraController 
 {
     private final CamaraService camaraService;
+    private final CamaraLecturaService camaraLecturaService;
 
     @GetMapping
     public PageResponse<CamaraSummaryResponse> listarTodas(
@@ -60,6 +65,18 @@ public class CamaraController
     public List<UltimaLecturaSensorResponse> obtenerUltimasMedidas(@PathVariable Long id) 
     {
         return camaraService.obtenerUltimasMedidas(id);
+    }
+
+    @GetMapping("/{id}/lecturas")
+    public List<CamaraLecturaResponse> listarLecturas(
+            @PathVariable Long id,
+            @RequestParam(required = false) Long desde)
+    {
+        Instant since = desde != null ? Instant.ofEpochMilli(desde) : Instant.now().minus(Duration.ofHours(24));
+
+        return camaraLecturaService.listarPorCamara(id, since).stream()
+                .map(CamaraLecturaResponse::from)
+                .toList();
     }
 
     @PostMapping
