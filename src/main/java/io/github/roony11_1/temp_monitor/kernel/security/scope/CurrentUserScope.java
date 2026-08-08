@@ -4,9 +4,9 @@ import io.github.roony11_1.temp_monitor.kernel.security.exception.AccesoDenegado
 import io.github.roony11_1.temp_monitor.kernel.security.exception.NoAutenticadoException;
 import io.github.roony11_1.temp_monitor.kernel.security.model.Rol;
 import io.github.roony11_1.temp_monitor.kernel.security.model.TokenUser;
-import io.github.roony11_1.temp_monitor.kernel.specification.FilterCondition;
-import io.github.roony11_1.temp_monitor.kernel.specification.FilterOperator;
-import io.github.roony11_1.temp_monitor.kernel.specification.FilterSpecificationBuilder;
+import io.github.roony11_1.specification.core.FilterCondition;
+import io.github.roony11_1.specification.core.FilterOperator;
+import io.github.roony11_1.specification.spring.FilterSpecificationBuilder;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

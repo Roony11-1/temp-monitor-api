@@ -2,7 +2,7 @@ package io.github.roony11_1.temp_monitor.modules.empresa.core.application;
 
 import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
-import io.github.roony11_1.temp_monitor.kernel.specification.FilterSpecificationBuilder;
+import io.github.roony11_1.specification.spring.FilterSpecificationBuilder;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.EmpresaRequest;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.EmpresaSummaryResponse;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.EmpresaNotFoundException;

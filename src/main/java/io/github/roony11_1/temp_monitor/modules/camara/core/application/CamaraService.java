@@ -18,9 +18,9 @@ import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Sucurs
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.repository.SucursalRepository;
 import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
-import io.github.roony11_1.temp_monitor.kernel.specification.FilterCondition;
-import io.github.roony11_1.temp_monitor.kernel.specification.FilterOperator;
-import io.github.roony11_1.temp_monitor.kernel.specification.FilterSpecificationBuilder;
+import io.github.roony11_1.specification.core.FilterCondition;
+import io.github.roony11_1.specification.core.FilterOperator;
+import io.github.roony11_1.specification.spring.FilterSpecificationBuilder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
