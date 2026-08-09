@@ -2,31 +2,21 @@ package io.github.roony11_1.temp_monitor.kernel.security.error;
 
 import io.github.roony11_1.error.core.ErrorCategory;
 
-public final class SecurityErrorCategories 
+public enum SecurityErrorCategories implements ErrorCategory
 {
-    private SecurityErrorCategories() {}
+    JWT_GENERATION_FAILED("Fallo al generar el token JWT"),
+    INVALID_TOKEN_USER("El usuario del token no es válido");
 
-    public static final ErrorCategory JWT_GENERATION_FAILED = new ErrorCategory() 
-    {
-        @Override public String name() { return "JWT_GENERATION_FAILED"; }
-        @Override public String description() { return "Fallo al generar el token JWT"; }
-    };
+    private final String description;
 
-    public static final ErrorCategory INVALID_TOKEN_USER = new ErrorCategory() 
+    SecurityErrorCategories(String description)
     {
-        @Override public String name() { return "INVALID_TOKEN_USER"; }
-        @Override public String description() { return "El usuario del token no es válido"; }
-    };
+        this.description = description;
+    }
 
-    public static final ErrorCategory ACCESS_DENIED = new ErrorCategory() 
+    @Override
+    public String description()
     {
-        @Override public String name() { return "ACCESS_DENIED"; }
-        @Override public String description() { return "Acceso denegado al recurso"; }
-    };
-
-    public static final ErrorCategory AUTHENTICATION_REQUIRED = new ErrorCategory() 
-    {
-        @Override public String name() { return "AUTHENTICATION_REQUIRED"; }
-        @Override public String description() { return "Autenticación requerida"; }
-    };
+        return description;
+    }
 }
