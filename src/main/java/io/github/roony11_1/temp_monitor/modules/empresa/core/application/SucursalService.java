@@ -2,6 +2,8 @@ package io.github.roony11_1.temp_monitor.modules.empresa.core.application;
 
 import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
+import io.github.roony11_1.specification.core.FilterCondition;
+import io.github.roony11_1.specification.core.FilterOperator;
 import io.github.roony11_1.specification.spring.FilterSpecificationBuilder;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.SucursalRequest;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.SucursalSummaryResponse;
@@ -48,8 +50,8 @@ public class SucursalService
     @Transactional(readOnly = true)
     public List<SucursalSummaryResponse> listarPorEmpresaSummary(Long empresaId) 
     {
-        return sucursalRepository.findByEmpresaId(empresaId).stream()
-                .filter(s -> currentUserScope.canAccess(s.getId(), s.getEmpresa().getId()))
+        return sucursalRepository.findAll(scopeSpec().and(byEmpresaSpec(empresaId)))
+                .stream()
                 .map(sucursalMapper::toSummaryResponse)
                 .toList();
     }
@@ -129,6 +131,15 @@ public class SucursalService
 
     private Specification<Sucursal> byIdSpec(Long id)
     {
-        return (root, query, cb) -> cb.equal(root.get("id"), id);
+        return new FilterSpecificationBuilder<Sucursal>()
+                .withCondition(new FilterCondition("id", FilterOperator.EQ, id))
+                .build();
+    }
+
+    private Specification<Sucursal> byEmpresaSpec(Long empresaId)
+    {
+        return new FilterSpecificationBuilder<Sucursal>()
+                .withCondition(new FilterCondition("empresa.id", FilterOperator.EQ, empresaId))
+                .build();
     }
 }

@@ -4,7 +4,6 @@ import io.github.roony11_1.temp_monitor.modules.camara.api.dto.CamaraRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.CamaraTemperaturaResponse;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.UltimaLecturaSensorResponse;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.camara.response.CamaraSummaryResponse;
-import io.github.roony11_1.temp_monitor.modules.camara.core.application.mapper.CamaraMapper;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.CamaraNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.RangoTemperaturaInvalidoException;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Camara;
@@ -93,7 +92,9 @@ public class CamaraService
 
     private Specification<Camara> byIdSpec(Long id)
     {
-        return (root, query, cb) -> cb.equal(root.get("id"), id);
+        return new FilterSpecificationBuilder<Camara>()
+                .withCondition(new FilterCondition("id", FilterOperator.EQ, id))
+                .build();
     }
 
     private Specification<Camara> bySucursalSpec(Long sucursalId)

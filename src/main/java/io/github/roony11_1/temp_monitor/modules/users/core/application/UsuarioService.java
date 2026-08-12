@@ -4,6 +4,8 @@ import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.security.exception.AccesoDenegadoException;
 import io.github.roony11_1.temp_monitor.kernel.security.exception.NoAutenticadoException;
 import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
+import io.github.roony11_1.specification.core.FilterCondition;
+import io.github.roony11_1.specification.core.FilterOperator;
 import io.github.roony11_1.specification.spring.FilterSpecificationBuilder;
 import io.github.roony11_1.temp_monitor.kernel.security.crypto.HashService;
 import io.github.roony11_1.temp_monitor.kernel.security.model.Rol;
@@ -63,8 +65,8 @@ public class UsuarioService
     @Transactional(readOnly = true)
     public List<UsuarioSummaryResponse> listarPorEmpresaSummary(Long empresaId) 
     {
-        return usuarioRepository.findByEmpresa_Id(empresaId).stream()
-                .filter(u -> currentUserScope.canAccess(sucursalIdOf(u), empresaIdOf(u)))
+        return usuarioRepository.findAll(scopeSpec().and(byEmpresaSpec(empresaId)))
+                .stream()
                 .map(usuarioMapper::toSummaryResponse)
                 .toList();
     }
@@ -72,8 +74,8 @@ public class UsuarioService
     @Transactional(readOnly = true)
     public List<UsuarioSummaryResponse> listarPorSucursalSummary(Long sucursalId) 
     {
-        return usuarioRepository.findBySucursal_Id(sucursalId).stream()
-                .filter(u -> currentUserScope.canAccess(sucursalId, empresaIdOf(u)))
+        return usuarioRepository.findAll(scopeSpec().and(bySucursalSpec(sucursalId)))
+                .stream()
                 .map(usuarioMapper::toSummaryResponse)
                 .toList();
     }
@@ -270,16 +272,22 @@ public class UsuarioService
 
     private Specification<Usuario> byIdSpec(Long id)
     {
-        return (root, query, cb) -> cb.equal(root.get("id"), id);
+        return new FilterSpecificationBuilder<Usuario>()
+                .withCondition(new FilterCondition("id", FilterOperator.EQ, id))
+                .build();
     }
 
-    private Long sucursalIdOf(Usuario usuario)
+    private Specification<Usuario> byEmpresaSpec(Long empresaId)
     {
-        return usuario.getSucursal() != null ? usuario.getSucursal().getId() : null;
+        return new FilterSpecificationBuilder<Usuario>()
+                .withCondition(new FilterCondition("empresa.id", FilterOperator.EQ, empresaId))
+                .build();
     }
 
-    private Long empresaIdOf(Usuario usuario)
+    private Specification<Usuario> bySucursalSpec(Long sucursalId)
     {
-        return usuario.getEmpresa() != null ? usuario.getEmpresa().getId() : null;
+        return new FilterSpecificationBuilder<Usuario>()
+                .withCondition(new FilterCondition("sucursal.id", FilterOperator.EQ, sucursalId))
+                .build();
     }
 }

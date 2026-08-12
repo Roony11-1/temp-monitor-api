@@ -12,12 +12,13 @@ import java.util.List;
 
 public interface SucursalRepository extends JpaRepository<Sucursal, Long>, JpaSpecificationExecutor<Sucursal> 
 {
-    @EntityGraph(attributePaths = "empresa")
-    List<Sucursal> findByEmpresaId(Long empresaId);
-
     @Override
     @EntityGraph(attributePaths = "empresa")
     Page<Sucursal> findAll(Specification<Sucursal> spec, Pageable pageable);
+
+    @Override
+    @EntityGraph(attributePaths = "empresa")
+    List<Sucursal> findAll(Specification<Sucursal> spec);
 
     boolean existsByNombre(String nombre);
 }

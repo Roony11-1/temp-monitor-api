@@ -17,12 +17,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long>, JpaSpec
 {
     boolean existsByEmail(String email);
 
-    @Query("SELECT u FROM Usuario u JOIN FETCH u.empresa LEFT JOIN FETCH u.sucursal WHERE u.empresa.id = :empresaId")
-    List<Usuario> findByEmpresa_Id(@Param("empresaId") Long empresaId);
-
-    @Query("SELECT u FROM Usuario u LEFT JOIN FETCH u.empresa JOIN FETCH u.sucursal WHERE u.sucursal.id = :sucursalId")
-    List<Usuario> findBySucursal_Id(@Param("sucursalId") Long sucursalId);
-
     @Query("SELECT u FROM Usuario u LEFT JOIN FETCH u.empresa LEFT JOIN FETCH u.sucursal")
     @Override
     List<Usuario> findAll();
@@ -35,6 +29,10 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long>, JpaSpec
     @Override
     @EntityGraph(attributePaths = {"empresa", "sucursal"})
     Page<Usuario> findAll(Specification<Usuario> spec, Pageable pageable);
+
+    @Override
+    @EntityGraph(attributePaths = {"empresa", "sucursal"})
+    List<Usuario> findAll(Specification<Usuario> spec);
 
     @Query("SELECT u FROM Usuario u LEFT JOIN FETCH u.empresa LEFT JOIN FETCH u.sucursal WHERE u.id = :id")
     @Override

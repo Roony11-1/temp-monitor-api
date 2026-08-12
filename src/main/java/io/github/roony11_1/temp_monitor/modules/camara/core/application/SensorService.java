@@ -16,6 +16,8 @@ import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.security.crypto.ApiKeyGenerator;
 import io.github.roony11_1.temp_monitor.kernel.security.crypto.HashService;
 import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
+import io.github.roony11_1.specification.core.FilterCondition;
+import io.github.roony11_1.specification.core.FilterOperator;
 import io.github.roony11_1.specification.spring.FilterSpecificationBuilder;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.ActualizarSensorRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.AsignarSensorRequest;
@@ -208,7 +210,9 @@ public class SensorService
 
     private void assertCamaraEnScope(Long camaraId)
     {
-        var byId = (Specification<Camara>) (root, query, cb) -> cb.equal(root.get("id"), camaraId);
+        var byId = new FilterSpecificationBuilder<Camara>()
+                .withCondition(new FilterCondition("id", FilterOperator.EQ, camaraId))
+                .build();
         camaraRepository.findOne(currentUserScope.<Camara>scopeSpec("sucursal.empresa.id", "sucursal.id").and(byId))
             .orElseThrow(() -> new CamaraNotFoundException("ID " + camaraId));
     }

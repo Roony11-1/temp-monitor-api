@@ -2,6 +2,9 @@ package io.github.roony11_1.temp_monitor.modules.camara.core.application;
 
 import io.github.roony11_1.temp_monitor.config.CamaraMuestreoConfig;
 import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
+import io.github.roony11_1.specification.core.FilterCondition;
+import io.github.roony11_1.specification.core.FilterOperator;
+import io.github.roony11_1.specification.spring.FilterSpecificationBuilder;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.CamaraNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Camara;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.CamaraLectura;
@@ -73,7 +76,9 @@ public class CamaraLecturaService
     @Transactional(readOnly = true)
     public List<CamaraLectura> listarPorCamara(Long camaraId, Instant since)
     {
-        var byId = (Specification<Camara>) (root, query, cb) -> cb.equal(root.get("id"), camaraId);
+        var byId = new FilterSpecificationBuilder<Camara>()
+                .withCondition(new FilterCondition("id", FilterOperator.EQ, camaraId))
+                .build();
         camaraRepository.findOne(currentUserScope.<Camara>scopeSpec("sucursal.empresa.id", "sucursal.id").and(byId))
             .orElseThrow(() -> new CamaraNotFoundException("ID " + camaraId));
 
