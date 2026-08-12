@@ -17,7 +17,6 @@ import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.S
 import io.github.roony11_1.temp_monitor.modules.users.api.dto.UsuarioRequest;
 import io.github.roony11_1.temp_monitor.modules.users.api.dto.UsuarioSummaryResponse;
 import io.github.roony11_1.temp_monitor.modules.users.core.domain.exceptions.EmailAlreadyExistsException;
-import io.github.roony11_1.temp_monitor.modules.users.api.dto.UsuarioResponse;
 import io.github.roony11_1.temp_monitor.modules.users.core.domain.exceptions.UserNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.users.core.domain.model.Usuario;
 import io.github.roony11_1.temp_monitor.modules.users.core.domain.repository.UsuarioRepository;
@@ -33,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -50,18 +50,6 @@ public class UsuarioService
     private final CurrentUserScope currentUserScope;
 
     @Transactional(readOnly = true)
-    public List<Usuario> listarTodos() 
-    {
-        return usuarioRepository.findAll(scopeSpec());
-    }
-
-    @Transactional(readOnly = true)
-    public Page<Usuario> listarTodos(Pageable pageable) 
-    {
-        return usuarioRepository.findAll(scopeSpec(), pageable);
-    }
-
-    @Transactional(readOnly = true)
     public Page<UsuarioSummaryResponse> listarTodos(Pageable pageable, Map<String, String> filters)
     {
         var userSpec = new FilterSpecificationBuilder<Usuario>()
@@ -70,14 +58,6 @@ public class UsuarioService
                 .build();
         return usuarioRepository.findAll(scopeSpec().and(userSpec), pageable)
                 .map(usuarioMapper::toSummaryResponse);
-    }
-
-    @Transactional(readOnly = true)
-    public List<Usuario> listarPorEmpresa(Long empresaId) 
-    {
-        return usuarioRepository.findByEmpresa_Id(empresaId).stream()
-                .filter(u -> currentUserScope.canAccess(sucursalIdOf(u), empresaIdOf(u)))
-                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -90,32 +70,12 @@ public class UsuarioService
     }
 
     @Transactional(readOnly = true)
-    public Page<Usuario> listarPorEmpresa(Long empresaId, Pageable pageable) 
-    {
-        return usuarioRepository.findAll(scopeSpec().and(byEmpresaSpec(empresaId)), pageable);
-    }
-
-    @Transactional(readOnly = true)
-    public List<Usuario> listarPorSucursal(Long sucursalId) 
-    {
-        return usuarioRepository.findBySucursal_Id(sucursalId).stream()
-                .filter(u -> currentUserScope.canAccess(sucursalId, empresaIdOf(u)))
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
     public List<UsuarioSummaryResponse> listarPorSucursalSummary(Long sucursalId) 
     {
         return usuarioRepository.findBySucursal_Id(sucursalId).stream()
                 .filter(u -> currentUserScope.canAccess(sucursalId, empresaIdOf(u)))
                 .map(usuarioMapper::toSummaryResponse)
                 .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public Page<Usuario> listarPorSucursal(Long sucursalId, Pageable pageable) 
-    {
-        return usuarioRepository.findAll(scopeSpec().and(bySucursalSpec(sucursalId)), pageable);
     }
 
     @Transactional(readOnly = true)
@@ -131,6 +91,9 @@ public class UsuarioService
         if (usuarioRepository.existsByEmail(request.getEmail()))
             throw new EmailAlreadyExistsException(request.getEmail());
 
+        if (request.getRoles() == null || request.getRoles().isEmpty())
+            throw new AccesoDenegadoException("Debes especificar al menos un rol");
+
         TokenUser currentUser = getCurrentUser();
 
         if (currentUser.getRoles().contains(Rol.SUPER_ADMIN)) 
@@ -140,13 +103,7 @@ public class UsuarioService
         else if (currentUser.getRoles().contains(Rol.ADMIN_EMPRESA)) 
         {
             // ADMIN_EMPRESA solo puede crear ADMIN_SUCURSAL, TECNICO, USUARIO
-            for (Rol r : request.getRoles()) 
-            {
-                if (r == Rol.SUPER_ADMIN || r == Rol.ADMIN_EMPRESA) 
-                {
-                    throw new AccesoDenegadoException("No puedes crear usuarios con rol " + r);
-                }
-            }
+            validarRolesAsignables(request.getRoles());
             // Debe asignar su misma empresa
             if (request.getEmpresaId() == null || !request.getEmpresaId().equals(currentUser.getEmpresaId())) 
             {
@@ -166,8 +123,7 @@ public class UsuarioService
 
         Sucursal sucursal = null;
         if (request.getSucursalId() != null) {
-            sucursal = sucursalRepository.findById(request.getSucursalId())
-                    .orElseThrow(() -> new SucursalNotFoundException("ID " + request.getSucursalId()));
+            sucursal = findSucursalEnScope(request.getSucursalId());
         }
 
         Usuario usuario = Usuario.builder()
@@ -198,11 +154,25 @@ public class UsuarioService
     {
         Usuario usuario = buscarPorId(id);
 
+        TokenUser currentUser = getCurrentUser();
+
+        if (!currentUser.getRoles().contains(Rol.SUPER_ADMIN)) 
+        {
+            validarNoModificaAdmin(usuario);
+            validarRolesAsignables(request.getRoles());
+        }
+
         usuario.setNombre(request.getNombre());
         usuario.setTelefono(request.getTelefono());
 
         if (request.getEmpresaId() != null) 
         {
+            if (!currentUser.getRoles().contains(Rol.SUPER_ADMIN)
+                    && !request.getEmpresaId().equals(currentUser.getEmpresaId())) 
+            {
+                throw new AccesoDenegadoException("Solo puedes asignar tu propia empresa");
+            }
+
             Empresa empresa = empresaRepository.findById(request.getEmpresaId())
                     .orElseThrow(() -> new EmpresaNotFoundException("ID " + request.getEmpresaId()));
 
@@ -215,8 +185,7 @@ public class UsuarioService
 
         if (request.getSucursalId() != null) 
         {
-            Sucursal sucursal = sucursalRepository.findById(request.getSucursalId())
-                    .orElseThrow(() -> new SucursalNotFoundException("ID " + request.getSucursalId()));
+            Sucursal sucursal = findSucursalEnScope(request.getSucursalId());
             usuario.setSucursal(sucursal);
         } 
         else 
@@ -260,6 +229,40 @@ public class UsuarioService
         usuarioRepository.delete(usuario);
     }
 
+    private Sucursal findSucursalEnScope(Long sucursalId)
+    {
+        Sucursal sucursal = sucursalRepository.findById(sucursalId)
+                .orElseThrow(() -> new SucursalNotFoundException("ID " + sucursalId));
+
+        currentUserScope.assertAccess(sucursal.getId(), sucursal.getEmpresa().getId());
+
+        return sucursal;
+    }
+
+    private void validarRolesAsignables(Set<Rol> roles)
+    {
+        if (roles == null)
+        {
+            return;
+        }
+
+        for (Rol rol : roles)
+        {
+            if (rol == Rol.SUPER_ADMIN || rol == Rol.ADMIN_EMPRESA)
+            {
+                throw new AccesoDenegadoException("No puedes asignar el rol " + rol);
+            }
+        }
+    }
+
+    private void validarNoModificaAdmin(Usuario usuario)
+    {
+        if (usuario.getRoles().contains(Rol.SUPER_ADMIN) || usuario.getRoles().contains(Rol.ADMIN_EMPRESA))
+        {
+            throw new AccesoDenegadoException("No puedes modificar un usuario SUPER_ADMIN o ADMIN_EMPRESA");
+        }
+    }
+
     private Specification<Usuario> scopeSpec()
     {
         return currentUserScope.scopeSpec("empresa.id", "sucursal.id");
@@ -268,16 +271,6 @@ public class UsuarioService
     private Specification<Usuario> byIdSpec(Long id)
     {
         return (root, query, cb) -> cb.equal(root.get("id"), id);
-    }
-
-    private Specification<Usuario> byEmpresaSpec(Long empresaId)
-    {
-        return (root, query, cb) -> cb.equal(root.get("empresa").get("id"), empresaId);
-    }
-
-    private Specification<Usuario> bySucursalSpec(Long sucursalId)
-    {
-        return (root, query, cb) -> cb.equal(root.get("sucursal").get("id"), sucursalId);
     }
 
     private Long sucursalIdOf(Usuario usuario)

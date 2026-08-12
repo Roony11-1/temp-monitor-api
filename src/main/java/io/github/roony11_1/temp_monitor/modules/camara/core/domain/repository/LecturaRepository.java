@@ -16,11 +16,7 @@ import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Lectura
 
 public interface LecturaRepository extends JpaRepository<Lectura, Long>
 {
-    List<Lectura> findBySensorUuidOrderByTimestampDesc(UUID sensorUuid);
-
     Page<Lectura> findBySensorUuidOrderByTimestampDesc(UUID sensorUuid, Pageable pageable);
-
-    List<Lectura> findBySensorUuidAndTimestampAfterOrderByTimestampDesc(UUID sensorUuid, Instant since);
 
     Page<Lectura> findBySensorUuidAndTimestampAfterOrderByTimestampDesc(UUID sensorUuid, Instant since, Pageable pageable);
 

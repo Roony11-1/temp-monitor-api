@@ -1,6 +1,5 @@
 package io.github.roony11_1.temp_monitor.modules.camara.core.application;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -9,7 +8,6 @@ import java.util.UUID;
 import org.hibernate.Hibernate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,8 +16,6 @@ import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.security.crypto.ApiKeyGenerator;
 import io.github.roony11_1.temp_monitor.kernel.security.crypto.HashService;
 import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
-import io.github.roony11_1.specification.core.FilterCondition;
-import io.github.roony11_1.specification.core.FilterOperator;
 import io.github.roony11_1.specification.spring.FilterSpecificationBuilder;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.ActualizarSensorRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.AsignarSensorRequest;
@@ -105,12 +101,6 @@ public class SensorService
         return sensor;
     }
 
-    public Sensor buscarPorId(Long id)
-    {
-        return sensorRepository.findById(id)
-            .orElseThrow(() -> new SensorNotFoundException("ID " + id));
-    }
-
     @Transactional(readOnly = true)
     public List<Sensor> listarPorCamara(Long camaraId)
     {
@@ -118,14 +108,6 @@ public class SensorService
         return sensorRepository.findByCamaraIdWithHierarchy(camaraId);
     }
 
-    @Transactional(readOnly = true)
-    public Page<Sensor> listarPorCamara(Long camaraId, Pageable pageable)
-    {
-        assertCamaraEnScope(camaraId);
-        return sensorRepository.findByCamaraIdWithHierarchy(camaraId, pageable);
-    }
-
-    @Transactional(readOnly = true)
     public Sensor buscarPorUuid(UUID uuid)
     {
         Sensor sensor = sensorRepository.findByUuidWithHierarchy(uuid)
@@ -134,20 +116,6 @@ public class SensorService
         currentUserScope.assertAccess(sucursalIdOf(sensor), empresaIdOf(sensor));
 
         return sensor;
-    }
-
-    @Transactional(readOnly = true)
-    public List<Sensor> listarTodos()
-    {
-        return sensorRepository.findAllWithHierarchy().stream()
-                .filter(s -> currentUserScope.canAccess(sucursalIdOf(s), empresaIdOf(s)))
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public Page<Sensor> listarTodos(Pageable pageable)
-    {
-        return sensorRepository.findAll(scopeSpec(), pageable);
     }
 
     @Transactional(readOnly = true)
@@ -199,14 +167,6 @@ public class SensorService
         return sensorRepository.findByUuid(uuid)
             .map(Sensor::getEstado)
             .orElseThrow(() -> new SensorNotFoundException("UUID " + uuid));
-    }
-
-    @Transactional
-    public void actualizarUltimoContacto(UUID uuid)
-    {
-        Sensor sensor = sensorRepository.findByUuid(uuid)
-            .orElseThrow(() -> new SensorNotFoundException("UUID " + uuid));
-        sensor.setUltimoContacto(Instant.now());
     }
 
     @Transactional

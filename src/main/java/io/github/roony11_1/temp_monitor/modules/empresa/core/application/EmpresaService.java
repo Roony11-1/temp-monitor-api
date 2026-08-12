@@ -16,7 +16,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Map;
 
 @Service
@@ -26,16 +25,6 @@ public class EmpresaService
     private final EmpresaRepository empresaRepository;
     private final EntityMapper<Empresa, EmpresaSummaryResponse> empresaMapper;
     private final CurrentUserScope currentUserScope;
-
-    public List<Empresa> listarTodas() 
-    {
-        return empresaRepository.findAll();
-    }
-
-    public Page<Empresa> listarTodas(Pageable pageable) 
-    {
-        return empresaRepository.findAll(pageable);
-    }
 
     @Transactional(readOnly = true)
     public Page<EmpresaSummaryResponse> listarTodas(Pageable pageable, Map<String, String> filters)

@@ -2,8 +2,6 @@ package io.github.roony11_1.temp_monitor.modules.empresa.core.application;
 
 import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
-import io.github.roony11_1.specification.core.FilterCondition;
-import io.github.roony11_1.specification.core.FilterOperator;
 import io.github.roony11_1.specification.spring.FilterSpecificationBuilder;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.SucursalRequest;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.SucursalSummaryResponse;
@@ -36,16 +34,6 @@ public class SucursalService
     private final EntityMapper<Sucursal, SucursalSummaryResponse> sucursalMapper;
     private final CurrentUserScope currentUserScope;
 
-    public List<Sucursal> listarTodas() 
-    {
-        return sucursalRepository.findAll();
-    }
-
-    public Page<Sucursal> listarTodas(Pageable pageable) 
-    {
-        return sucursalRepository.findAll(pageable);
-    }
-
     @Transactional(readOnly = true)
     public Page<SucursalSummaryResponse> listarTodas(Pageable pageable, Map<String, String> filters)
     {
@@ -57,13 +45,6 @@ public class SucursalService
                 .map(sucursalMapper::toSummaryResponse);
     }
 
-    public List<Sucursal> listarPorEmpresa(Long empresaId) 
-    {
-        return sucursalRepository.findByEmpresaId(empresaId).stream()
-                .filter(s -> currentUserScope.canAccess(s.getId(), s.getEmpresa().getId()))
-                .toList();
-    }
-
     @Transactional(readOnly = true)
     public List<SucursalSummaryResponse> listarPorEmpresaSummary(Long empresaId) 
     {
@@ -71,11 +52,6 @@ public class SucursalService
                 .filter(s -> currentUserScope.canAccess(s.getId(), s.getEmpresa().getId()))
                 .map(sucursalMapper::toSummaryResponse)
                 .toList();
-    }
-
-    public Page<Sucursal> listarPorEmpresa(Long empresaId, Pageable pageable) 
-    {
-        return sucursalRepository.findAll(scopeSpec().and(byEmpresaSpec(empresaId)), pageable);
     }
 
     public Sucursal buscarPorId(Long id) 
@@ -154,12 +130,5 @@ public class SucursalService
     private Specification<Sucursal> byIdSpec(Long id)
     {
         return (root, query, cb) -> cb.equal(root.get("id"), id);
-    }
-
-    private Specification<Sucursal> byEmpresaSpec(Long empresaId)
-    {
-        return new FilterSpecificationBuilder<Sucursal>()
-                .withCondition(new FilterCondition("empresa.id", FilterOperator.EQ, empresaId))
-                .build();
     }
 }

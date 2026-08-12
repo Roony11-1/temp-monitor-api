@@ -15,8 +15,6 @@ public interface SucursalRepository extends JpaRepository<Sucursal, Long>, JpaSp
     @EntityGraph(attributePaths = "empresa")
     List<Sucursal> findByEmpresaId(Long empresaId);
 
-    Page<Sucursal> findByEmpresaId(Long empresaId, Pageable pageable);
-
     @Override
     @EntityGraph(attributePaths = "empresa")
     Page<Sucursal> findAll(Specification<Sucursal> spec, Pageable pageable);

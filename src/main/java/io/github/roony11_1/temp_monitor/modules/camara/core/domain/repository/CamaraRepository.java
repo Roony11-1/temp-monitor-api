@@ -8,14 +8,8 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-import java.util.List;
-
 public interface CamaraRepository extends JpaRepository<Camara, Long>, JpaSpecificationExecutor<Camara> 
 {
-    List<Camara> findBySucursalId(Long sucursalId);
-
-    Page<Camara> findBySucursalId(Long sucursalId, Pageable pageable);
-
     @Override
     @EntityGraph(attributePaths = "sucursal")
     Page<Camara> findAll(Specification<Camara> spec, Pageable pageable);

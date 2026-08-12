@@ -53,16 +53,6 @@ public class CamaraService
     private final EntityMapper<Camara, CamaraSummaryResponse> camaraMapper;
     private final CurrentUserScope currentUserScope;
 
-    public List<Camara> listarTodas()
-    {
-        return camaraRepository.findAll(scopeSpec(), Sort.unsorted());
-    }
-
-    public Page<Camara> listarTodas(Pageable pageable)
-    {
-        return camaraRepository.findAll(scopeSpec(), pageable);
-    }
-
     @Transactional(readOnly = true)
     public Page<CamaraSummaryResponse> listarTodas(Pageable pageable, Map<String, String> filters)
     {
@@ -88,11 +78,6 @@ public class CamaraService
     public List<Camara> listarPorSucursal(Long sucursalId)
     {
         return camaraRepository.findAll(scopeSpec().and(bySucursalSpec(sucursalId)), Sort.unsorted());
-    }
-
-    public Page<Camara> listarPorSucursal(Long sucursalId, Pageable pageable)
-    {
-        return camaraRepository.findAll(scopeSpec().and(bySucursalSpec(sucursalId)), pageable);
     }
 
     public Camara buscarPorId(Long id)

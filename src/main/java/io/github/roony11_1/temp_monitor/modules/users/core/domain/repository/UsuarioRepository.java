@@ -20,16 +20,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long>, JpaSpec
     @Query("SELECT u FROM Usuario u JOIN FETCH u.empresa LEFT JOIN FETCH u.sucursal WHERE u.empresa.id = :empresaId")
     List<Usuario> findByEmpresa_Id(@Param("empresaId") Long empresaId);
 
-    @Query(value = "SELECT u FROM Usuario u JOIN FETCH u.empresa LEFT JOIN FETCH u.sucursal WHERE u.empresa.id = :empresaId",
-           countQuery = "SELECT COUNT(u) FROM Usuario u WHERE u.empresa.id = :empresaId")
-    Page<Usuario> findByEmpresa_Id(@Param("empresaId") Long empresaId, Pageable pageable);
-
     @Query("SELECT u FROM Usuario u LEFT JOIN FETCH u.empresa JOIN FETCH u.sucursal WHERE u.sucursal.id = :sucursalId")
     List<Usuario> findBySucursal_Id(@Param("sucursalId") Long sucursalId);
-
-    @Query(value = "SELECT u FROM Usuario u LEFT JOIN FETCH u.empresa JOIN FETCH u.sucursal WHERE u.sucursal.id = :sucursalId",
-           countQuery = "SELECT COUNT(u) FROM Usuario u WHERE u.sucursal.id = :sucursalId")
-    Page<Usuario> findBySucursal_Id(@Param("sucursalId") Long sucursalId, Pageable pageable);
 
     @Query("SELECT u FROM Usuario u LEFT JOIN FETCH u.empresa LEFT JOIN FETCH u.sucursal")
     @Override

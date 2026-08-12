@@ -76,6 +76,7 @@ public class UsuarioController
     }
 
     @PostMapping("/{id}/password")
+    @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'SUPER_ADMIN')")
     public ResponseEntity<Void> cambiarPassword(@PathVariable Long id, @RequestBody CambiarPasswordRequest request) 
     {
         usuarioService.cambiarPassword(id, request.getNuevaPassword());
