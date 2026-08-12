@@ -17,12 +17,12 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long>, JpaSpec
 {
     boolean existsByEmail(String email);
 
-    @Query("SELECT u FROM Usuario u LEFT JOIN FETCH u.empresa LEFT JOIN FETCH u.sucursal")
+    @Query("SELECT u FROM Usuario u LEFT JOIN FETCH u.empresa LEFT JOIN FETCH u.sucursal WHERE u.deletedAt IS NULL")
     @Override
     List<Usuario> findAll();
 
-    @Query(value = "SELECT u FROM Usuario u LEFT JOIN FETCH u.empresa LEFT JOIN FETCH u.sucursal",
-           countQuery = "SELECT COUNT(u) FROM Usuario u")
+    @Query(value = "SELECT u FROM Usuario u LEFT JOIN FETCH u.empresa LEFT JOIN FETCH u.sucursal WHERE u.deletedAt IS NULL",
+           countQuery = "SELECT COUNT(u) FROM Usuario u WHERE u.deletedAt IS NULL")
     @Override
     Page<Usuario> findAll(Pageable pageable);
 
@@ -34,10 +34,10 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long>, JpaSpec
     @EntityGraph(attributePaths = {"empresa", "sucursal"})
     List<Usuario> findAll(Specification<Usuario> spec);
 
-    @Query("SELECT u FROM Usuario u LEFT JOIN FETCH u.empresa LEFT JOIN FETCH u.sucursal WHERE u.id = :id")
+    @Query("SELECT u FROM Usuario u LEFT JOIN FETCH u.empresa LEFT JOIN FETCH u.sucursal WHERE u.id = :id AND u.deletedAt IS NULL")
     @Override
     Optional<Usuario> findById(@Param("id") Long id);
 
-    @Query("SELECT u FROM Usuario u LEFT JOIN FETCH u.empresa LEFT JOIN FETCH u.sucursal WHERE u.email = :email")
+    @Query("SELECT u FROM Usuario u LEFT JOIN FETCH u.empresa LEFT JOIN FETCH u.sucursal WHERE u.email = :email AND u.deletedAt IS NULL")
     Optional<Usuario> findByEmail(@Param("email") String email);
 }

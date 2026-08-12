@@ -18,4 +18,5 @@ public class SucursalSummaryResponse
     private String empresa;
     private Long empresaId;
     private boolean activo;
+    private boolean eliminado;
 }

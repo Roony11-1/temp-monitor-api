@@ -63,6 +63,8 @@ public class Sensor
     @UpdateTimestamp
     private Instant updatedAt;
 
+    private Instant deletedAt;
+
     public boolean puedeRegistrarLectura()
     {
         if (this.getCamara() == null)

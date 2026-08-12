@@ -31,6 +31,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -121,6 +122,11 @@ public class UsuarioService
         if (request.getEmpresaId() != null) {
             empresa = empresaRepository.findById(request.getEmpresaId())
                     .orElseThrow(() -> new EmpresaNotFoundException("ID " + request.getEmpresaId()));
+
+            if (empresa.getDeletedAt() != null)
+            {
+                throw new EmpresaNotFoundException("ID " + request.getEmpresaId());
+            }
         }
 
         Sucursal sucursal = null;
@@ -154,7 +160,7 @@ public class UsuarioService
     @Transactional
     public Usuario actualizar(Long id, UsuarioRequest request) 
     {
-        Usuario usuario = buscarPorId(id);
+        Usuario usuario = buscarActivaPorId(id);
 
         TokenUser currentUser = getCurrentUser();
 
@@ -177,6 +183,11 @@ public class UsuarioService
 
             Empresa empresa = empresaRepository.findById(request.getEmpresaId())
                     .orElseThrow(() -> new EmpresaNotFoundException("ID " + request.getEmpresaId()));
+
+            if (empresa.getDeletedAt() != null)
+            {
+                throw new EmpresaNotFoundException("ID " + request.getEmpresaId());
+            }
 
             usuario.setEmpresa(empresa);
         } 
@@ -206,29 +217,52 @@ public class UsuarioService
     @Transactional
     public void cambiarPassword(Long id, String nuevaPassword) 
     {
-        Usuario usuario = buscarPorId(id);
+        Usuario usuario = buscarActivaPorId(id);
         usuario.setPasswordHash(passwordHasher.hash(nuevaPassword));
     }
 
     @Transactional
     public void activar(Long id) 
     {
-        Usuario usuario = buscarPorId(id);
+        Usuario usuario = buscarActivaPorId(id);
         usuario.setActivo(true);
     }
 
     @Transactional
     public void desactivar(Long id) 
     {
-        Usuario usuario = buscarPorId(id);
+        Usuario usuario = buscarActivaPorId(id);
         usuario.setActivo(false);
     }
 
     @Transactional
     public void eliminar(Long id) 
     {
-        var usuario = buscarPorId(id);
-        usuarioRepository.delete(usuario);
+        Usuario usuario = buscarActivaPorId(id);
+        usuario.setDeletedAt(Instant.now());
+    }
+
+    @Transactional
+    public Usuario restaurar(Long id) 
+    {
+        Usuario usuario = usuarioRepository.findOne(scopeSpec().and(byIdSpec(id)))
+                .orElseThrow(() -> new UserNotFoundException("ID " + id));
+
+        usuario.setDeletedAt(null);
+
+        return usuario;
+    }
+
+    private Usuario buscarActivaPorId(Long id)
+    {
+        Usuario usuario = buscarPorId(id);
+
+        if (usuario.getDeletedAt() != null)
+        {
+            throw new UserNotFoundException("ID " + id);
+        }
+
+        return usuario;
     }
 
     private Sucursal findSucursalEnScope(Long sucursalId)

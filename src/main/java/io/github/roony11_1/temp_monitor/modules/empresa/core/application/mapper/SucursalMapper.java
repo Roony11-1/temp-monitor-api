@@ -20,6 +20,7 @@ public class SucursalMapper implements EntityMapper<Sucursal, SucursalSummaryRes
             .empresa(entity.getEmpresa().getNombre())
             .empresaId(entity.getEmpresa().getId())
             .activo(entity.isActivo())
+            .eliminado(entity.getDeletedAt() != null)
             .build();
     }
 }

@@ -24,4 +24,5 @@ public class SensorSummaryResponse
     private Long empresaId;
     private String empresaNombre;
     private EstadoSensor estado;
+    private boolean eliminado;
 }

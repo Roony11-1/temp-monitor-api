@@ -23,6 +23,7 @@ public class UsuarioMapper implements EntityMapper<Usuario, UsuarioSummaryRespon
             .sucursalId(entity.getSucursalId())
             .roles(entity.getRoles().stream().map(Enum::name).toList())
             .activo(entity.isActivo())
+            .eliminado(entity.getDeletedAt() != null)
             .build();
     }
 }

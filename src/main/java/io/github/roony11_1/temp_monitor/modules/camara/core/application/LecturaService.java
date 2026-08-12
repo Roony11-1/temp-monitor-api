@@ -28,7 +28,7 @@ public class LecturaService
     @Transactional
     public void registrar(UUID sensorUuid, RegistrarLecturaRequest request)
     {
-        Sensor sensor = sensorRepository.findByUuid(sensorUuid)
+        Sensor sensor = sensorRepository.findActiveByUuid(sensorUuid)
             .orElseThrow(() -> new SensorNotFoundException("UUID " + sensorUuid));
 
         if (sensor.getCamara() == null)

@@ -21,6 +21,7 @@ public class UsuarioResponse
     private Long sucursalId;
     private List<String> roles;
     private boolean activo;
+    private boolean eliminado;
     private Instant createdAt;
     private Instant lastLogin;
 
@@ -37,6 +38,7 @@ public class UsuarioResponse
                 .sucursalId(usuario.getSucursalId())
                 .roles(usuario.getRoles().stream().map(Enum::name).toList())
                 .activo(usuario.isActivo())
+                .eliminado(usuario.getDeletedAt() != null)
                 .createdAt(usuario.getCreatedAt())
                 .lastLogin(usuario.getLastLogin())
                 .build();

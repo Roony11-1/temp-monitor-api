@@ -17,4 +17,5 @@ public class EmpresaSummaryResponse
     private String telefono;
     private String email;
     private boolean activo;
+    private boolean eliminado;
 }

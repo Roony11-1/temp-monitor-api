@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -42,6 +43,7 @@ public class EmpresaController
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<EmpresaResponse> crear(@RequestBody EmpresaRequest request) 
     {
         Empresa empresa = empresaService.crear(request);
@@ -51,6 +53,7 @@ public class EmpresaController
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public EmpresaResponse actualizar(@PathVariable Long id, @RequestBody EmpresaRequest request) 
     {
         var empresa = empresaService.actualizar(id, request);
@@ -59,6 +62,7 @@ public class EmpresaController
     }
 
     @PostMapping("/{id}/activar")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<Void> activar(@PathVariable Long id) 
     {
         empresaService.activar(id);
@@ -66,13 +70,24 @@ public class EmpresaController
     }
 
     @PostMapping("/{id}/desactivar")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<Void> desactivar(@PathVariable Long id) 
     {
         empresaService.desactivar(id);
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/{id}/restaurar")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<EmpresaResponse> restaurar(@PathVariable Long id) 
+    {
+        var empresa = empresaService.restaurar(id);
+
+        return ResponseEntity.ok(EmpresaResponse.toResponse(empresa));
+    }
+
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) 
     {
         empresaService.eliminar(id);

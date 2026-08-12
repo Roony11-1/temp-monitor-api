@@ -42,7 +42,10 @@ public class CamaraLecturaService
     public void muestrear()
     {
         Instant ahora = Instant.now();
-        camaraRepository.findAll().forEach(camara -> muestrearCamara(camara, ahora));
+        var noEliminadas = new FilterSpecificationBuilder<Camara>()
+                .withCondition(new FilterCondition("deletedAt", FilterOperator.IS_NULL, null))
+                .build();
+        camaraRepository.findAll(noEliminadas).forEach(camara -> muestrearCamara(camara, ahora));
     }
 
     @Transactional

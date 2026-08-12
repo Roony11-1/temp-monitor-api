@@ -16,6 +16,7 @@ public class EmpresaResponse
     private String telefono;
     private String email;
     private boolean activo;
+    private boolean eliminado;
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -28,6 +29,7 @@ public class EmpresaResponse
             .telefono(empresa.getTelefono())
             .email(empresa.getEmail())
             .activo(empresa.isActivo())
+            .eliminado(empresa.getDeletedAt() != null)
             .createdAt(empresa.getCreatedAt())
             .updatedAt(empresa.getUpdatedAt())
             .build();

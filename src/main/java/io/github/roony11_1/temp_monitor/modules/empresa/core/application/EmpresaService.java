@@ -18,6 +18,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.Map;
 
 @Service
@@ -58,7 +59,7 @@ public class EmpresaService
     @Transactional
     public Empresa actualizar(Long id, EmpresaRequest request) 
     {
-        Empresa empresa = buscarPorId(id);
+        Empresa empresa = buscarActivaPorId(id);
 
         empresa.setNombre(request.getNombre());
         empresa.setDireccion(request.getDireccion());
@@ -71,7 +72,7 @@ public class EmpresaService
     @Transactional
     public void activar(Long id) 
     {
-        Empresa empresa = buscarPorId(id);
+        Empresa empresa = buscarActivaPorId(id);
 
         empresa.setActivo(true);
     }
@@ -79,7 +80,7 @@ public class EmpresaService
     @Transactional
     public void desactivar(Long id) 
     {
-        Empresa empresa = buscarPorId(id);
+        Empresa empresa = buscarActivaPorId(id);
 
         empresa.setActivo(false);
     }
@@ -87,9 +88,32 @@ public class EmpresaService
     @Transactional
     public void eliminar(Long id) 
     {
-        var empresa = buscarPorId(id);
+        Empresa empresa = buscarActivaPorId(id);
 
-        empresaRepository.delete(empresa);
+        empresa.setDeletedAt(Instant.now());
+    }
+
+    @Transactional
+    public Empresa restaurar(Long id) 
+    {
+        Empresa empresa = empresaRepository.findOne(empresaScope().and(byIdSpec(id)))
+                .orElseThrow(() -> new EmpresaNotFoundException("ID " + id));
+
+        empresa.setDeletedAt(null);
+
+        return empresa;
+    }
+
+    private Empresa buscarActivaPorId(Long id)
+    {
+        Empresa empresa = buscarPorId(id);
+
+        if (empresa.getDeletedAt() != null)
+        {
+            throw new EmpresaNotFoundException("ID " + id);
+        }
+
+        return empresa;
     }
 
     private Specification<Empresa> empresaScope()

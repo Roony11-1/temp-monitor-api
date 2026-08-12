@@ -102,6 +102,15 @@ public class UsuarioController
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/{id}/restaurar")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<UsuarioResponse> restaurar(@PathVariable Long id) 
+    {
+        var usuario = usuarioService.restaurar(id);
+
+        return ResponseEntity.ok(UsuarioResponse.toResponse(usuario));
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'SUPER_ADMIN')")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) 

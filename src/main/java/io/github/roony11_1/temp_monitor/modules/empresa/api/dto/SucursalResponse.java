@@ -16,6 +16,7 @@ public class SucursalResponse
     private String telefono;
     private Long empresaId;
     private boolean activo;
+    private boolean eliminado;
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -28,6 +29,7 @@ public class SucursalResponse
             .telefono(sucursal.getTelefono())
             .empresaId(sucursal.getEmpresa().getId())
             .activo(sucursal.isActivo())
+            .eliminado(sucursal.getDeletedAt() != null)
             .createdAt(sucursal.getCreatedAt())
             .updatedAt(sucursal.getUpdatedAt())
             .build();

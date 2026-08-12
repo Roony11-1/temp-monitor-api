@@ -9,11 +9,17 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import io.github.roony11_1.specification.core.FilterCondition;
+import io.github.roony11_1.specification.core.FilterOperator;
+import io.github.roony11_1.specification.spring.FilterSpecificationBuilder;
+import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Camara;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.CamaraRepository;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.LecturaRepository;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.SensorRepository;
 import io.github.roony11_1.temp_monitor.modules.dashboard.api.dto.DashboardResponse;
 import io.github.roony11_1.temp_monitor.modules.dashboard.api.dto.DashboardResponse.TemperaturePoint;
+import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Empresa;
+import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Sucursal;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.repository.EmpresaRepository;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.repository.SucursalRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,9 +39,22 @@ public class DashboardService
     {
         Instant threshold = Instant.now().minus(Duration.ofMinutes(5));
 
-        long empresas = empresaRepository.count();
-        long sucursales = sucursalRepository.count();
-        long camarasActivas = camaraRepository.countByActivo(true);
+        var noEliminadasEmpresa = new FilterSpecificationBuilder<Empresa>()
+                .withCondition(new FilterCondition("deletedAt", FilterOperator.IS_NULL, null))
+                .build();
+        var noEliminadasSucursal = new FilterSpecificationBuilder<Sucursal>()
+                .withCondition(new FilterCondition("deletedAt", FilterOperator.IS_NULL, null))
+                .build();
+        var noEliminadasCamara = new FilterSpecificationBuilder<Camara>()
+                .withCondition(new FilterCondition("deletedAt", FilterOperator.IS_NULL, null))
+                .build();
+
+        long empresas = empresaRepository.count(noEliminadasEmpresa);
+        long sucursales = sucursalRepository.count(noEliminadasSucursal);
+        long camarasActivas = camaraRepository.count(
+                noEliminadasCamara.and(new FilterSpecificationBuilder<Camara>()
+                        .withCondition(new FilterCondition("activo", FilterOperator.EQ, true))
+                        .build()));
         long sensoresOnline = sensorRepository.countOnline(threshold);
         long sensoresOffline = sensorRepository.countOffline(threshold);
 

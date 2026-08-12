@@ -19,6 +19,7 @@ public class EmpresaMapper implements EntityMapper<Empresa, EmpresaSummaryRespon
             .telefono(entity.getTelefono())
             .email(entity.getEmail())
             .activo(entity.isActivo())
+            .eliminado(entity.getDeletedAt() != null)
             .build();
     }
 }

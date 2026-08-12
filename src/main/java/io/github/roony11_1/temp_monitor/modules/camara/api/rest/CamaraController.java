@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
@@ -80,6 +81,7 @@ public class CamaraController
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'ADMIN_SUCURSAL', 'SUPER_ADMIN')")
     public ResponseEntity<CamaraResponse> crear(@RequestBody CamaraRequest request) 
     {
         Camara camara = camaraService.crear(request);
@@ -89,12 +91,14 @@ public class CamaraController
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'ADMIN_SUCURSAL', 'SUPER_ADMIN')")
     public CamaraResponse actualizar(@PathVariable Long id, @RequestBody CamaraRequest request) 
     {
         return CamaraResponse.toResponse(camaraService.actualizar(id, request));
     }
 
     @PostMapping("/{id}/activar")
+    @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'ADMIN_SUCURSAL', 'SUPER_ADMIN')")
     public ResponseEntity<Void> activar(@PathVariable Long id) 
     {
         camaraService.activar(id);
@@ -102,13 +106,22 @@ public class CamaraController
     }
 
     @PostMapping("/{id}/desactivar")
+    @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'ADMIN_SUCURSAL', 'SUPER_ADMIN')")
     public ResponseEntity<Void> desactivar(@PathVariable Long id) 
     {
         camaraService.desactivar(id);
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/{id}/restaurar")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<CamaraResponse> restaurar(@PathVariable Long id) 
+    {
+        return ResponseEntity.ok(CamaraResponse.toResponse(camaraService.restaurar(id)));
+    }
+
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'ADMIN_SUCURSAL', 'SUPER_ADMIN')")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) 
     {
         camaraService.eliminar(id);

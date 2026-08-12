@@ -33,7 +33,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 @Service
 @RequiredArgsConstructor
 public class CamaraService 
@@ -113,6 +112,13 @@ public class CamaraService
         Sucursal sucursal = sucursalRepository.findById(request.getSucursalId())
                 .orElseThrow(() -> new SucursalNotFoundException("ID " + request.getSucursalId()));
 
+        if (sucursal.getDeletedAt() != null)
+        {
+            throw new SucursalNotFoundException("ID " + request.getSucursalId());
+        }
+
+        currentUserScope.assertAccess(sucursal.getId(), sucursal.getEmpresa().getId());
+
         Camara camara = Camara.builder()
                 .nombre(request.getNombre())
                 .descripcion(request.getDescripcion())
@@ -130,7 +136,7 @@ public class CamaraService
     {
         validarRango(request.getTemperaturaMin(), request.getTemperaturaMax());
 
-        Camara camara = buscarPorId(id);
+        Camara camara = buscarActivaPorId(id);
 
         camara.setNombre(request.getNombre());
         camara.setDescripcion(request.getDescripcion());
@@ -142,6 +148,13 @@ public class CamaraService
             Sucursal sucursal = sucursalRepository.findById(request.getSucursalId())
                     .orElseThrow(() -> new SucursalNotFoundException("ID " + request.getSucursalId()));
 
+            if (sucursal.getDeletedAt() != null)
+            {
+                throw new SucursalNotFoundException("ID " + request.getSucursalId());
+            }
+
+            currentUserScope.assertAccess(sucursal.getId(), sucursal.getEmpresa().getId());
+
             camara.setSucursal(sucursal);
         }
 
@@ -151,7 +164,7 @@ public class CamaraService
     @Transactional
     public void activar(Long id) 
     {
-        Camara camara = buscarPorId(id);
+        Camara camara = buscarActivaPorId(id);
 
         camara.setActivo(true);
     }
@@ -159,7 +172,7 @@ public class CamaraService
     @Transactional
     public void desactivar(Long id) 
     {
-        Camara camara = buscarPorId(id);
+        Camara camara = buscarActivaPorId(id);
 
         camara.setActivo(false);
     }
@@ -175,9 +188,32 @@ public class CamaraService
     @Transactional
     public void eliminar(Long id) 
     {
-        var camara = buscarPorId(id);
+        Camara camara = buscarActivaPorId(id);
 
-        camaraRepository.delete(camara);
+        camara.setDeletedAt(Instant.now());
+    }
+
+    @Transactional
+    public Camara restaurar(Long id) 
+    {
+        Camara camara = camaraRepository.findOne(scopeSpec().and(byIdSpec(id)))
+                .orElseThrow(() -> new CamaraNotFoundException("ID " + id));
+
+        camara.setDeletedAt(null);
+
+        return camara;
+    }
+
+    private Camara buscarActivaPorId(Long id)
+    {
+        Camara camara = buscarPorId(id);
+
+        if (camara.getDeletedAt() != null)
+        {
+            throw new CamaraNotFoundException("ID " + id);
+        }
+
+        return camara;
     }
 
     @Transactional(readOnly = true)

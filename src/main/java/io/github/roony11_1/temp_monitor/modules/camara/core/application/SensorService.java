@@ -1,5 +1,6 @@
 package io.github.roony11_1.temp_monitor.modules.camara.core.application;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -53,14 +54,14 @@ public class SensorService
 
     public Optional<Sensor> authenticateByUuidAndApiKey(UUID uuid, String apiKey) 
     {
-        return sensorRepository.findByUuid(uuid)
+        return sensorRepository.findActiveByUuid(uuid)
             .filter(sensor -> hashService.verify(apiKey, sensor.getApiKeyHash()));
     }
 
     @Transactional
     public RegistroSensorResponse registrar(RegistroSensorRequest request)
     {
-        if (sensorRepository.findByMacAddress(request.getMacAddress()).isPresent())
+        if (sensorRepository.findActiveByMacAddress(request.getMacAddress()).isPresent())
         {
             throw new SensorAlreadyExistsException(request.getMacAddress());
         }
@@ -86,7 +87,7 @@ public class SensorService
     @Transactional
     public Sensor asignar(AsignarSensorRequest request)
     {
-        Sensor sensor = sensorRepository.findByUuid(request.getUuid())
+        Sensor sensor = sensorRepository.findActiveByUuid(request.getUuid())
             .orElseThrow(() -> new SensorNotFoundException("UUID " + request.getUuid()));
 
         if (!hashService.verify(request.getApiKey(), sensor.getApiKeyHash()))
@@ -96,6 +97,13 @@ public class SensorService
 
         Camara camara = camaraRepository.findById(request.getCamaraId())
             .orElseThrow(() -> new CamaraNotFoundException("ID " + request.getCamaraId()));
+
+        if (camara.getDeletedAt() != null)
+        {
+            throw new CamaraNotFoundException("ID " + request.getCamaraId());
+        }
+
+        currentUserScope.assertAccess(camara.getSucursal().getId(), camara.getSucursal().getEmpresa().getId());
 
         sensor.setCamara(camara);
         sensor.setEstado(EstadoSensor.ACTIVO);
@@ -134,13 +142,20 @@ public class SensorService
     @Transactional
     public Sensor actualizar(UUID uuid, ActualizarSensorRequest request)
     {
-        Sensor sensor = sensorRepository.findByUuidWithHierarchy(uuid)
+        Sensor sensor = sensorRepository.findActiveByUuidWithHierarchy(uuid)
             .orElseThrow(() -> new SensorNotFoundException("UUID " + uuid));
 
         if (request.getCamaraId() != null)
         {
             Camara camara = camaraRepository.findById(request.getCamaraId())
                 .orElseThrow(() -> new CamaraNotFoundException("ID " + request.getCamaraId()));
+
+            if (camara.getDeletedAt() != null)
+            {
+                throw new CamaraNotFoundException("ID " + request.getCamaraId());
+            }
+
+            currentUserScope.assertAccess(camara.getSucursal().getId(), camara.getSucursal().getEmpresa().getId());
             sensor.setCamara(camara);
 
             if (sensor.getEstado() == EstadoSensor.PENDIENTE && request.getEstado() == null)
@@ -166,7 +181,7 @@ public class SensorService
 
     public EstadoSensor consultarEstado(UUID uuid)
     {
-        return sensorRepository.findByUuid(uuid)
+        return sensorRepository.findActiveByUuid(uuid)
             .map(Sensor::getEstado)
             .orElseThrow(() -> new SensorNotFoundException("UUID " + uuid));
     }
@@ -174,7 +189,7 @@ public class SensorService
     @Transactional
     public RegistroSensorResponse renewApiKey(UUID uuid)
     {
-        Sensor sensor = sensorRepository.findByUuid(uuid)
+        Sensor sensor = sensorRepository.findActiveByUuid(uuid)
             .orElseThrow(() -> new SensorNotFoundException("UUID " + uuid));
 
         String newApiKey = apiKeyGenerator.generate();
@@ -190,7 +205,7 @@ public class SensorService
     @Transactional
     public RegistroSensorResponse renewApiKeyByMac(String macAddress)
     {
-        Sensor sensor = sensorRepository.findByMacAddress(macAddress)
+        Sensor sensor = sensorRepository.findActiveByMacAddress(macAddress)
             .orElseThrow(() -> new SensorNotFoundException("MAC " + macAddress));
 
         String newApiKey = apiKeyGenerator.generate();
@@ -201,6 +216,26 @@ public class SensorService
             .estado(sensor.getEstado())
             .apiKey(newApiKey)
             .build();
+    }
+
+    @Transactional
+    public void eliminar(UUID uuid)
+    {
+        Sensor sensor = sensorRepository.findActiveByUuidWithHierarchy(uuid)
+            .orElseThrow(() -> new SensorNotFoundException("UUID " + uuid));
+
+        sensor.setDeletedAt(Instant.now());
+    }
+
+    @Transactional
+    public Sensor restaurar(UUID uuid)
+    {
+        Sensor sensor = sensorRepository.findByUuidWithHierarchy(uuid)
+            .orElseThrow(() -> new SensorNotFoundException("UUID " + uuid));
+
+        sensor.setDeletedAt(null);
+
+        return sensor;
     }
 
     private Specification<Sensor> scopeSpec()

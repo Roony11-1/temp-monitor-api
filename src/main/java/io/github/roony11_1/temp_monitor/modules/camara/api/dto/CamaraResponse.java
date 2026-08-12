@@ -16,6 +16,7 @@ public class CamaraResponse
     private Double temperaturaMin;
     private Double temperaturaMax;
     private boolean activo;
+    private boolean eliminado;
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -29,6 +30,7 @@ public class CamaraResponse
         response.setTemperaturaMin(camara.getTemperaturaMin());
         response.setTemperaturaMax(camara.getTemperaturaMax());
         response.setActivo(camara.isActivo());
+        response.setEliminado(camara.getDeletedAt() != null);
         response.setCreatedAt(camara.getCreatedAt());
         response.setUpdatedAt(camara.getUpdatedAt());
 

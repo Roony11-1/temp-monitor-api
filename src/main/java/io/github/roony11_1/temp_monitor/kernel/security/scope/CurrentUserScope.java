@@ -85,29 +85,39 @@ public class CurrentUserScope
     /**
      * Specification de ámbito lista para combinarse con la del usuario.
      * Devuelve una conjunción (sin filtro) para SUPER_ADMIN.
+     * Para el resto de roles, además del ámbito, excluye los registros
+     * eliminados lógicamente (deletedAt IS NULL), de modo que solo el
+     * SUPER_ADMIN ve el estado "eliminado" en el mismo listado.
      */
     public <T> Specification<T> scopeSpec(String empresaPath, String sucursalPath)
     {
-        Optional<FilterCondition> condition = scopeCondition(empresaPath, sucursalPath);
-        if (condition.isEmpty())
+        if (isSuperAdmin())
         {
             return (root, query, cb) -> cb.conjunction();
         }
-        return new FilterSpecificationBuilder<T>().withCondition(condition.get()).build();
+        Optional<FilterCondition> condition = scopeCondition(empresaPath, sucursalPath);
+        FilterSpecificationBuilder<T> builder = new FilterSpecificationBuilder<T>()
+                .withCondition(new FilterCondition("deletedAt", FilterOperator.IS_NULL, null));
+        condition.ifPresent(builder::withCondition);
+        return builder.build();
     }
 
     /**
      * Specification de ámbito para el catálogo de Empresas.
-     * Devuelve una conjunción para SUPER_ADMIN.
+     * Devuelve una conjunción para SUPER_ADMIN; para el resto excluye
+     * los registros eliminados lógicamente.
      */
     public <T> Specification<T> scopeEmpresaOnlySpec(String empresaPath)
     {
-        Optional<FilterCondition> condition = scopeEmpresaOnly(empresaPath);
-        if (condition.isEmpty())
+        if (isSuperAdmin())
         {
             return (root, query, cb) -> cb.conjunction();
         }
-        return new FilterSpecificationBuilder<T>().withCondition(condition.get()).build();
+        Optional<FilterCondition> condition = scopeEmpresaOnly(empresaPath);
+        FilterSpecificationBuilder<T> builder = new FilterSpecificationBuilder<T>()
+                .withCondition(new FilterCondition("deletedAt", FilterOperator.IS_NULL, null));
+        condition.ifPresent(builder::withCondition);
+        return builder.build();
     }
 
     /**

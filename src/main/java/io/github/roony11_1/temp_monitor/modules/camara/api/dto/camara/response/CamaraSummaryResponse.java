@@ -20,4 +20,5 @@ public class CamaraSummaryResponse
     private Double temperaturaMax;
     private Double temperaturaActual;
     private boolean estado;
+    private boolean eliminado;
 }

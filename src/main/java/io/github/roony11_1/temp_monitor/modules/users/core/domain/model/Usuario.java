@@ -64,6 +64,8 @@ public class Usuario
     @Builder.Default
     private boolean activo = true;
 
+    private Instant deletedAt;
+
     public Long getEmpresaId() {
         return empresa != null ? empresa.getId() : null;
     }

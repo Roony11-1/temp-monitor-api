@@ -21,6 +21,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -68,6 +69,13 @@ public class SucursalService
         Empresa empresa = empresaRepository.findById(requst.getEmpresaId())
                 .orElseThrow(() -> new EmpresaNotFoundException("ID " + requst.getEmpresaId()));
 
+        if (empresa.getDeletedAt() != null)
+        {
+            throw new EmpresaNotFoundException("ID " + requst.getEmpresaId());
+        }
+
+        currentUserScope.assertAccess(null, empresa.getId());
+
         if (sucursalRepository.existsByNombre(requst.getNombre())) 
         {
             throw new NombreSucursalAlreadyExistsException(requst.getNombre());
@@ -87,7 +95,7 @@ public class SucursalService
     @Transactional
     public Sucursal actualizar(Long id, SucursalRequest request) 
     {
-        Sucursal sucursal = buscarPorId(id);
+        Sucursal sucursal = buscarActivaPorId(id);
 
         sucursal.setNombre(request.getNombre());
         sucursal.setDireccion(request.getDireccion());
@@ -97,6 +105,7 @@ public class SucursalService
         {
             Empresa empresa = empresaRepository.findById(request.getEmpresaId())
                     .orElseThrow(() -> new EmpresaNotFoundException("ID " + request.getEmpresaId()));
+            currentUserScope.assertAccess(null, empresa.getId());
             sucursal.setEmpresa(empresa);
         }
 
@@ -106,22 +115,45 @@ public class SucursalService
     @Transactional
     public void activar(Long id) 
     {
-        Sucursal sucursal = buscarPorId(id);
+        Sucursal sucursal = buscarActivaPorId(id);
         sucursal.setActivo(true);
     }
 
     @Transactional
     public void desactivar(Long id) 
     {
-        Sucursal sucursal = buscarPorId(id);
+        Sucursal sucursal = buscarActivaPorId(id);
         sucursal.setActivo(false);
     }
 
     @Transactional
     public void eliminar(Long id) 
     {
-        var sucursal = buscarPorId(id);
-        sucursalRepository.delete(sucursal);
+        Sucursal sucursal = buscarActivaPorId(id);
+        sucursal.setDeletedAt(Instant.now());
+    }
+
+    @Transactional
+    public Sucursal restaurar(Long id) 
+    {
+        Sucursal sucursal = sucursalRepository.findOne(scopeSpec().and(byIdSpec(id)))
+                .orElseThrow(() -> new SucursalNotFoundException("ID " + id));
+
+        sucursal.setDeletedAt(null);
+
+        return sucursal;
+    }
+
+    private Sucursal buscarActivaPorId(Long id)
+    {
+        Sucursal sucursal = buscarPorId(id);
+
+        if (sucursal.getDeletedAt() != null)
+        {
+            throw new SucursalNotFoundException("ID " + id);
+        }
+
+        return sucursal;
     }
 
     private Specification<Sucursal> scopeSpec()

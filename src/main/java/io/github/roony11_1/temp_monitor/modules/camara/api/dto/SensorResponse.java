@@ -21,6 +21,7 @@ public class SensorResponse
     private String empresaNombre;
     private Instant ultimoContacto;
     private EstadoSensor estado;
+    private boolean eliminado;
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -43,6 +44,7 @@ public class SensorResponse
 
         response.setUltimoContacto(sensor.getUltimoContacto());
         response.setEstado(sensor.getEstado());
+        response.setEliminado(sensor.getDeletedAt() != null);
         response.setCreatedAt(sensor.getCreatedAt());
         response.setUpdatedAt(sensor.getUpdatedAt());
 

@@ -46,6 +46,8 @@ public class Camara
     @Builder.Default
     private boolean activo = true;
 
+    private Instant deletedAt;
+
     @CreationTimestamp
     private Instant createdAt;
 

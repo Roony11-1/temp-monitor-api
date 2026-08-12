@@ -23,6 +23,7 @@ public class SensorMapper implements EntityMapper<Sensor, SensorSummaryResponse>
             .empresaId(entity.getCamara() != null ? entity.getCamara().getSucursal().getEmpresa().getId() : null)
             .empresaNombre(entity.getCamara() != null ? entity.getCamara().getSucursal().getEmpresa().getNombre() : null)
             .estado(entity.getEstado())
+            .eliminado(entity.getDeletedAt() != null)
             .build();
     }
 }

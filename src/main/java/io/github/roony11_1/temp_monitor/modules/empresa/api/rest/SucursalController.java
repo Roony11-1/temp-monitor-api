@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -48,6 +49,7 @@ public class SucursalController
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'SUPER_ADMIN')")
     public ResponseEntity<SucursalResponse> crear(@RequestBody SucursalRequest request) 
     {
         Sucursal sucursal = sucursalService.crear(request);
@@ -57,6 +59,7 @@ public class SucursalController
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'SUPER_ADMIN')")
     public SucursalResponse actualizar(@PathVariable Long id, @RequestBody SucursalRequest request) 
     {
         var sucursal = sucursalService.actualizar(id, request);
@@ -65,6 +68,7 @@ public class SucursalController
     }
 
     @PostMapping("/{id}/activar")
+    @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'SUPER_ADMIN')")
     public ResponseEntity<Void> activar(@PathVariable Long id) 
     {
         sucursalService.activar(id);
@@ -72,13 +76,24 @@ public class SucursalController
     }
 
     @PostMapping("/{id}/desactivar")
+    @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'SUPER_ADMIN')")
     public ResponseEntity<Void> desactivar(@PathVariable Long id) 
     {
         sucursalService.desactivar(id);
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/{id}/restaurar")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<SucursalResponse> restaurar(@PathVariable Long id) 
+    {
+        var sucursal = sucursalService.restaurar(id);
+
+        return ResponseEntity.ok(SucursalResponse.toResponse(sucursal));
+    }
+
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'SUPER_ADMIN')")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) 
     {
         sucursalService.eliminar(id);

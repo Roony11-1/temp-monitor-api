@@ -21,6 +21,7 @@ public class CamaraMapper implements EntityMapper<Camara, CamaraSummaryResponse>
             .temperaturaMin(entity.getTemperaturaMin())
             .temperaturaMax(entity.getTemperaturaMax())
             .estado(entity.isActivo())
+            .eliminado(entity.getDeletedAt() != null)
             .build();
     }
 }
