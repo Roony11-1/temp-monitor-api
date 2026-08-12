@@ -28,10 +28,10 @@ public class JwtGenerator
 
     public String generate(TokenUser user) 
     {
-        Objects.requireNonNull(user.getId(), "El usuario no tiene ID");
-        Objects.requireNonNull(user.getEmail(), "El usuario no tiene email");
+        Objects.requireNonNull(user.id(), "El usuario no tiene ID");
+        Objects.requireNonNull(user.email(), "El usuario no tiene email");
 
-        Set<String> roles = user.getRoles()
+        Set<String> roles = user.roles()
                 .stream()
                 .map(Rol::name)
                 .collect(Collectors.toSet());
@@ -47,27 +47,27 @@ public class JwtGenerator
 
             var builder = Jwts.builder()
                     .issuer("temp-monitor")
-                    .subject(user.getId().toString())
-                    .claim("email", user.getEmail())
+                    .subject(user.id().toString())
+                    .claim("email", user.email())
                     .claim("roles", roles)
                     .issuedAt(new Date())
                     .expiration(Date.from(Instant.now().plus(Duration.ofHours(jwtConfig.getExpirationHours()))));
 
-            if (user.getEmpresaId() != null) 
+            if (user.empresaId() != null) 
             {
-                builder.claim("empresaId", user.getEmpresaId());
+                builder.claim("empresaId", user.empresaId());
             }
 
-            if (user.getSucursalId() != null) 
+            if (user.sucursalId() != null) 
             {
-                builder.claim("sucursalId", user.getSucursalId());
+                builder.claim("sucursalId", user.sucursalId());
             }
 
             return builder.signWith(key).compact();
         } 
         catch (Exception e) 
         {
-            log.error("Error al generar JWT para userId={}", user.getId(), e);
+            log.error("Error al generar JWT para userId={}", user.id(), e);
             throw new JwtGenerationException(e.getMessage());
         }
     }

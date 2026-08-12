@@ -96,16 +96,16 @@ public class UsuarioService
 
         TokenUser currentUser = getCurrentUser();
 
-        if (currentUser.getRoles().contains(Rol.SUPER_ADMIN)) 
+        if (currentUser.roles().contains(Rol.SUPER_ADMIN)) 
         {
             // SUPER_ADMIN puede crear cualquier rol
         } 
-        else if (currentUser.getRoles().contains(Rol.ADMIN_EMPRESA)) 
+        else if (currentUser.roles().contains(Rol.ADMIN_EMPRESA)) 
         {
             // ADMIN_EMPRESA solo puede crear ADMIN_SUCURSAL, TECNICO, USUARIO
             validarRolesAsignables(request.getRoles());
             // Debe asignar su misma empresa
-            if (request.getEmpresaId() == null || !request.getEmpresaId().equals(currentUser.getEmpresaId())) 
+            if (request.getEmpresaId() == null || !request.getEmpresaId().equals(currentUser.empresaId())) 
             {
                 throw new AccesoDenegadoException("Solo puedes crear usuarios en tu propia empresa");
             }
@@ -156,7 +156,7 @@ public class UsuarioService
 
         TokenUser currentUser = getCurrentUser();
 
-        if (!currentUser.getRoles().contains(Rol.SUPER_ADMIN)) 
+        if (!currentUser.roles().contains(Rol.SUPER_ADMIN)) 
         {
             validarNoModificaAdmin(usuario);
             validarRolesAsignables(request.getRoles());
@@ -167,8 +167,8 @@ public class UsuarioService
 
         if (request.getEmpresaId() != null) 
         {
-            if (!currentUser.getRoles().contains(Rol.SUPER_ADMIN)
-                    && !request.getEmpresaId().equals(currentUser.getEmpresaId())) 
+            if (!currentUser.roles().contains(Rol.SUPER_ADMIN)
+                    && !request.getEmpresaId().equals(currentUser.empresaId())) 
             {
                 throw new AccesoDenegadoException("Solo puedes asignar tu propia empresa");
             }

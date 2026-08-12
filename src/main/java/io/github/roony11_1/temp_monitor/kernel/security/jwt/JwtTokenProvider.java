@@ -84,13 +84,6 @@ public class JwtTokenProvider
         Long empresaId = claims.get("empresaId", Long.class);
         Long sucursalId = claims.get("sucursalId", Long.class);
 
-        return new TokenUser() 
-        {
-            @Override public Long getId() { return userId; }
-            @Override public String getEmail() { return email; }
-            @Override public Set<Rol> getRoles() { return roles; }
-            @Override public Long getEmpresaId() { return empresaId; }
-            @Override public Long getSucursalId() { return sucursalId; }
-        };
+        return new TokenUser(userId, email, roles, empresaId, sucursalId);
     }
 }

@@ -38,7 +38,7 @@ public class CurrentUserScope
 
     public boolean isSuperAdmin()
     {
-        return currentUser().getRoles().contains(Rol.SUPER_ADMIN);
+        return currentUser().roles().contains(Rol.SUPER_ADMIN);
     }
 
     /**
@@ -53,13 +53,13 @@ public class CurrentUserScope
             return Optional.empty();
         }
         TokenUser user = currentUser();
-        if (user.getSucursalId() != null)
+        if (user.sucursalId() != null)
         {
-            return Optional.of(new FilterCondition(sucursalPath, FilterOperator.EQ, user.getSucursalId()));
+            return Optional.of(new FilterCondition(sucursalPath, FilterOperator.EQ, user.sucursalId()));
         }
-        if (user.getEmpresaId() != null)
+        if (user.empresaId() != null)
         {
-            return Optional.of(new FilterCondition(empresaPath, FilterOperator.EQ, user.getEmpresaId()));
+            return Optional.of(new FilterCondition(empresaPath, FilterOperator.EQ, user.empresaId()));
         }
         throw new AccesoDenegadoException("El usuario no tiene un ámbito de acceso asignado");
     }
@@ -75,9 +75,9 @@ public class CurrentUserScope
             return Optional.empty();
         }
         TokenUser user = currentUser();
-        if (user.getEmpresaId() != null)
+        if (user.empresaId() != null)
         {
-            return Optional.of(new FilterCondition(empresaPath, FilterOperator.EQ, user.getEmpresaId()));
+            return Optional.of(new FilterCondition(empresaPath, FilterOperator.EQ, user.empresaId()));
         }
         throw new AccesoDenegadoException("El usuario no tiene un ámbito de acceso asignado");
     }
@@ -121,13 +121,13 @@ public class CurrentUserScope
             return true;
         }
         TokenUser user = currentUser();
-        if (user.getSucursalId() != null)
+        if (user.sucursalId() != null)
         {
-            return sucursalId != null && user.getSucursalId().equals(sucursalId);
+            return sucursalId != null && user.sucursalId().equals(sucursalId);
         }
-        if (user.getEmpresaId() != null)
+        if (user.empresaId() != null)
         {
-            return empresaId != null && user.getEmpresaId().equals(empresaId);
+            return empresaId != null && user.empresaId().equals(empresaId);
         }
         return false;
     }

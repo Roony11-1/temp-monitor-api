@@ -38,6 +38,11 @@ public class DefaultUserCredentialsService implements IUserCredentialsService
 
         usuario.setLastLogin(Instant.now());
 
-        return usuario;
+        return new TokenUser(
+                usuario.getId(),
+                usuario.getEmail(),
+                usuario.getRoles(),
+                usuario.getEmpresaId(),
+                usuario.getSucursalId());
     }
 }

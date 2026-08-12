@@ -6,9 +6,6 @@ import io.github.roony11_1.temp_monitor.kernel.security.model.Rol;
 import io.github.roony11_1.temp_monitor.kernel.security.model.TokenUser;
 import io.github.roony11_1.specification.core.FilterCondition;
 import io.github.roony11_1.specification.core.FilterOperator;
-import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Empresa;
-import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Sucursal;
-import io.github.roony11_1.temp_monitor.modules.users.core.domain.model.Usuario;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -105,20 +102,14 @@ class CurrentUserScopeTest {
     }
 
     private void authenticate(TokenUser principal) {
-        var authorities = principal.getRoles().stream()
+        var authorities = principal.roles().stream()
                 .map(rol -> new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + rol.name()))
                 .toList();
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(principal, null, authorities));
     }
 
-    private Usuario usuario(Rol rol, Long empresaId, Long sucursalId) {
-        Empresa empresa = empresaId != null ? Empresa.builder().id(empresaId).build() : null;
-        Sucursal sucursal = sucursalId != null ? Sucursal.builder().id(sucursalId).build() : null;
-        return Usuario.builder()
-                .roles(Set.of(rol))
-                .empresa(empresa)
-                .sucursal(sucursal)
-                .build();
+    private TokenUser usuario(Rol rol, Long empresaId, Long sucursalId) {
+        return new TokenUser(1L, "test@test.com", Set.of(rol), empresaId, sucursalId);
     }
 }

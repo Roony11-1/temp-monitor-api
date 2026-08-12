@@ -11,7 +11,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import io.github.roony11_1.temp_monitor.kernel.security.model.Rol;
-import io.github.roony11_1.temp_monitor.kernel.security.model.TokenUser;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Empresa;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Sucursal;
 
@@ -22,7 +21,7 @@ import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Sucurs
 @NoArgsConstructor
 @Builder
 @EqualsAndHashCode(callSuper = false)
-public class Usuario implements TokenUser 
+public class Usuario 
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -65,12 +64,10 @@ public class Usuario implements TokenUser
     @Builder.Default
     private boolean activo = true;
 
-    @Override
     public Long getEmpresaId() {
         return empresa != null ? empresa.getId() : null;
     }
 
-    @Override
     public Long getSucursalId() {
         return sucursal != null ? sucursal.getId() : null;
     }
