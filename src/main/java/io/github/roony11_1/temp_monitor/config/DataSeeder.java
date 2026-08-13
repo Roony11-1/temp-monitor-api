@@ -12,6 +12,7 @@ import io.github.roony11_1.temp_monitor.modules.users.core.domain.repository.Usu
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -27,10 +28,13 @@ public class DataSeeder implements CommandLineRunner
     private final SucursalRepository sucursalRepository;
     private final CamaraRepository camaraRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JdbcTemplate jdbcTemplate;
 
     @Override
     public void run(String... args) 
     {
+        limpiarRolObsoletoTecnico();
+
         if (usuarioRepository.count() > 0) return;
 
         log.info("Sembrando datos de prueba...");
@@ -58,13 +62,24 @@ public class DataSeeder implements CommandLineRunner
         crearUsuario("empresa2@test.com",    pass, "Admin FoodInc",     foodInc,  null, Rol.ADMIN_EMPRESA);
         crearUsuario("sucursal1@test.com",   pass, "Admin Centro",      techCorp, centro, Rol.ADMIN_SUCURSAL);
         crearUsuario("sucursal2@test.com",   pass, "Admin Norte",       techCorp, norte,  Rol.ADMIN_SUCURSAL);
-        crearUsuario("tecnico1@test.com",    pass, "Técnico Centro",    techCorp, centro, Rol.TECNICO);
-        crearUsuario("tecnico2@test.com",    pass, "Técnico Norte",     techCorp, norte,  Rol.TECNICO);
-        crearUsuario("tecnico3@test.com",    pass, "Técnico Sur",       foodInc,  sur,    Rol.TECNICO);
         crearUsuario("usuario1@test.com",    pass, "Usuario Centro",    techCorp, centro, Rol.USUARIO);
         crearUsuario("usuario2@test.com",    pass, "Usuario Norte",     techCorp, norte,  Rol.USUARIO);
 
         log.info("Seed completado. Todos los usuarios usan contraseña 'admin123'");
+    }
+
+    private void limpiarRolObsoletoTecnico() {
+        int rolesBorrados = jdbcTemplate.update(
+            "DELETE FROM usuario_roles WHERE rol = ?", "TECNICO");
+        if (rolesBorrados > 0) {
+            log.warn("Rol obsoleto TECNICO detectado: se borraron {} roles.", rolesBorrados);
+        }
+
+        int usuariosSinRol = jdbcTemplate.update(
+            "DELETE FROM usuarios u WHERE NOT EXISTS (SELECT 1 FROM usuario_roles r WHERE r.usuario_id = u.id)");
+        if (usuariosSinRol > 0) {
+            log.warn("Se borraron {} usuarios que quedaron sin rol.", usuariosSinRol);
+        }
     }
 
     private void crearUsuario(String email, String password, String nombre, Empresa empresa, Sucursal sucursal, Rol rol) {

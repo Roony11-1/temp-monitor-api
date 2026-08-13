@@ -19,7 +19,7 @@ import java.util.Optional;
  *
  * Política:
  * - SUPER_ADMIN -> acceso total (sin filtro).
- * - Usuario con sucursal (ADMIN_SUCURSAL, TECNICO, USUARIO) -> solo su sucursal.
+ * - Usuario con sucursal (ADMIN_SUCURSAL, USUARIO) -> solo su sucursal.
  * - Usuario con solo empresa (ADMIN_EMPRESA) -> solo su empresa.
  * - Sin empresa ni sucursal -> denegado.
  */

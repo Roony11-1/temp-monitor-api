@@ -32,6 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -55,11 +56,23 @@ public class UsuarioService
     @Transactional(readOnly = true)
     public Page<UsuarioSummaryResponse> listarTodos(Pageable pageable, Map<String, String> filters)
     {
+        Map<String, String> escalares = new HashMap<>(filters);
+        String rol = escalares.remove("roles");
+
         var userSpec = new FilterSpecificationBuilder<Usuario>()
                 .withAliases(FILTER_ALIASES)
-                .withConditions(filters)
+                .withConditions(escalares)
                 .build();
-        return usuarioRepository.findAll(scopeSpec().and(userSpec), pageable)
+
+        Specification<Usuario> rolesSpec = (root, query, cb) -> cb.conjunction();
+        if (rol != null && !rol.isBlank()) {
+            rolesSpec = (root, query, cb) -> {
+                query.distinct(true);
+                return root.join("roles").as(String.class).in(rol);
+            };
+        }
+
+        return usuarioRepository.findAll(scopeSpec().and(userSpec).and(rolesSpec), pageable)
                 .map(usuarioMapper::toSummaryResponse);
     }
 
@@ -105,7 +118,7 @@ public class UsuarioService
         } 
         else if (currentUser.roles().contains(Rol.ADMIN_EMPRESA)) 
         {
-            // ADMIN_EMPRESA solo puede crear ADMIN_SUCURSAL, TECNICO, USUARIO
+            // ADMIN_EMPRESA solo puede crear ADMIN_SUCURSAL, USUARIO
             validarRolesAsignables(request.getRoles());
             // Debe asignar su misma empresa
             if (request.getEmpresaId() == null || !request.getEmpresaId().equals(currentUser.empresaId())) 

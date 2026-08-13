@@ -5,6 +5,5 @@ public enum Rol
     SUPER_ADMIN,
     ADMIN_EMPRESA,
     ADMIN_SUCURSAL,
-    TECNICO,
     USUARIO
 }
