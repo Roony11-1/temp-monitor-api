@@ -35,6 +35,10 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long>, JpaSpec
     @EntityGraph(attributePaths = {"empresa", "sucursal"})
     List<Usuario> findAll(Specification<Usuario> spec);
 
+    @Override
+    @EntityGraph(attributePaths = {"empresa", "sucursal", "roles"})
+    Optional<Usuario> findOne(Specification<Usuario> spec);
+
     @Query("SELECT u FROM Usuario u LEFT JOIN FETCH u.empresa LEFT JOIN FETCH u.sucursal WHERE u.id = :id AND u.deletedAt IS NULL")
     @Override
     Optional<Usuario> findById(@Param("id") Long id);
