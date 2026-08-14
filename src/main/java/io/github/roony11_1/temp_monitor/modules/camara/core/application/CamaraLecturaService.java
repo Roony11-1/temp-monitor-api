@@ -89,6 +89,14 @@ public class CamaraLecturaService
     }
 
     @Transactional(readOnly = true)
+    public List<CamaraLectura> listarTodoPorCamara(Long camaraId)
+    {
+        assertCamaraEnScope(camaraId);
+
+        return camaraLecturaRepository.findByCamaraIdOrderByBucketStartAsc(camaraId);
+    }
+
+    @Transactional(readOnly = true)
     public List<CamaraLecturaResumen> listarResumenPorCamara(Long camaraId, GranularidadLectura granularidad)
     {
         assertCamaraEnScope(camaraId);

@@ -19,7 +19,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 
@@ -83,9 +82,14 @@ public class CamaraController
                     .toList();
         }
 
-        Instant since = desde != null ? Instant.ofEpochMilli(desde) : Instant.now().minus(Duration.ofHours(24));
+        if (desde != null)
+        {
+            return camaraLecturaService.listarPorCamara(id, Instant.ofEpochMilli(desde)).stream()
+                    .map(CamaraLecturaResponse::from)
+                    .toList();
+        }
 
-        return camaraLecturaService.listarPorCamara(id, since).stream()
+        return camaraLecturaService.listarTodoPorCamara(id).stream()
                 .map(CamaraLecturaResponse::from)
                 .toList();
     }

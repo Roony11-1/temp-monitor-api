@@ -16,6 +16,8 @@ public interface CamaraLecturaRepository extends JpaRepository<CamaraLectura, Lo
 
     List<CamaraLectura> findByCamaraIdAndBucketStartAfterOrderByBucketStartAsc(Long camaraId, Instant since);
 
+    List<CamaraLectura> findByCamaraIdOrderByBucketStartAsc(Long camaraId);
+
     @Query("SELECT cl FROM CamaraLectura cl WHERE cl.bucketStart = "
         + "(SELECT MAX(cl2.bucketStart) FROM CamaraLectura cl2 WHERE cl2.camara.id = cl.camara.id) "
         + "AND cl.camara.id IN :camaraIds")
