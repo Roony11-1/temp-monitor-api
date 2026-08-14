@@ -11,9 +11,11 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.EstadoSensor;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Sensor;
 
 public interface SensorRepository extends JpaRepository<Sensor, Long>, JpaSpecificationExecutor<Sensor>
@@ -41,6 +43,30 @@ public interface SensorRepository extends JpaRepository<Sensor, Long>, JpaSpecif
     @Query(value = "SELECT s FROM Sensor s LEFT JOIN FETCH s.camara c LEFT JOIN FETCH c.sucursal sc LEFT JOIN FETCH sc.empresa WHERE c.id = :camaraId AND s.deletedAt IS NULL",
            countQuery = "SELECT COUNT(s) FROM Sensor s WHERE s.camara.id = :camaraId AND s.deletedAt IS NULL")
     List<Sensor> findByCamaraIdWithHierarchy(Long camaraId);
+
+    @Modifying
+    @Query("UPDATE Sensor s SET s.deletedAt = :deletedAt WHERE s.camara.id = :camaraId")
+    int bulkActualizarDeletedAtPorCamara(@Param("camaraId") Long camaraId, @Param("deletedAt") Instant deletedAt);
+
+    @Modifying
+    @Query("UPDATE Sensor s SET s.deletedAt = :deletedAt WHERE s.camara.sucursal.id = :sucursalId")
+    int bulkActualizarDeletedAtPorSucursal(@Param("sucursalId") Long sucursalId, @Param("deletedAt") Instant deletedAt);
+
+    @Modifying
+    @Query("UPDATE Sensor s SET s.deletedAt = :deletedAt WHERE s.camara.sucursal.empresa.id = :empresaId")
+    int bulkActualizarDeletedAtPorEmpresa(@Param("empresaId") Long empresaId, @Param("deletedAt") Instant deletedAt);
+
+    @Modifying
+    @Query("UPDATE Sensor s SET s.estado = :estado WHERE s.camara.id = :camaraId AND (:desde IS NULL OR s.estado = :desde)")
+    int bulkActualizarEstadoPorCamara(@Param("camaraId") Long camaraId, @Param("estado") EstadoSensor estado, @Param("desde") EstadoSensor desde);
+
+    @Modifying
+    @Query("UPDATE Sensor s SET s.estado = :estado WHERE s.camara.sucursal.id = :sucursalId AND (:desde IS NULL OR s.estado = :desde)")
+    int bulkActualizarEstadoPorSucursal(@Param("sucursalId") Long sucursalId, @Param("estado") EstadoSensor estado, @Param("desde") EstadoSensor desde);
+
+    @Modifying
+    @Query("UPDATE Sensor s SET s.estado = :estado WHERE s.camara.sucursal.empresa.id = :empresaId AND (:desde IS NULL OR s.estado = :desde)")
+    int bulkActualizarEstadoPorEmpresa(@Param("empresaId") Long empresaId, @Param("estado") EstadoSensor estado, @Param("desde") EstadoSensor desde);
 
     @Query("SELECT COUNT(s) FROM Sensor s WHERE s.deletedAt IS NULL AND s.estado = io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.EstadoSensor.ACTIVO AND s.ultimoContacto > :threshold")
     long countOnline(@Param("threshold") Instant threshold);

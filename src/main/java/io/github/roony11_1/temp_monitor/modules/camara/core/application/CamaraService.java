@@ -15,6 +15,7 @@ import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.Le
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.SucursalNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Sucursal;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.repository.SucursalRepository;
+import io.github.roony11_1.temp_monitor.kernel.cascade.CascadeStateService;
 import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
 import io.github.roony11_1.specification.core.FilterCondition;
@@ -50,6 +51,7 @@ public class CamaraService
 
     private final EntityMapper<Camara, CamaraSummaryResponse> camaraMapper;
     private final CurrentUserScope currentUserScope;
+    private final CascadeStateService cascadeStateService;
 
     @Transactional(readOnly = true)
     public Page<CamaraSummaryResponse> listarTodas(Pageable pageable, Map<String, String> filters)
@@ -166,7 +168,7 @@ public class CamaraService
     {
         Camara camara = buscarActivaPorId(id);
 
-        camara.setActivo(true);
+        cascadeStateService.activarCamara(camara);
     }
 
     @Transactional
@@ -174,7 +176,7 @@ public class CamaraService
     {
         Camara camara = buscarActivaPorId(id);
 
-        camara.setActivo(false);
+        cascadeStateService.desactivarCamara(camara);
     }
 
     private void validarRango(Double min, Double max) 
@@ -190,7 +192,7 @@ public class CamaraService
     {
         Camara camara = buscarActivaPorId(id);
 
-        camara.setDeletedAt(Instant.now());
+        cascadeStateService.eliminarCamara(camara);
     }
 
     @Transactional
@@ -199,7 +201,7 @@ public class CamaraService
         Camara camara = camaraRepository.findOne(scopeSpec().and(byIdSpec(id)))
                 .orElseThrow(() -> new CamaraNotFoundException("ID " + id));
 
-        camara.setDeletedAt(null);
+        cascadeStateService.restaurarCamara(camara);
 
         return camara;
     }

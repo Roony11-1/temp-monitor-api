@@ -1,5 +1,6 @@
 package io.github.roony11_1.temp_monitor.modules.empresa.core.application;
 
+import io.github.roony11_1.temp_monitor.kernel.cascade.CascadeStateService;
 import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
 import io.github.roony11_1.specification.core.FilterCondition;
@@ -18,7 +19,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.util.Map;
 
 @Service
@@ -28,6 +28,7 @@ public class EmpresaService
     private final EmpresaRepository empresaRepository;
     private final EntityMapper<Empresa, EmpresaSummaryResponse> empresaMapper;
     private final CurrentUserScope currentUserScope;
+    private final CascadeStateService cascadeStateService;
 
     @Transactional(readOnly = true)
     public Page<EmpresaSummaryResponse> listarTodas(Pageable pageable, Map<String, String> filters)
@@ -74,7 +75,7 @@ public class EmpresaService
     {
         Empresa empresa = buscarActivaPorId(id);
 
-        empresa.setActivo(true);
+        cascadeStateService.activarEmpresa(empresa);
     }
 
     @Transactional
@@ -82,7 +83,7 @@ public class EmpresaService
     {
         Empresa empresa = buscarActivaPorId(id);
 
-        empresa.setActivo(false);
+        cascadeStateService.desactivarEmpresa(empresa);
     }
 
     @Transactional
@@ -90,7 +91,7 @@ public class EmpresaService
     {
         Empresa empresa = buscarActivaPorId(id);
 
-        empresa.setDeletedAt(Instant.now());
+        cascadeStateService.eliminarEmpresa(empresa);
     }
 
     @Transactional
@@ -99,7 +100,7 @@ public class EmpresaService
         Empresa empresa = empresaRepository.findOne(empresaScope().and(byIdSpec(id)))
                 .orElseThrow(() -> new EmpresaNotFoundException("ID " + id));
 
-        empresa.setDeletedAt(null);
+        cascadeStateService.restaurarEmpresa(empresa);
 
         return empresa;
     }

@@ -1,5 +1,6 @@
 package io.github.roony11_1.temp_monitor.modules.empresa.core.application;
 
+import io.github.roony11_1.temp_monitor.kernel.cascade.CascadeStateService;
 import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
 import io.github.roony11_1.specification.core.FilterCondition;
@@ -21,7 +22,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -36,6 +36,7 @@ public class SucursalService
     private final EmpresaRepository empresaRepository;
     private final EntityMapper<Sucursal, SucursalSummaryResponse> sucursalMapper;
     private final CurrentUserScope currentUserScope;
+    private final CascadeStateService cascadeStateService;
 
     @Transactional(readOnly = true)
     public Page<SucursalSummaryResponse> listarTodas(Pageable pageable, Map<String, String> filters)
@@ -116,21 +117,21 @@ public class SucursalService
     public void activar(Long id) 
     {
         Sucursal sucursal = buscarActivaPorId(id);
-        sucursal.setActivo(true);
+        cascadeStateService.activarSucursal(sucursal);
     }
 
     @Transactional
     public void desactivar(Long id) 
     {
         Sucursal sucursal = buscarActivaPorId(id);
-        sucursal.setActivo(false);
+        cascadeStateService.desactivarSucursal(sucursal);
     }
 
     @Transactional
     public void eliminar(Long id) 
     {
         Sucursal sucursal = buscarActivaPorId(id);
-        sucursal.setDeletedAt(Instant.now());
+        cascadeStateService.eliminarSucursal(sucursal);
     }
 
     @Transactional
@@ -139,7 +140,7 @@ public class SucursalService
         Sucursal sucursal = sucursalRepository.findOne(scopeSpec().and(byIdSpec(id)))
                 .orElseThrow(() -> new SucursalNotFoundException("ID " + id));
 
-        sucursal.setDeletedAt(null);
+        cascadeStateService.restaurarSucursal(sucursal);
 
         return sucursal;
     }
