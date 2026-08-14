@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import io.github.roony11_1.temp_monitor.kernel.dto.PageResponse;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.RegistrarLecturaRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.core.application.LecturaService;
+import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.GranularidadLectura;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Lectura;
 import lombok.RequiredArgsConstructor;
 
@@ -36,8 +37,18 @@ public class LecturaController
     }
 
     @GetMapping("/sensor/{uuid}")
-    public ResponseEntity<PageResponse<Lectura>> listarPorSensor(@PathVariable UUID uuid, @RequestParam(required = false) Long since, @PageableDefault(size = 10000, sort = "timestamp") Pageable pageable)
+    public ResponseEntity<PageResponse<?>> listarPorSensor(
+            @PathVariable UUID uuid,
+            @RequestParam(required = false) Long since,
+            @RequestParam(required = false) GranularidadLectura granularidad,
+            @PageableDefault(size = 10000, sort = "timestamp") Pageable pageable)
     {
+        if (granularidad != null)
+        {
+            return ResponseEntity.ok(PageResponse.from(
+                    lecturaService.listarResumenPorSensor(uuid, granularidad, pageable)));
+        }
+
         var page = since != null
             ? lecturaService.listarPorSensor(uuid, Instant.ofEpochMilli(since), pageable)
             : lecturaService.listarPorSensor(uuid, pageable);

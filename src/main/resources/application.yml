@@ -17,6 +17,12 @@ app:
     secret: ${APP_JWT_SECRET}
     access-expiration-minutes: ${APP_JWT_ACCESS_EXPIRATION_MINUTES:15}
     refresh-expiration-days: ${APP_JWT_REFRESH_EXPIRATION_DAYS:7}
+  compactacion:
+    enabled: ${COMPACTACION_ENABLED:false}
+    cron: ${COMPACTACION_CRON:0 0 3 * * SUN}
+    retencion-dias: ${COMPACTACION_RETENCION_DIAS:30}
+    retencion-meses: ${COMPACTACION_RETENCION_MESES:12}
+    max-lote: ${COMPACTACION_MAX_LOTE:100000}
 
 logging:
   level:

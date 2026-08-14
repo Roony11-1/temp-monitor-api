@@ -12,9 +12,12 @@ import io.github.roony11_1.temp_monitor.modules.camara.api.dto.RegistrarLecturaR
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.SensorDeshabilitadoException;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.SensorNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.SensorSinCamaraException;
+import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.GranularidadLectura;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Lectura;
+import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.LecturaResumen;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Sensor;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.LecturaRepository;
+import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.LecturaResumenRepository;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.SensorRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -23,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 public class LecturaService
 {
     private final LecturaRepository lecturaRepository;
+    private final LecturaResumenRepository lecturaResumenRepository;
     private final SensorRepository sensorRepository;
 
     @Transactional
@@ -64,5 +68,11 @@ public class LecturaService
     public Page<Lectura> listarPorSensor(UUID sensorUuid, Instant since, Pageable pageable)
     {
         return lecturaRepository.findBySensorUuidAndTimestampAfterOrderByTimestampDesc(sensorUuid, since, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<LecturaResumen> listarResumenPorSensor(UUID sensorUuid, GranularidadLectura granularidad, Pageable pageable)
+    {
+        return lecturaResumenRepository.findBySensorUuidAndGranularidadOrderByBucketStartDesc(sensorUuid, granularidad, pageable);
     }
 }

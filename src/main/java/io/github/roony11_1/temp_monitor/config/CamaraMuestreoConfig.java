@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 @Getter
 public class CamaraMuestreoConfig 
 {
-    @Value("${app.camara-muestreo.cadencia-ms:165000}")
+    @Value("${app.camara-muestreo.cadencia-ms:330000}")
     private long cadenciaMs;
 
     @Value("${app.camara-muestreo.initial-delay-ms:60000}")

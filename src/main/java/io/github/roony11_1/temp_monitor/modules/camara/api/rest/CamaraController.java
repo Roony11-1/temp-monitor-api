@@ -1,6 +1,7 @@
 package io.github.roony11_1.temp_monitor.modules.camara.api.rest;
 
 import io.github.roony11_1.temp_monitor.kernel.dto.PageResponse;
+import io.github.roony11_1.temp_monitor.modules.camara.api.dto.CamaraLecturaResumenResponse;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.CamaraLecturaResponse;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.CamaraRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.CamaraResponse;
@@ -10,6 +11,7 @@ import io.github.roony11_1.temp_monitor.modules.camara.api.dto.camara.response.C
 import io.github.roony11_1.temp_monitor.modules.camara.core.application.CamaraLecturaService;
 import io.github.roony11_1.temp_monitor.modules.camara.core.application.CamaraService;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Camara;
+import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.GranularidadLectura;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -69,10 +71,18 @@ public class CamaraController
     }
 
     @GetMapping("/{id}/lecturas")
-    public List<CamaraLecturaResponse> listarLecturas(
+    public List<?> listarLecturas(
             @PathVariable Long id,
-            @RequestParam(required = false) Long desde)
+            @RequestParam(required = false) Long desde,
+            @RequestParam(required = false) GranularidadLectura granularidad)
     {
+        if (granularidad != null)
+        {
+            return camaraLecturaService.listarResumenPorCamara(id, granularidad).stream()
+                    .map(CamaraLecturaResumenResponse::from)
+                    .toList();
+        }
+
         Instant since = desde != null ? Instant.ofEpochMilli(desde) : Instant.now().minus(Duration.ofHours(24));
 
         return camaraLecturaService.listarPorCamara(id, since).stream()

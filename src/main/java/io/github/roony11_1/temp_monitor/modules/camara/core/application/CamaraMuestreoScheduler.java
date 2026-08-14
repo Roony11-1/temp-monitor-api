@@ -10,7 +10,7 @@ public class CamaraMuestreoScheduler
 {
     private final CamaraLecturaService camaraLecturaService;
 
-    @Scheduled(fixedDelayString = "${app.camara-muestreo.cadencia-ms:165000}", initialDelayString = "${app.camara-muestreo.initial-delay-ms:60000}")
+    @Scheduled(fixedDelayString = "${app.camara-muestreo.cadencia-ms:330000}", initialDelayString = "${app.camara-muestreo.initial-delay-ms:60000}")
     public void muestrear()
     {
         camaraLecturaService.muestrear();

@@ -8,8 +8,11 @@ import io.github.roony11_1.specification.spring.FilterSpecificationBuilder;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.CamaraNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Camara;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.CamaraLectura;
+import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.CamaraLecturaResumen;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.EstadoSensor;
+import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.GranularidadLectura;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.CamaraLecturaRepository;
+import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.CamaraLecturaResumenRepository;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.CamaraRepository;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.LecturaRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +32,7 @@ public class CamaraLecturaService
 
     private final CamaraRepository camaraRepository;
     private final CamaraLecturaRepository camaraLecturaRepository;
+    private final CamaraLecturaResumenRepository camaraLecturaResumenRepository;
     private final LecturaRepository lecturaRepository;
     private final CurrentUserScope currentUserScope;
     private final CamaraMuestreoConfig camaraMuestreoConfig;
@@ -79,13 +83,26 @@ public class CamaraLecturaService
     @Transactional(readOnly = true)
     public List<CamaraLectura> listarPorCamara(Long camaraId, Instant since)
     {
+        assertCamaraEnScope(camaraId);
+
+        return camaraLecturaRepository.findByCamaraIdAndBucketStartAfterOrderByBucketStartAsc(camaraId, since);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CamaraLecturaResumen> listarResumenPorCamara(Long camaraId, GranularidadLectura granularidad)
+    {
+        assertCamaraEnScope(camaraId);
+
+        return camaraLecturaResumenRepository.findByCamaraIdAndGranularidadOrderByBucketStartDesc(camaraId, granularidad);
+    }
+
+    private void assertCamaraEnScope(Long camaraId)
+    {
         var byId = new FilterSpecificationBuilder<Camara>()
                 .withCondition(new FilterCondition("id", FilterOperator.EQ, camaraId))
                 .build();
         camaraRepository.findOne(currentUserScope.<Camara>scopeSpec("sucursal.empresa.id", "sucursal.id").and(byId))
             .orElseThrow(() -> new CamaraNotFoundException("ID " + camaraId));
-
-        return camaraLecturaRepository.findByCamaraIdAndBucketStartAfterOrderByBucketStartAsc(camaraId, since);
     }
 
     private Instant bucketStart(Instant momento)
