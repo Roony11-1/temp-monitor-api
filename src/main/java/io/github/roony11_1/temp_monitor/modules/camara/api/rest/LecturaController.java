@@ -3,6 +3,7 @@ package io.github.roony11_1.temp_monitor.modules.camara.api.rest;
 import java.time.Instant;
 import java.util.UUID;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
@@ -45,8 +46,10 @@ public class LecturaController
     {
         if (granularidad != null)
         {
+            Pageable resumenPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+
             return ResponseEntity.ok(PageResponse.from(
-                    lecturaService.listarResumenPorSensor(uuid, granularidad, pageable)));
+                    lecturaService.listarResumenPorSensor(uuid, granularidad, resumenPageable)));
         }
 
         var page = since != null
