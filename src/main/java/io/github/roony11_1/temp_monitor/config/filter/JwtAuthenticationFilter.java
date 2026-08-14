@@ -1,6 +1,9 @@
 package io.github.roony11_1.temp_monitor.config.filter;
 
 import io.github.roony11_1.temp_monitor.kernel.security.jwt.JwtTokenProvider;
+import io.github.roony11_1.temp_monitor.kernel.security.model.Rol;
+import io.github.roony11_1.temp_monitor.kernel.security.model.TokenUser;
+import io.github.roony11_1.temp_monitor.kernel.security.service.IUserCredentialsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,6 +23,7 @@ import java.util.List;
 public class JwtAuthenticationFilter extends OncePerRequestFilter 
 {
     private final JwtTokenProvider jwtTokenProvider;
+    private final IUserCredentialsService userCredentialsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
@@ -34,14 +38,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter
 
             if (jwtTokenProvider.validateToken(token)) 
             {
-                List<SimpleGrantedAuthority> authorities = jwtTokenProvider.getRoles(token).stream()
-                        .map(SimpleGrantedAuthority::new)
-                        .map(a -> new SimpleGrantedAuthority("ROLE_" + a.getAuthority()))
-                        .toList();
+                try 
+                {
+                    // Validación por request contra BD: el JWT deja de valer si el
+                    // usuario (o su empresa/sucursal) fue eliminado/desactivado.
+                    TokenUser tokenUser = userCredentialsService.validateAndGetByUserId(
+                            jwtTokenProvider.getUserId(token));
 
-                var authentication = new UsernamePasswordAuthenticationToken(
-                        jwtTokenProvider.getTokenUser(token), null, authorities);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                    List<SimpleGrantedAuthority> authorities = tokenUser.roles().stream()
+                            .map(Rol::name)
+                            .map(name -> new SimpleGrantedAuthority("ROLE_" + name))
+                            .toList();
+
+                    var authentication = new UsernamePasswordAuthenticationToken(tokenUser, null, authorities);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                } 
+                catch (Exception e) 
+                {
+                    SecurityContextHolder.clearContext();
+                }
             }
         }
 

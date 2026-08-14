@@ -11,6 +11,9 @@ public class JwtConfig
     @Value("${app.jwt.secret}")
     private String secret;
 
-    @Value("${app.jwt.expiration-hours:24}")
-    private long expirationHours;
+    @Value("${app.jwt.access-expiration-minutes:15}")
+    private long accessExpirationMinutes;
+
+    @Value("${app.jwt.refresh-expiration-days:7}")
+    private long refreshExpirationDays;
 }

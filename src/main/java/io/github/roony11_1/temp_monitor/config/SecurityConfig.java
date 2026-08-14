@@ -45,7 +45,8 @@ public class SecurityConfig
                 })
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**").permitAll()
+                .requestMatchers("/auth/login").permitAll()
+                .requestMatchers("/auth/refresh").permitAll()
                 .requestMatchers("/api/sensores/registrar").permitAll()
                 .requestMatchers("/api/sensores/renew-api-key-by-mac").hasRole("SUPER_ADMIN")
                 .requestMatchers("/api/sensores/{uuid}/renew-api-key").hasRole("SUPER_ADMIN")

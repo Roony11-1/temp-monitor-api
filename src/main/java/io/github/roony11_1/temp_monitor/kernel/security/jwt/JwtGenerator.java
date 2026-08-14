@@ -51,7 +51,7 @@ public class JwtGenerator
                     .claim("email", user.email())
                     .claim("roles", roles)
                     .issuedAt(new Date())
-                    .expiration(Date.from(Instant.now().plus(Duration.ofHours(jwtConfig.getExpirationHours()))));
+                    .expiration(Date.from(Instant.now().plus(Duration.ofMinutes(jwtConfig.getAccessExpirationMinutes()))));
 
             if (user.empresaId() != null) 
             {

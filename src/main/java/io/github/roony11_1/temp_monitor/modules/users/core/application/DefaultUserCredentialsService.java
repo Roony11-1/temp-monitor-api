@@ -1,6 +1,7 @@
 package io.github.roony11_1.temp_monitor.modules.users.core.application;
 
 import io.github.roony11_1.temp_monitor.kernel.security.crypto.HashService;
+import io.github.roony11_1.temp_monitor.kernel.security.exception.NoAutenticadoException;
 import io.github.roony11_1.temp_monitor.kernel.security.model.TokenUser;
 import io.github.roony11_1.temp_monitor.kernel.security.service.IUserCredentialsService;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Empresa;
@@ -41,6 +42,29 @@ public class DefaultUserCredentialsService implements IUserCredentialsService
         validarEmpresaYSucursalActivas(usuario);
 
         usuario.setLastLogin(Instant.now());
+
+        return new TokenUser(
+                usuario.getId(),
+                usuario.getEmail(),
+                usuario.getRoles(),
+                usuario.getEmpresaId(),
+                usuario.getSucursalId());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TokenUser validateAndGetByUserId(Long userId)
+    {
+        // findById excluye usuarios soft-deleted (deletedAt IS NULL)
+        Usuario usuario = usuarioRepository.findById(userId)
+                .orElseThrow(() -> new NoAutenticadoException("Usuario no encontrado o eliminado"));
+
+        if (!usuario.isActivo())
+        {
+            throw new UserDisabledException();
+        }
+
+        validarEmpresaYSucursalActivas(usuario);
 
         return new TokenUser(
                 usuario.getId(),

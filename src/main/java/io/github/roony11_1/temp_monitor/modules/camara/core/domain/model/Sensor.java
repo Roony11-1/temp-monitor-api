@@ -57,6 +57,13 @@ public class Sensor
     @Builder.Default
     private EstadoSensor estado = EstadoSensor.PENDIENTE;
 
+    /**
+     * Estado anterior guardado por la cascada al deshabilitar el sensor.
+     * {@code null} = deshabilitado manualmente (no se reactiva en cascada);
+     * un valor distinto = deshabilitado por la cascada (se restaura al activar).
+     */
+    private EstadoSensor estadoPrevio;
+
     @CreationTimestamp
     private Instant createdAt;
 

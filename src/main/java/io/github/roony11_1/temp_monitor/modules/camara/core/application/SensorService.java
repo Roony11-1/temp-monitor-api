@@ -107,6 +107,7 @@ public class SensorService
 
         sensor.setCamara(camara);
         sensor.setEstado(EstadoSensor.ACTIVO);
+        sensor.setEstadoPrevio(null);
 
         return sensor;
     }
@@ -161,6 +162,7 @@ public class SensorService
             if (sensor.getEstado() == EstadoSensor.PENDIENTE && request.getEstado() == null)
             {
                 sensor.setEstado(EstadoSensor.ACTIVO);
+                sensor.setEstadoPrevio(null);
             }
         }
 
@@ -171,6 +173,7 @@ public class SensorService
                 throw new IllegalArgumentException("No se puede asignar el estado PENDIENTE manualmente");
             }
             sensor.setEstado(request.getEstado());
+            sensor.setEstadoPrevio(null);
         }
 
         Hibernate.initialize(sensor.getCamara().getSucursal());
