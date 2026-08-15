@@ -20,9 +20,11 @@ import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.Le
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.LecturaResumenRepository;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.SensorRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class LecturaService
 {
     private final LecturaRepository lecturaRepository;
@@ -56,6 +58,10 @@ public class LecturaService
         lecturaRepository.save(lectura);
         
         sensor.setUltimoContacto(now);
+
+        log.info("Lectura registrada: sensor={}, temperatura={}°C, timestamp={}, camara={}",
+                sensorUuid, request.getTemperatura(), now,
+                sensor.getCamara() != null ? sensor.getCamara().getId() : null);
     }
 
     @Transactional(readOnly = true)

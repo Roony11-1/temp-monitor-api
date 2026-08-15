@@ -19,7 +19,7 @@ import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.Ca
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.CamaraRepository;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.LecturaRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.jpa.domain.Specification;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +29,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CamaraLecturaService 
 {
     public static final Duration VENTANA_MUESTRA = Duration.ofMinutes(15);
@@ -41,11 +42,6 @@ public class CamaraLecturaService
     private final CamaraMuestreoConfig camaraMuestreoConfig;
     private final DetailEntityMapper<CamaraLectura, CamaraLecturaResponse> camaraLecturaMapper;
     private final DetailEntityMapper<CamaraLecturaResumen, CamaraLecturaResumenResponse> camaraLecturaResumenMapper;
-
-    private Duration cadencia()
-    {
-        return Duration.ofSeconds(camaraMuestreoConfig.getCadenciaSegundos());
-    }
 
     @Transactional
     public void muestrear()
@@ -68,6 +64,7 @@ public class CamaraLecturaService
 
         if (sensores == 0)
         {
+            log.debug("Muestra de cámara omitida (sin sensores con datos): camara={}, bucketStart={}", camara.getId(), bucketStart);
             return;
         }
 
@@ -78,11 +75,16 @@ public class CamaraLecturaService
                 .bucketStart(bucketStart)
                 .build());
 
+        boolean esNueva = muestra.getId() == null;
         muestra.setMuestreadoEn(momento);
         muestra.setPromedio(promedio != null ? promedio : 0.0);
         muestra.setConteoSensores((int) sensores);
 
         camaraLecturaRepository.save(muestra);
+
+        log.info("Muestra de cámara {} {}: camara={}, bucketStart={}, promedio={}°C, sensores={}, muestreadoEn={}",
+                esNueva ? "creada" : "actualizada", camara.getId(), bucketStart, muestra.getPromedio(),
+                muestra.getConteoSensores(), momento);
     }
 
     @Transactional(readOnly = true)
