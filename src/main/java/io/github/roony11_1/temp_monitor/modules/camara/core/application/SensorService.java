@@ -13,6 +13,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import io.github.roony11_1.temp_monitor.kernel.mapper.DetailEntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.security.crypto.ApiKeyGenerator;
 import io.github.roony11_1.temp_monitor.kernel.security.crypto.HashService;
@@ -24,6 +25,7 @@ import io.github.roony11_1.temp_monitor.modules.camara.api.dto.ActualizarSensorR
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.AsignarSensorRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.RegistroSensorRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.RegistroSensorResponse;
+import io.github.roony11_1.temp_monitor.modules.camara.api.dto.SensorResponse;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.SensorSummaryResponse;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.ApiKeyInvalidaException;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.CamaraNotFoundException;
@@ -50,6 +52,7 @@ public class SensorService
     private final HashService hashService;
     private final ApiKeyGenerator apiKeyGenerator;
     private final EntityMapper<Sensor, SensorSummaryResponse> sensorMapper;
+    private final DetailEntityMapper<Sensor, SensorResponse> sensorDetailMapper;
     private final CurrentUserScope currentUserScope;
 
     public Optional<Sensor> authenticateByUuidAndApiKey(UUID uuid, String apiKey) 
@@ -85,7 +88,7 @@ public class SensorService
     }
 
     @Transactional
-    public Sensor asignar(AsignarSensorRequest request)
+    public SensorResponse asignar(AsignarSensorRequest request)
     {
         Sensor sensor = sensorRepository.findActiveByUuid(request.getUuid())
             .orElseThrow(() -> new SensorNotFoundException("UUID " + request.getUuid()));
@@ -109,24 +112,27 @@ public class SensorService
         sensor.setEstado(EstadoSensor.ACTIVO);
         sensor.setEstadoPrevio(null);
 
-        return sensor;
+        return sensorDetailMapper.toResponse(sensor);
     }
 
     @Transactional(readOnly = true)
-    public List<Sensor> listarPorCamara(Long camaraId)
+    public List<SensorResponse> listarPorCamara(Long camaraId)
     {
         assertCamaraEnScope(camaraId);
-        return sensorRepository.findByCamaraIdWithHierarchy(camaraId);
+        return sensorRepository.findByCamaraIdWithHierarchy(camaraId).stream()
+                .map(sensorDetailMapper::toResponse)
+                .toList();
     }
 
-    public Sensor buscarPorUuid(UUID uuid)
+    @Transactional(readOnly = true)
+    public SensorResponse buscarPorUuid(UUID uuid)
     {
         Sensor sensor = sensorRepository.findByUuidWithHierarchy(uuid)
             .orElseThrow(() -> new SensorNotFoundException("UUID " + uuid));
 
         currentUserScope.assertAccess(sucursalIdOf(sensor), empresaIdOf(sensor));
 
-        return sensor;
+        return sensorDetailMapper.toResponse(sensor);
     }
 
     @Transactional(readOnly = true)
@@ -141,7 +147,7 @@ public class SensorService
     }
 
     @Transactional
-    public Sensor actualizar(UUID uuid, ActualizarSensorRequest request)
+    public SensorResponse actualizar(UUID uuid, ActualizarSensorRequest request)
     {
         Sensor sensor = sensorRepository.findActiveByUuidWithHierarchy(uuid)
             .orElseThrow(() -> new SensorNotFoundException("UUID " + uuid));
@@ -179,7 +185,7 @@ public class SensorService
         Hibernate.initialize(sensor.getCamara().getSucursal());
         Hibernate.initialize(sensor.getCamara().getSucursal().getEmpresa());
         
-        return sensor;
+        return sensorDetailMapper.toResponse(sensor);
     }
 
     public EstadoSensor consultarEstado(UUID uuid)
@@ -231,14 +237,14 @@ public class SensorService
     }
 
     @Transactional
-    public Sensor restaurar(UUID uuid)
+    public SensorResponse restaurar(UUID uuid)
     {
         Sensor sensor = sensorRepository.findByUuidWithHierarchy(uuid)
             .orElseThrow(() -> new SensorNotFoundException("UUID " + uuid));
 
         sensor.setDeletedAt(null);
 
-        return sensor;
+        return sensorDetailMapper.toResponse(sensor);
     }
 
     private Specification<Sensor> scopeSpec()

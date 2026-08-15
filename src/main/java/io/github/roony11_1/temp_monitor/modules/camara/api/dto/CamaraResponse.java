@@ -4,8 +4,6 @@ import lombok.Data;
 
 import java.time.Instant;
 
-import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Camara;
-
 @Data
 public class CamaraResponse 
 {
@@ -19,21 +17,4 @@ public class CamaraResponse
     private boolean eliminado;
     private Instant createdAt;
     private Instant updatedAt;
-
-    public static CamaraResponse toResponse(Camara camara) 
-    {
-        CamaraResponse response = new CamaraResponse();
-        response.setId(camara.getId());
-        response.setNombre(camara.getNombre());
-        response.setDescripcion(camara.getDescripcion());
-        response.setSucursalId(camara.getSucursal().getId());
-        response.setTemperaturaMin(camara.getTemperaturaMin());
-        response.setTemperaturaMax(camara.getTemperaturaMax());
-        response.setActivo(camara.isActivo());
-        response.setEliminado(camara.getDeletedAt() != null);
-        response.setCreatedAt(camara.getCreatedAt());
-        response.setUpdatedAt(camara.getUpdatedAt());
-
-        return response;
-    }
 }

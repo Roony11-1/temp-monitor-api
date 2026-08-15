@@ -1,6 +1,7 @@
 package io.github.roony11_1.temp_monitor.modules.camara.core.application;
 
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.CamaraRequest;
+import io.github.roony11_1.temp_monitor.modules.camara.api.dto.CamaraResponse;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.CamaraTemperaturaResponse;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.UltimaLecturaSensorResponse;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.camara.response.CamaraSummaryResponse;
@@ -16,6 +17,7 @@ import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.S
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Sucursal;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.repository.SucursalRepository;
 import io.github.roony11_1.temp_monitor.kernel.cascade.CascadeStateService;
+import io.github.roony11_1.temp_monitor.kernel.mapper.DetailEntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
 import io.github.roony11_1.specification.core.FilterCondition;
@@ -50,6 +52,7 @@ public class CamaraService
     private final CamaraLecturaRepository camaraLecturaRepository;
 
     private final EntityMapper<Camara, CamaraSummaryResponse> camaraMapper;
+    private final DetailEntityMapper<Camara, CamaraResponse> camaraDetailMapper;
     private final CurrentUserScope currentUserScope;
     private final CascadeStateService cascadeStateService;
 
@@ -75,12 +78,21 @@ public class CamaraService
         });
     }
 
-    public List<Camara> listarPorSucursal(Long sucursalId)
+    @Transactional(readOnly = true)
+    public List<CamaraResponse> listarPorSucursal(Long sucursalId)
     {
-        return camaraRepository.findAll(scopeSpec().and(bySucursalSpec(sucursalId)), Sort.unsorted());
+        return camaraRepository.findAll(scopeSpec().and(bySucursalSpec(sucursalId)), Sort.unsorted()).stream()
+                .map(camaraDetailMapper::toResponse)
+                .toList();
     }
 
-    public Camara buscarPorId(Long id)
+    @Transactional(readOnly = true)
+    public CamaraResponse buscarPorId(Long id)
+    {
+        return camaraDetailMapper.toResponse(buscarEntidadPorId(id));
+    }
+
+    private Camara buscarEntidadPorId(Long id)
     {
         return camaraRepository.findOne(scopeSpec().and(byIdSpec(id)))
                 .orElseThrow(() -> new CamaraNotFoundException("ID " + id));
@@ -107,7 +119,7 @@ public class CamaraService
     }
 
     @Transactional
-    public Camara crear(CamaraRequest request) 
+    public CamaraResponse crear(CamaraRequest request) 
     {
         validarRango(request.getTemperaturaMin(), request.getTemperaturaMax());
 
@@ -130,11 +142,11 @@ public class CamaraService
                 .activo(true)
                 .build();
 
-        return camaraRepository.save(camara);
+        return camaraDetailMapper.toResponse(camaraRepository.save(camara));
     }
 
     @Transactional
-    public Camara actualizar(Long id, CamaraRequest request) 
+    public CamaraResponse actualizar(Long id, CamaraRequest request) 
     {
         validarRango(request.getTemperaturaMin(), request.getTemperaturaMax());
 
@@ -160,7 +172,7 @@ public class CamaraService
             camara.setSucursal(sucursal);
         }
 
-        return camara;
+        return camaraDetailMapper.toResponse(camara);
     }
 
     @Transactional
@@ -196,19 +208,18 @@ public class CamaraService
     }
 
     @Transactional
-    public Camara restaurar(Long id) 
+    public CamaraResponse restaurar(Long id) 
     {
-        Camara camara = camaraRepository.findOne(scopeSpec().and(byIdSpec(id)))
-                .orElseThrow(() -> new CamaraNotFoundException("ID " + id));
+        Camara camara = buscarEntidadPorId(id);
 
         cascadeStateService.restaurarCamara(camara);
 
-        return camara;
+        return camaraDetailMapper.toResponse(camara);
     }
 
     private Camara buscarActivaPorId(Long id)
     {
-        Camara camara = buscarPorId(id);
+        Camara camara = buscarEntidadPorId(id);
 
         if (camara.getDeletedAt() != null)
         {
@@ -221,7 +232,7 @@ public class CamaraService
     @Transactional(readOnly = true)
     public CamaraTemperaturaResponse obtenerTemperatura(Long id)
     {
-        buscarPorId(id);
+        buscarEntidadPorId(id);
 
         Instant since = Instant.now().minus(VENTANA_TEMPERATURA);
 
@@ -239,7 +250,7 @@ public class CamaraService
     @Transactional(readOnly = true)
     public List<UltimaLecturaSensorResponse> obtenerUltimasMedidas(Long id)
     {
-        buscarPorId(id);
+        buscarEntidadPorId(id);
 
         return lecturaRepository.findUltimaPorSensorDeCamara(id).stream()
                 .map(l -> UltimaLecturaSensorResponse.builder()

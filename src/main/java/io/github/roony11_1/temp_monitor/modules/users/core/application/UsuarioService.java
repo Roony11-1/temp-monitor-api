@@ -1,5 +1,6 @@
 package io.github.roony11_1.temp_monitor.modules.users.core.application;
 
+import io.github.roony11_1.temp_monitor.kernel.mapper.DetailEntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.security.exception.AccesoDenegadoException;
 import io.github.roony11_1.temp_monitor.kernel.security.exception.NoAutenticadoException;
@@ -17,6 +18,7 @@ import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.repository.S
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.EmpresaNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.SucursalNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.users.api.dto.UsuarioRequest;
+import io.github.roony11_1.temp_monitor.modules.users.api.dto.UsuarioResponse;
 import io.github.roony11_1.temp_monitor.modules.users.api.dto.UsuarioSummaryResponse;
 import io.github.roony11_1.temp_monitor.modules.users.core.domain.exceptions.EmailAlreadyExistsException;
 import io.github.roony11_1.temp_monitor.modules.users.core.domain.exceptions.UserNotFoundException;
@@ -51,6 +53,7 @@ public class UsuarioService
     private final SucursalRepository sucursalRepository;
     private final HashService passwordHasher;
     private final EntityMapper<Usuario, UsuarioSummaryResponse> usuarioMapper;
+    private final DetailEntityMapper<Usuario, UsuarioResponse> usuarioDetailMapper;
     private final CurrentUserScope currentUserScope;
 
     @Transactional(readOnly = true)
@@ -95,14 +98,19 @@ public class UsuarioService
     }
 
     @Transactional(readOnly = true)
-    public Usuario buscarPorId(Long id) 
+    public UsuarioResponse buscarPorId(Long id) 
+    {
+        return usuarioDetailMapper.toResponse(buscarEntidadPorId(id));
+    }
+
+    private Usuario buscarEntidadPorId(Long id) 
     {
         return usuarioRepository.findOne(scopeSpec().and(byIdSpec(id)))
                 .orElseThrow(() -> new UserNotFoundException("ID " + id));
     }
 
     @Transactional
-    public Usuario crear(UsuarioRequest request) 
+    public UsuarioResponse crear(UsuarioRequest request) 
     {
         if (usuarioRepository.existsByEmail(request.getEmail()))
             throw new EmailAlreadyExistsException(request.getEmail());
@@ -157,7 +165,7 @@ public class UsuarioService
                 .activo(true)
                 .build();
 
-        return usuarioRepository.save(usuario);
+        return usuarioDetailMapper.toResponse(usuarioRepository.save(usuario));
     }
 
     private TokenUser getCurrentUser() 
@@ -171,7 +179,7 @@ public class UsuarioService
     }
 
     @Transactional
-    public Usuario actualizar(Long id, UsuarioRequest request) 
+    public UsuarioResponse actualizar(Long id, UsuarioRequest request) 
     {
         Usuario usuario = buscarActivaPorId(id);
 
@@ -224,7 +232,7 @@ public class UsuarioService
             usuario.setRoles(request.getRoles());
         }
 
-        return usuario;
+        return usuarioDetailMapper.toResponse(usuario);
     }
 
     @Transactional
@@ -256,19 +264,18 @@ public class UsuarioService
     }
 
     @Transactional
-    public Usuario restaurar(Long id) 
+    public UsuarioResponse restaurar(Long id) 
     {
-        Usuario usuario = usuarioRepository.findOne(scopeSpec().and(byIdSpec(id)))
-                .orElseThrow(() -> new UserNotFoundException("ID " + id));
+        Usuario usuario = buscarEntidadPorId(id);
 
         usuario.setDeletedAt(null);
 
-        return usuario;
+        return usuarioDetailMapper.toResponse(usuario);
     }
 
     private Usuario buscarActivaPorId(Long id)
     {
-        Usuario usuario = buscarPorId(id);
+        Usuario usuario = buscarEntidadPorId(id);
 
         if (usuario.getDeletedAt() != null)
         {

@@ -1,12 +1,14 @@
 package io.github.roony11_1.temp_monitor.modules.empresa.core.application;
 
 import io.github.roony11_1.temp_monitor.kernel.cascade.CascadeStateService;
+import io.github.roony11_1.temp_monitor.kernel.mapper.DetailEntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
 import io.github.roony11_1.specification.core.FilterCondition;
 import io.github.roony11_1.specification.core.FilterOperator;
 import io.github.roony11_1.specification.spring.FilterSpecificationBuilder;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.EmpresaRequest;
+import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.EmpresaResponse;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.EmpresaSummaryResponse;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.EmpresaNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.NombreEmpresaAlreadyExistsException;
@@ -27,6 +29,7 @@ public class EmpresaService
 {
     private final EmpresaRepository empresaRepository;
     private final EntityMapper<Empresa, EmpresaSummaryResponse> empresaMapper;
+    private final DetailEntityMapper<Empresa, EmpresaResponse> empresaDetailMapper;
     private final CurrentUserScope currentUserScope;
     private final CascadeStateService cascadeStateService;
 
@@ -40,25 +43,31 @@ public class EmpresaService
                 .map(empresaMapper::toSummaryResponse);
     }
 
-    public Empresa buscarPorId(Long id) 
+    @Transactional(readOnly = true)
+    public EmpresaResponse buscarPorId(Long id) 
+    {
+        return empresaDetailMapper.toResponse(buscarEntidadPorId(id));
+    }
+
+    private Empresa buscarEntidadPorId(Long id) 
     {
         return empresaRepository.findOne(empresaScope().and(byIdSpec(id)))
                 .orElseThrow(() -> new EmpresaNotFoundException("ID " + id));
     }
 
     @Transactional
-    public Empresa crear(EmpresaRequest request) 
+    public EmpresaResponse crear(EmpresaRequest request) 
     {
         if (empresaRepository.existsByNombre(request.getNombre()))
             throw new NombreEmpresaAlreadyExistsException(request.getNombre());
 
         Empresa empresa = request.fromRequest();
 
-        return empresaRepository.save(empresa);
+        return empresaDetailMapper.toResponse(empresaRepository.save(empresa));
     }
 
     @Transactional
-    public Empresa actualizar(Long id, EmpresaRequest request) 
+    public EmpresaResponse actualizar(Long id, EmpresaRequest request) 
     {
         Empresa empresa = buscarActivaPorId(id);
 
@@ -67,7 +76,7 @@ public class EmpresaService
         empresa.setTelefono(request.getTelefono());
         empresa.setEmail(request.getEmail());
 
-        return empresa;
+        return empresaDetailMapper.toResponse(empresa);
     }
 
     @Transactional
@@ -95,19 +104,18 @@ public class EmpresaService
     }
 
     @Transactional
-    public Empresa restaurar(Long id) 
+    public EmpresaResponse restaurar(Long id) 
     {
-        Empresa empresa = empresaRepository.findOne(empresaScope().and(byIdSpec(id)))
-                .orElseThrow(() -> new EmpresaNotFoundException("ID " + id));
+        Empresa empresa = buscarEntidadPorId(id);
 
         cascadeStateService.restaurarEmpresa(empresa);
 
-        return empresa;
+        return empresaDetailMapper.toResponse(empresa);
     }
 
     private Empresa buscarActivaPorId(Long id)
     {
-        Empresa empresa = buscarPorId(id);
+        Empresa empresa = buscarEntidadPorId(id);
 
         if (empresa.getDeletedAt() != null)
         {

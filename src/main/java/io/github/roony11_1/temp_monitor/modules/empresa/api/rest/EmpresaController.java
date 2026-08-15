@@ -5,7 +5,6 @@ import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.EmpresaRequest;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.EmpresaResponse;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.EmpresaSummaryResponse;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.application.EmpresaService;
-import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Empresa;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -37,28 +36,24 @@ public class EmpresaController
     @GetMapping("/{id}")
     public EmpresaResponse buscarPorId(@PathVariable Long id) 
     {
-        var empresa = empresaService.buscarPorId(id);
-        
-        return EmpresaResponse.toResponse(empresa);
+        return empresaService.buscarPorId(id);
     }
 
     @PostMapping
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<EmpresaResponse> crear(@RequestBody EmpresaRequest request) 
     {
-        Empresa empresa = empresaService.crear(request);
+        EmpresaResponse empresa = empresaService.crear(request);
 
             return ResponseEntity.created(URI.create("/api/empresas/" + empresa.getId()))
-                .body(EmpresaResponse.toResponse(empresa));
+                .body(empresa);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public EmpresaResponse actualizar(@PathVariable Long id, @RequestBody EmpresaRequest request) 
     {
-        var empresa = empresaService.actualizar(id, request);
-
-        return EmpresaResponse.toResponse(empresa);
+        return empresaService.actualizar(id, request);
     }
 
     @PostMapping("/{id}/activar")
@@ -81,9 +76,7 @@ public class EmpresaController
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<EmpresaResponse> restaurar(@PathVariable Long id) 
     {
-        var empresa = empresaService.restaurar(id);
-
-        return ResponseEntity.ok(EmpresaResponse.toResponse(empresa));
+        return ResponseEntity.ok(empresaService.restaurar(id));
     }
 
     @DeleteMapping("/{id}")

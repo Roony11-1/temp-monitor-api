@@ -5,7 +5,6 @@ import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.SucursalRequest;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.SucursalResponse;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.SucursalSummaryResponse;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.application.SucursalService;
-import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Sucursal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -43,28 +42,24 @@ public class SucursalController
     @GetMapping("/{id}")
     public SucursalResponse buscarPorId(@PathVariable Long id) 
     {
-        var sucursal = sucursalService.buscarPorId(id);
-
-        return SucursalResponse.toResponse(sucursal);
+        return sucursalService.buscarPorId(id);
     }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'SUPER_ADMIN')")
     public ResponseEntity<SucursalResponse> crear(@RequestBody SucursalRequest request) 
     {
-        Sucursal sucursal = sucursalService.crear(request);
+        SucursalResponse sucursal = sucursalService.crear(request);
 
         return ResponseEntity.created(URI.create("/api/sucursales/" + sucursal.getId()))
-                .body(SucursalResponse.toResponse(sucursal));
+                .body(sucursal);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'SUPER_ADMIN')")
     public SucursalResponse actualizar(@PathVariable Long id, @RequestBody SucursalRequest request) 
     {
-        var sucursal = sucursalService.actualizar(id, request);
-
-        return SucursalResponse.toResponse(sucursal);
+        return sucursalService.actualizar(id, request);
     }
 
     @PostMapping("/{id}/activar")
@@ -87,9 +82,7 @@ public class SucursalController
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<SucursalResponse> restaurar(@PathVariable Long id) 
     {
-        var sucursal = sucursalService.restaurar(id);
-
-        return ResponseEntity.ok(SucursalResponse.toResponse(sucursal));
+        return ResponseEntity.ok(sucursalService.restaurar(id));
     }
 
     @DeleteMapping("/{id}")

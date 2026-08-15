@@ -58,7 +58,7 @@ public class SensorController
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<SensorResponse> asignar(@RequestBody AsignarSensorRequest request)
     {
-        var response = SensorResponse.toResponse(sensorService.asignar(request));
+        var response = sensorService.asignar(request);
 
         return ResponseEntity.ok(response);
     }
@@ -66,9 +66,7 @@ public class SensorController
     @GetMapping("/camara/{camaraId}")
     public ResponseEntity<List<SensorResponse>> listarPorCamara(@PathVariable Long camaraId)
     {
-        List<SensorResponse> sensores = sensorService.listarPorCamara(camaraId).stream()
-            .map(SensorResponse::toResponse)
-            .toList();
+        List<SensorResponse> sensores = sensorService.listarPorCamara(camaraId);
 
         return ResponseEntity.ok(sensores);
     }
@@ -77,7 +75,7 @@ public class SensorController
     @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'ADMIN_SUCURSAL', 'SUPER_ADMIN')")
     public ResponseEntity<SensorResponse> actualizar(@PathVariable UUID uuid, @RequestBody ActualizarSensorRequest request)
     {
-        var response = SensorResponse.toResponse(sensorService.actualizar(uuid, request));
+        var response = sensorService.actualizar(uuid, request);
 
         return ResponseEntity.ok(response);
     }
@@ -95,7 +93,7 @@ public class SensorController
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<SensorResponse> restaurar(@PathVariable UUID uuid)
     {
-        var response = SensorResponse.toResponse(sensorService.restaurar(uuid));
+        var response = sensorService.restaurar(uuid);
 
         return ResponseEntity.ok(response);
     }
@@ -103,7 +101,7 @@ public class SensorController
     @GetMapping("/{uuid}")
     public ResponseEntity<SensorResponse> buscarPorUuid(@PathVariable UUID uuid)
     {
-        var response = SensorResponse.toResponse(sensorService.buscarPorUuid(uuid));
+        var response = sensorService.buscarPorUuid(uuid);
 
         return ResponseEntity.ok(response);
     }

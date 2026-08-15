@@ -1,6 +1,7 @@
 package io.github.roony11_1.temp_monitor.modules.camara.core.application;
 
 import io.github.roony11_1.temp_monitor.config.CamaraMuestreoConfig;
+import io.github.roony11_1.temp_monitor.kernel.mapper.DetailEntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
 import io.github.roony11_1.specification.core.FilterCondition;
 import io.github.roony11_1.specification.core.FilterOperator;
@@ -11,6 +12,8 @@ import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.CamaraL
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.CamaraLecturaResumen;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.EstadoSensor;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.GranularidadLectura;
+import io.github.roony11_1.temp_monitor.modules.camara.api.dto.CamaraLecturaResponse;
+import io.github.roony11_1.temp_monitor.modules.camara.api.dto.CamaraLecturaResumenResponse;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.CamaraLecturaRepository;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.CamaraLecturaResumenRepository;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.CamaraRepository;
@@ -36,6 +39,8 @@ public class CamaraLecturaService
     private final LecturaRepository lecturaRepository;
     private final CurrentUserScope currentUserScope;
     private final CamaraMuestreoConfig camaraMuestreoConfig;
+    private final DetailEntityMapper<CamaraLectura, CamaraLecturaResponse> camaraLecturaMapper;
+    private final DetailEntityMapper<CamaraLecturaResumen, CamaraLecturaResumenResponse> camaraLecturaResumenMapper;
 
     private Duration cadencia()
     {
@@ -81,27 +86,33 @@ public class CamaraLecturaService
     }
 
     @Transactional(readOnly = true)
-    public List<CamaraLectura> listarPorCamara(Long camaraId, Instant since)
+    public List<CamaraLecturaResponse> listarPorCamara(Long camaraId, Instant since)
     {
         assertCamaraEnScope(camaraId);
 
-        return camaraLecturaRepository.findByCamaraIdAndBucketStartAfterOrderByBucketStartAsc(camaraId, since);
+        return camaraLecturaRepository.findByCamaraIdAndBucketStartAfterOrderByBucketStartAsc(camaraId, since).stream()
+                .map(camaraLecturaMapper::toResponse)
+                .toList();
     }
 
     @Transactional(readOnly = true)
-    public List<CamaraLectura> listarTodoPorCamara(Long camaraId)
+    public List<CamaraLecturaResponse> listarTodoPorCamara(Long camaraId)
     {
         assertCamaraEnScope(camaraId);
 
-        return camaraLecturaRepository.findByCamaraIdOrderByBucketStartAsc(camaraId);
+        return camaraLecturaRepository.findByCamaraIdOrderByBucketStartAsc(camaraId).stream()
+                .map(camaraLecturaMapper::toResponse)
+                .toList();
     }
 
     @Transactional(readOnly = true)
-    public List<CamaraLecturaResumen> listarResumenPorCamara(Long camaraId, GranularidadLectura granularidad)
+    public List<CamaraLecturaResumenResponse> listarResumenPorCamara(Long camaraId, GranularidadLectura granularidad)
     {
         assertCamaraEnScope(camaraId);
 
-        return camaraLecturaResumenRepository.findByCamaraIdAndGranularidadOrderByBucketStartDesc(camaraId, granularidad);
+        return camaraLecturaResumenRepository.findByCamaraIdAndGranularidadOrderByBucketStartDesc(camaraId, granularidad).stream()
+                .map(camaraLecturaResumenMapper::toResponse)
+                .toList();
     }
 
     private void assertCamaraEnScope(Long camaraId)

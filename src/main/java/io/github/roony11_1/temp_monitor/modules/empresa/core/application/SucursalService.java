@@ -1,12 +1,14 @@
 package io.github.roony11_1.temp_monitor.modules.empresa.core.application;
 
 import io.github.roony11_1.temp_monitor.kernel.cascade.CascadeStateService;
+import io.github.roony11_1.temp_monitor.kernel.mapper.DetailEntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
 import io.github.roony11_1.specification.core.FilterCondition;
 import io.github.roony11_1.specification.core.FilterOperator;
 import io.github.roony11_1.specification.spring.FilterSpecificationBuilder;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.SucursalRequest;
+import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.SucursalResponse;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.SucursalSummaryResponse;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.EmpresaNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.exceptions.NombreSucursalAlreadyExistsException;
@@ -35,6 +37,7 @@ public class SucursalService
     private final SucursalRepository sucursalRepository;
     private final EmpresaRepository empresaRepository;
     private final EntityMapper<Sucursal, SucursalSummaryResponse> sucursalMapper;
+    private final DetailEntityMapper<Sucursal, SucursalResponse> sucursalDetailMapper;
     private final CurrentUserScope currentUserScope;
     private final CascadeStateService cascadeStateService;
 
@@ -58,14 +61,20 @@ public class SucursalService
                 .toList();
     }
 
-    public Sucursal buscarPorId(Long id) 
+    @Transactional(readOnly = true)
+    public SucursalResponse buscarPorId(Long id) 
+    {
+        return sucursalDetailMapper.toResponse(buscarEntidadPorId(id));
+    }
+
+    private Sucursal buscarEntidadPorId(Long id) 
     {
         return sucursalRepository.findOne(scopeSpec().and(byIdSpec(id)))
                 .orElseThrow(() -> new SucursalNotFoundException("ID " + id));
     }
 
     @Transactional
-    public Sucursal crear(SucursalRequest requst) 
+    public SucursalResponse crear(SucursalRequest requst) 
     {
         Empresa empresa = empresaRepository.findById(requst.getEmpresaId())
                 .orElseThrow(() -> new EmpresaNotFoundException("ID " + requst.getEmpresaId()));
@@ -90,11 +99,11 @@ public class SucursalService
                 .activo(true)
                 .build();
 
-        return sucursalRepository.save(sucursal);
+        return sucursalDetailMapper.toResponse(sucursalRepository.save(sucursal));
     }
 
     @Transactional
-    public Sucursal actualizar(Long id, SucursalRequest request) 
+    public SucursalResponse actualizar(Long id, SucursalRequest request) 
     {
         Sucursal sucursal = buscarActivaPorId(id);
 
@@ -110,7 +119,7 @@ public class SucursalService
             sucursal.setEmpresa(empresa);
         }
 
-        return sucursal;
+        return sucursalDetailMapper.toResponse(sucursal);
     }
 
     @Transactional
@@ -135,19 +144,18 @@ public class SucursalService
     }
 
     @Transactional
-    public Sucursal restaurar(Long id) 
+    public SucursalResponse restaurar(Long id) 
     {
-        Sucursal sucursal = sucursalRepository.findOne(scopeSpec().and(byIdSpec(id)))
-                .orElseThrow(() -> new SucursalNotFoundException("ID " + id));
+        Sucursal sucursal = buscarEntidadPorId(id);
 
         cascadeStateService.restaurarSucursal(sucursal);
 
-        return sucursal;
+        return sucursalDetailMapper.toResponse(sucursal);
     }
 
     private Sucursal buscarActivaPorId(Long id)
     {
-        Sucursal sucursal = buscarPorId(id);
+        Sucursal sucursal = buscarEntidadPorId(id);
 
         if (sucursal.getDeletedAt() != null)
         {

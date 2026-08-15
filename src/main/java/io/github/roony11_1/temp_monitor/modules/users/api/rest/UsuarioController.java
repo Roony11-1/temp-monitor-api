@@ -6,7 +6,6 @@ import io.github.roony11_1.temp_monitor.modules.users.api.dto.UsuarioRequest;
 import io.github.roony11_1.temp_monitor.modules.users.api.dto.UsuarioResponse;
 import io.github.roony11_1.temp_monitor.modules.users.api.dto.UsuarioSummaryResponse;
 import io.github.roony11_1.temp_monitor.modules.users.core.application.UsuarioService;
-import io.github.roony11_1.temp_monitor.modules.users.core.domain.model.Usuario;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -50,29 +49,25 @@ public class UsuarioController
     @GetMapping("/{id}")
     public UsuarioResponse buscarPorId(@PathVariable Long id) 
     {
-        var usuario = usuarioService.buscarPorId(id);
-
-        return UsuarioResponse.toResponse(usuario);
+        return usuarioService.buscarPorId(id);
     }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'SUPER_ADMIN')")
     public ResponseEntity<UsuarioResponse> crear(@RequestBody UsuarioRequest request) 
     {
-        Usuario usuario = usuarioService.crear(request);
+        UsuarioResponse usuario = usuarioService.crear(request);
         
         return ResponseEntity
             .created(URI.create("/api/usuarios/" + usuario.getId()))
-            .body(UsuarioResponse.toResponse(usuario));
+            .body(usuario);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN_EMPRESA', 'SUPER_ADMIN')")
     public UsuarioResponse actualizar(@PathVariable Long id, @RequestBody UsuarioRequest request) 
     {
-        var usuario = usuarioService.actualizar(id, request);
-
-        return UsuarioResponse.toResponse(usuario);
+        return usuarioService.actualizar(id, request);
     }
 
     @PostMapping("/{id}/password")
@@ -106,9 +101,7 @@ public class UsuarioController
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<UsuarioResponse> restaurar(@PathVariable Long id) 
     {
-        var usuario = usuarioService.restaurar(id);
-
-        return ResponseEntity.ok(UsuarioResponse.toResponse(usuario));
+        return ResponseEntity.ok(usuarioService.restaurar(id));
     }
 
     @DeleteMapping("/{id}")
