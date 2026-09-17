@@ -23,6 +23,7 @@ import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
 import io.github.roony11_1.specification.core.FilterCondition;
 import io.github.roony11_1.specification.core.FilterOperator;
 import io.github.roony11_1.specification.spring.FilterSpecificationBuilder;
+import io.github.roony11_1.temp_monitor.kernel.spec.FilterParserAdapter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,7 +32,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
+import io.github.roony11_1.temp_monitor.kernel.domain.RangoTemperatura;
+import io.github.roony11_1.temp_monitor.kernel.util.TemperatureUtils;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -40,11 +42,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CamaraService 
 {
-    private static final Duration VENTANA_TEMPERATURA = Duration.ofMinutes(15);
-
-    private static final Map<String, String> FILTER_ALIASES = Map.of(
-            "sucursal", "sucursal.nombre",
-            "estado", "activo");
 
     private final CamaraRepository camaraRepository;
     private final SucursalRepository sucursalRepository;
@@ -55,13 +52,13 @@ public class CamaraService
     private final DetailEntityMapper<Camara, CamaraResponse> camaraDetailMapper;
     private final CurrentUserScope currentUserScope;
     private final CascadeStateService cascadeStateService;
+    private final FilterParserAdapter filterParserAdapter;
 
     @Transactional(readOnly = true)
     public Page<CamaraSummaryResponse> listarTodas(Pageable pageable, Map<String, String> filters)
     {
         var userSpec = new FilterSpecificationBuilder<Camara>()
-                .withAliases(FILTER_ALIASES)
-                .withConditions(filters)
+                .withConditions(filterParserAdapter.parse(filters, "camara"))
                 .build();
 
         var page = camaraRepository.findAll(scopeSpec().and(userSpec), pageable);
@@ -193,10 +190,7 @@ public class CamaraService
 
     private void validarRango(Double min, Double max) 
     {
-        if (min != null && max != null && min >= max) 
-        {
-            throw new RangoTemperaturaInvalidoException();
-        }
+        RangoTemperatura.validar(min, max);
     }
 
     @Transactional
@@ -234,14 +228,14 @@ public class CamaraService
     {
         buscarEntidadPorId(id);
 
-        Instant since = Instant.now().minus(VENTANA_TEMPERATURA);
+        Instant since = Instant.now().minus(TemperatureUtils.VENTANA_15_MIN);
 
         Double promedio = lecturaRepository.calcularPromedioPorCamara(id, since, EstadoSensor.ACTIVO);
         long sensoresConDatos = lecturaRepository.contarSensoresConDatosPorCamara(id, since, EstadoSensor.ACTIVO);
         Instant ultimaLectura = lecturaRepository.findUltimaLecturaPorCamara(id).orElse(null);
 
         return CamaraTemperaturaResponse.builder()
-                .promedio(promedio != null ? Math.round(promedio * 10.0) / 10.0 : null)
+                .promedio(TemperatureUtils.round1(promedio))
                 .sensoresConDatos(sensoresConDatos)
                 .ultimaLectura(ultimaLectura)
                 .build();

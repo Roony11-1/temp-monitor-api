@@ -11,6 +11,8 @@ import io.github.roony11_1.specification.spring.FilterSpecificationBuilder;
 import io.github.roony11_1.temp_monitor.kernel.security.crypto.HashService;
 import io.github.roony11_1.temp_monitor.kernel.security.model.Rol;
 import io.github.roony11_1.temp_monitor.kernel.security.model.TokenUser;
+import io.github.roony11_1.temp_monitor.kernel.security.policy.RoleAssignmentPolicy;
+import io.github.roony11_1.temp_monitor.kernel.spec.FilterParserAdapter;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Empresa;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Sucursal;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.repository.EmpresaRepository;
@@ -38,16 +40,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 public class UsuarioService 
 {
-    private static final Map<String, String> FILTER_ALIASES = Map.of(
-            "empresa", "empresa.nombre",
-            "sucursal", "sucursal.nombre");
-
     private final UsuarioRepository usuarioRepository;
     private final EmpresaRepository empresaRepository;
     private final SucursalRepository sucursalRepository;
@@ -55,6 +52,8 @@ public class UsuarioService
     private final EntityMapper<Usuario, UsuarioSummaryResponse> usuarioMapper;
     private final DetailEntityMapper<Usuario, UsuarioResponse> usuarioDetailMapper;
     private final CurrentUserScope currentUserScope;
+    private final FilterParserAdapter filterParserAdapter;
+    private final RoleAssignmentPolicy roleAssignmentPolicy;
 
     @Transactional(readOnly = true)
     public Page<UsuarioSummaryResponse> listarTodos(Pageable pageable, Map<String, String> filters)
@@ -63,8 +62,7 @@ public class UsuarioService
         String rol = escalares.remove("roles");
 
         var userSpec = new FilterSpecificationBuilder<Usuario>()
-                .withAliases(FILTER_ALIASES)
-                .withConditions(escalares)
+                .withConditions(filterParserAdapter.parse(escalares, "usuario"))
                 .build();
 
         Specification<Usuario> rolesSpec = (root, query, cb) -> cb.conjunction();
@@ -119,25 +117,7 @@ public class UsuarioService
             throw new AccesoDenegadoException("Debes especificar al menos un rol");
 
         TokenUser currentUser = getCurrentUser();
-
-        if (currentUser.roles().contains(Rol.SUPER_ADMIN)) 
-        {
-            // SUPER_ADMIN puede crear cualquier rol
-        } 
-        else if (currentUser.roles().contains(Rol.ADMIN_EMPRESA)) 
-        {
-            // ADMIN_EMPRESA solo puede crear ADMIN_SUCURSAL, USUARIO
-            validarRolesAsignables(request.getRoles());
-            // Debe asignar su misma empresa
-            if (request.getEmpresaId() == null || !request.getEmpresaId().equals(currentUser.empresaId())) 
-            {
-                throw new AccesoDenegadoException("Solo puedes crear usuarios en tu propia empresa");
-            }
-        } 
-        else 
-        {
-            throw new AccesoDenegadoException("No tienes permiso para crear usuarios");
-        }
+        roleAssignmentPolicy.assertCanAssignOnCreate(currentUser, request.getRoles(), request.getEmpresaId());
 
         Empresa empresa = null;
         if (request.getEmpresaId() != null) {
@@ -184,12 +164,7 @@ public class UsuarioService
         Usuario usuario = buscarActivaPorId(id);
 
         TokenUser currentUser = getCurrentUser();
-
-        if (!currentUser.roles().contains(Rol.SUPER_ADMIN)) 
-        {
-            validarNoModificaAdmin(usuario);
-            validarRolesAsignables(request.getRoles());
-        }
+        roleAssignmentPolicy.assertCanModify(currentUser, usuario, request.getRoles());
 
         usuario.setNombre(request.getNombre());
         usuario.setTelefono(request.getTelefono());
@@ -293,30 +268,6 @@ public class UsuarioService
         currentUserScope.assertAccess(sucursal.getId(), sucursal.getEmpresa().getId());
 
         return sucursal;
-    }
-
-    private void validarRolesAsignables(Set<Rol> roles)
-    {
-        if (roles == null)
-        {
-            return;
-        }
-
-        for (Rol rol : roles)
-        {
-            if (rol == Rol.SUPER_ADMIN || rol == Rol.ADMIN_EMPRESA)
-            {
-                throw new AccesoDenegadoException("No puedes asignar el rol " + rol);
-            }
-        }
-    }
-
-    private void validarNoModificaAdmin(Usuario usuario)
-    {
-        if (usuario.getRoles().contains(Rol.SUPER_ADMIN) || usuario.getRoles().contains(Rol.ADMIN_EMPRESA))
-        {
-            throw new AccesoDenegadoException("No puedes modificar un usuario SUPER_ADMIN o ADMIN_EMPRESA");
-        }
     }
 
     private Specification<Usuario> scopeSpec()

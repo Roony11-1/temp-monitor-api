@@ -42,7 +42,7 @@ public class LecturaService
             throw new SensorSinCamaraException(sensorUuid.toString());
         }
 
-        if (sensor.puedeRegistrarLectura())
+        if (sensor.isBlockedForRecording())
         {
             throw new SensorDeshabilitadoException(sensorUuid.toString());
         }

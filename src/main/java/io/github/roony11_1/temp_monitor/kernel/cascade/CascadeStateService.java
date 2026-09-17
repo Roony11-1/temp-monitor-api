@@ -1,154 +1,150 @@
 package io.github.roony11_1.temp_monitor.kernel.cascade;
 
+import io.github.roony11_1.temp_monitor.kernel.cascade.handler.CascadeHandler;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Camara;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Empresa;
 import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Sucursal;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Propaga cambios de estado en cascada por la jerarquía de negocio:
  * Empresa -> Sucursal -> Camara -> Sensor, más Usuarios ligados a empresa/sucursal.
  *
- * <p>Acciones soportadas por nivel:
- * <ul>
- *   <li>{@code eliminar*}: marca {@code deletedAt} en el nodo y todo su árbol.</li>
- *   <li>{@code restaurar*}: limpia {@code deletedAt} en el nodo y todo su árbol.</li>
- *   <li>{@code desactivar*}: {@code activo=false} en el nodo y sus hijos; para sensores,
- *       {@code estado=DESHABILITADO} guardando su estado anterior en {@code estadoPrevio}
- *       (solo si aún no estaban deshabilitados).</li>
- *   <li>{@code activar*}: {@code activo=true} en el nodo y sus hijos; para sensores
- *       deshabilitados por la cascada ({@code estadoPrevio != null}) restaura {@code estadoPrevio}
- *       (se respeta PENDIENTE). Los deshabilitados manualmente ({@code estadoPrevio = null})
- *       permanecen {@code DESHABILITADO}.</li>
- * </ul>
+ * <p>OCP: ahora delega a {@link CascadeHandler}s. Agregar un nuevo nivel (ej. Zona, Dispositivo)
+ * solo requiere un nuevo bean {@code CascadeHandler}, sin modificar esta clase.
+ * Cada handler encapsula los bulk updates de su jerarquía.
  *
- * <p>Los niveles hijos se actualizan en batch (interfaces {@code *BulkRepository} de este
- * paquete, métodos {@code @Modifying}) sin cargar entidades en memoria: el costo por acción
- * es constante (Empresa/Sucursal: 4 updates, Cámara: 2). Cada método es {@code @Transactional}
- * (REQUIRED: si ya vino de un service transaccional, se une a esa transacción). El nodo raíz
- * pasa *managed* si el llamador lo cargó en la misma transacción y sus cambios se persisten
- * por dirty checking.
+ * <p>Cada método es {@code @Transactional} (REQUIRED: si ya vino de un service transaccional, se une a esa transacción).
  */
 @Component
 @RequiredArgsConstructor
 @Transactional
 public class CascadeStateService 
 {
-    private final SucursalBulkRepository sucursalBulkRepository;
-    private final CamaraBulkRepository camaraBulkRepository;
-    private final SensorBulkRepository sensorBulkRepository;
-    private final UsuarioBulkRepository usuarioBulkRepository;
+    private final List<CascadeHandler<?>> handlers;
+
+    private Map<Class<?>, CascadeHandler<?>> handlerMap;
+
+    @PostConstruct
+    void init() {
+        handlerMap = handlers.stream()
+                .collect(Collectors.toMap(CascadeHandler::supportedType, Function.identity()));
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> CascadeHandler<T> handlerFor(Class<T> type) {
+        CascadeHandler<?> handler = handlerMap.get(type);
+        if (handler == null) {
+            throw new IllegalArgumentException("No hay CascadeHandler para " + type.getSimpleName());
+        }
+        return (CascadeHandler<T>) handler;
+    }
 
     // ===================== Empresa =====================
 
     public void eliminarEmpresa(Empresa empresa) 
     {
-        Instant ahora = Instant.now();
-        empresa.setDeletedAt(ahora);
-        Long id = empresa.getId();
-        sucursalBulkRepository.bulkActualizarDeletedAtPorEmpresa(id, ahora);
-        camaraBulkRepository.bulkActualizarDeletedAtPorEmpresa(id, ahora);
-        sensorBulkRepository.bulkActualizarDeletedAtPorEmpresa(id, ahora);
-        usuarioBulkRepository.bulkActualizarDeletedAtPorEmpresa(id, ahora);
+        handlerFor(Empresa.class).softDelete(empresa, Instant.now());
     }
 
     public void restaurarEmpresa(Empresa empresa) 
     {
-        empresa.setDeletedAt(null);
-        Long id = empresa.getId();
-        sucursalBulkRepository.bulkActualizarDeletedAtPorEmpresa(id, null);
-        camaraBulkRepository.bulkActualizarDeletedAtPorEmpresa(id, null);
-        sensorBulkRepository.bulkActualizarDeletedAtPorEmpresa(id, null);
-        usuarioBulkRepository.bulkActualizarDeletedAtPorEmpresa(id, null);
+        handlerFor(Empresa.class).restore(empresa);
     }
 
     public void desactivarEmpresa(Empresa empresa) 
     {
-        empresa.setActivo(false);
-        Long id = empresa.getId();
-        sucursalBulkRepository.bulkActualizarActivoPorEmpresa(id, false);
-        camaraBulkRepository.bulkActualizarActivoPorEmpresa(id, false);
-        sensorBulkRepository.bulkDeshabilitarPorEmpresa(id);
-        usuarioBulkRepository.bulkActualizarActivoPorEmpresa(id, false);
+        handlerFor(Empresa.class).deactivate(empresa);
     }
 
     public void activarEmpresa(Empresa empresa) 
     {
-        empresa.setActivo(true);
-        Long id = empresa.getId();
-        sucursalBulkRepository.bulkActualizarActivoPorEmpresa(id, true);
-        camaraBulkRepository.bulkActualizarActivoPorEmpresa(id, true);
-        sensorBulkRepository.bulkActivarPorEmpresa(id);
-        usuarioBulkRepository.bulkActualizarActivoPorEmpresa(id, true);
+        handlerFor(Empresa.class).activate(empresa);
     }
 
     // ===================== Sucursal =====================
 
     public void eliminarSucursal(Sucursal sucursal) 
     {
-        Instant ahora = Instant.now();
-        sucursal.setDeletedAt(ahora);
-        Long id = sucursal.getId();
-        camaraBulkRepository.bulkActualizarDeletedAtPorSucursal(id, ahora);
-        sensorBulkRepository.bulkActualizarDeletedAtPorSucursal(id, ahora);
-        usuarioBulkRepository.bulkActualizarDeletedAtPorSucursal(id, ahora);
+        handlerFor(Sucursal.class).softDelete(sucursal, Instant.now());
     }
 
     public void restaurarSucursal(Sucursal sucursal) 
     {
-        sucursal.setDeletedAt(null);
-        Long id = sucursal.getId();
-        camaraBulkRepository.bulkActualizarDeletedAtPorSucursal(id, null);
-        sensorBulkRepository.bulkActualizarDeletedAtPorSucursal(id, null);
-        usuarioBulkRepository.bulkActualizarDeletedAtPorSucursal(id, null);
+        handlerFor(Sucursal.class).restore(sucursal);
     }
 
     public void desactivarSucursal(Sucursal sucursal) 
     {
-        sucursal.setActivo(false);
-        Long id = sucursal.getId();
-        camaraBulkRepository.bulkActualizarActivoPorSucursal(id, false);
-        sensorBulkRepository.bulkDeshabilitarPorSucursal(id);
-        usuarioBulkRepository.bulkActualizarActivoPorSucursal(id, false);
+        handlerFor(Sucursal.class).deactivate(sucursal);
     }
 
     public void activarSucursal(Sucursal sucursal) 
     {
-        sucursal.setActivo(true);
-        Long id = sucursal.getId();
-        camaraBulkRepository.bulkActualizarActivoPorSucursal(id, true);
-        sensorBulkRepository.bulkActivarPorSucursal(id);
-        usuarioBulkRepository.bulkActualizarActivoPorSucursal(id, true);
+        handlerFor(Sucursal.class).activate(sucursal);
     }
 
     // ===================== Camara =====================
 
     public void eliminarCamara(Camara camara) 
     {
-        Instant ahora = Instant.now();
-        camara.setDeletedAt(ahora);
-        sensorBulkRepository.bulkActualizarDeletedAtPorCamara(camara.getId(), ahora);
+        handlerFor(Camara.class).softDelete(camara, Instant.now());
     }
 
     public void restaurarCamara(Camara camara) 
     {
-        camara.setDeletedAt(null);
-        sensorBulkRepository.bulkActualizarDeletedAtPorCamara(camara.getId(), null);
+        handlerFor(Camara.class).restore(camara);
     }
 
     public void desactivarCamara(Camara camara) 
     {
-        camara.setActivo(false);
-        sensorBulkRepository.bulkDeshabilitarPorCamara(camara.getId());
+        handlerFor(Camara.class).deactivate(camara);
     }
 
     public void activarCamara(Camara camara) 
     {
-        camara.setActivo(true);
-        sensorBulkRepository.bulkActivarPorCamara(camara.getId());
+        handlerFor(Camara.class).activate(camara);
+    }
+
+    // ===================== Genérico OCP =====================
+
+    /**
+     * Método genérico OCP para futuras entidades. No requiere nuevo método por tipo.
+     * Ej.: {@code cascadeStateService.softDelete(zona)} si existe un handler para Zona.
+     */
+    public <T> void softDelete(T root, Instant now) {
+        @SuppressWarnings("unchecked")
+        Class<T> type = (Class<T>) root.getClass();
+        // Soporta proxies de Hibernate: busca por superclase si no encuentra exacto
+        CascadeHandler<T> handler = findHandlerForInstance(root);
+        handler.softDelete(root, now);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> CascadeHandler<T> findHandlerForInstance(T instance) {
+        Class<?> clazz = instance.getClass();
+        // Intenta exacto, luego superclase (para proxies)
+        CascadeHandler<?> handler = handlerMap.get(clazz);
+        if (handler == null) {
+            for (Map.Entry<Class<?>, CascadeHandler<?>> e : handlerMap.entrySet()) {
+                if (e.getKey().isAssignableFrom(clazz) || clazz.getName().contains(e.getKey().getSimpleName())) {
+                    handler = e.getValue();
+                    break;
+                }
+            }
+        }
+        if (handler == null) {
+            throw new IllegalArgumentException("No hay CascadeHandler para " + clazz.getSimpleName());
+        }
+        return (CascadeHandler<T>) handler;
     }
 }

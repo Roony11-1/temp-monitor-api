@@ -55,23 +55,12 @@ public class SensorApiKeyFilter extends OncePerRequestFilter
             apiKey
         ).orElseThrow(() -> new ApiKeyInvalidaException("Credenciales inválidas"));
 
-        switch (sensor.getEstado()) 
-        {
-            case PENDIENTE:
-                log.info("Sensor pendiente de asignación: {}", sensor.getUuid());
-                break;
-
-            case ACTIVO:
-                log.info("Sensor activo: {}", sensor.getUuid());
-                break;
-
-            case DESHABILITADO:
-                log.warn("Sensor deshabilitado: {}", sensor.getUuid());
-                throw new SensorDeshabilitadoException(sensor.getUuid().toString());
-
-            default:
-                log.error("Estado desconocido: {}", sensor.getEstado());
-                throw new IllegalStateException("Estado de sensor no reconocido: " + sensor.getEstado());
+        // OCP: sin switch. Nuevo EstadoSensor solo requiere implementar canAuthenticate().
+        if (!sensor.getEstado().canAuthenticate()) {
+            log.warn("Sensor deshabilitado: {}", sensor.getUuid());
+            sensor.getEstado().assertCanAuthenticate(sensor.getUuid().toString());
+        } else {
+            log.info("Sensor {} en estado {}", sensor.getUuid(), sensor.getEstado());
         }
 
         UsernamePasswordAuthenticationToken authentication = 

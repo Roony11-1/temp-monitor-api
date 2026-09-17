@@ -1,6 +1,6 @@
 package io.github.roony11_1.temp_monitor.modules.dashboard.core.application;
 
-import java.time.Duration;
+import io.github.roony11_1.temp_monitor.kernel.util.TemperatureUtils;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -37,7 +37,7 @@ public class DashboardService
     @Transactional(readOnly = true)
     public DashboardResponse obtenerDashboard()
     {
-        Instant threshold = Instant.now().minus(Duration.ofMinutes(5));
+        Instant threshold = Instant.now().minus(TemperatureUtils.ONLINE_THRESHOLD_5_MIN);
 
         var noEliminadasEmpresa = new FilterSpecificationBuilder<Empresa>()
                 .withCondition(new FilterCondition("deletedAt", FilterOperator.IS_NULL, null))
@@ -71,14 +71,14 @@ public class DashboardService
             camarasActivas,
             sensoresOnline,
             sensoresOffline,
-            Math.round(temperaturaPromedio * 10.0) / 10.0,
+            TemperatureUtils.round1(temperaturaPromedio),
             temperatura24h
         );
     }
 
     private List<TemperaturePoint> obtenerTemperatura24h()
     {
-        Instant since = Instant.now().minus(Duration.ofHours(24));
+        Instant since = Instant.now().minus(TemperatureUtils.VENTANA_24_H);
         List<io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Lectura> lecturas = lecturaRepository.findUltimas24h(since);
 
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM HH:mm").withZone(ZoneId.systemDefault());

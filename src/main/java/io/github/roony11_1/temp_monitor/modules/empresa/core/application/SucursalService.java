@@ -7,6 +7,7 @@ import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
 import io.github.roony11_1.specification.core.FilterCondition;
 import io.github.roony11_1.specification.core.FilterOperator;
 import io.github.roony11_1.specification.spring.FilterSpecificationBuilder;
+import io.github.roony11_1.temp_monitor.kernel.spec.FilterParserAdapter;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.SucursalRequest;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.SucursalResponse;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.SucursalSummaryResponse;
@@ -31,22 +32,19 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class SucursalService 
 {
-    private static final Map<String, String> FILTER_ALIASES = Map.of(
-            "empresa", "empresa.nombre");
-
     private final SucursalRepository sucursalRepository;
     private final EmpresaRepository empresaRepository;
     private final EntityMapper<Sucursal, SucursalSummaryResponse> sucursalMapper;
     private final DetailEntityMapper<Sucursal, SucursalResponse> sucursalDetailMapper;
     private final CurrentUserScope currentUserScope;
     private final CascadeStateService cascadeStateService;
+    private final FilterParserAdapter filterParserAdapter;
 
     @Transactional(readOnly = true)
     public Page<SucursalSummaryResponse> listarTodas(Pageable pageable, Map<String, String> filters)
     {
         var userSpec = new FilterSpecificationBuilder<Sucursal>()
-                .withAliases(FILTER_ALIASES)
-                .withConditions(filters)
+                .withConditions(filterParserAdapter.parse(filters, "sucursal"))
                 .build();
         return sucursalRepository.findAll(scopeSpec().and(userSpec), pageable)
                 .map(sucursalMapper::toSummaryResponse);

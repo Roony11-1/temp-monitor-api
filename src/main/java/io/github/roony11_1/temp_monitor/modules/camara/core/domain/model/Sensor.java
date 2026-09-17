@@ -72,12 +72,25 @@ public class Sensor
 
     private Instant deletedAt;
 
+    /**
+     * Indica si el sensor puede registrar lecturas.
+     * Delega la decisión al {@link EstadoSensor} (OCP) y exige cámara asignada.
+     * Corrige bug previo donde el nombre invertía la semántica (retornaba true cuando NO podía).
+     */
     public boolean puedeRegistrarLectura()
     {
         if (this.getCamara() == null)
         {
-            return true;
+            return false;
         }
-        return this.getEstado() == EstadoSensor.DESHABILITADO || this.getEstado() == EstadoSensor.PENDIENTE;
+        return this.getEstado() != null && this.getEstado().canRecord();
+    }
+
+    /**
+     * Conveniencia: negación de {@link #puedeRegistrarLectura()} para callers que validan bloqueo.
+     */
+    public boolean isBlockedForRecording()
+    {
+        return !puedeRegistrarLectura();
     }
 }

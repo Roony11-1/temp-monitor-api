@@ -21,6 +21,7 @@ import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
 import io.github.roony11_1.specification.core.FilterCondition;
 import io.github.roony11_1.specification.core.FilterOperator;
 import io.github.roony11_1.specification.spring.FilterSpecificationBuilder;
+import io.github.roony11_1.temp_monitor.kernel.spec.FilterParserAdapter;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.ActualizarSensorRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.AsignarSensorRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.RegistroSensorRequest;
@@ -43,10 +44,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SensorService 
 {
-    private static final Map<String, String> FILTER_ALIASES = Map.of(
-            "empresaNombre", "camara.sucursal.empresa.nombre",
-            "sucursalNombre", "camara.sucursal.nombre");
-
     private final SensorRepository sensorRepository;
     private final CamaraRepository camaraRepository;
     private final HashService hashService;
@@ -54,6 +51,7 @@ public class SensorService
     private final EntityMapper<Sensor, SensorSummaryResponse> sensorMapper;
     private final DetailEntityMapper<Sensor, SensorResponse> sensorDetailMapper;
     private final CurrentUserScope currentUserScope;
+    private final FilterParserAdapter filterParserAdapter;
 
     public Optional<Sensor> authenticateByUuidAndApiKey(UUID uuid, String apiKey) 
     {
@@ -139,8 +137,7 @@ public class SensorService
     public Page<SensorSummaryResponse> listarTodos(Pageable pageable, Map<String, String> filters)
     {
         var userSpec = new FilterSpecificationBuilder<Sensor>()
-                .withAliases(FILTER_ALIASES)
-                .withConditions(filters)
+                .withConditions(filterParserAdapter.parse(filters, "sensor"))
                 .build();
         return sensorRepository.findAll(scopeSpec().and(userSpec), pageable)
                 .map(sensorMapper::toSummaryResponse);
@@ -165,7 +162,7 @@ public class SensorService
             currentUserScope.assertAccess(camara.getSucursal().getId(), camara.getSucursal().getEmpresa().getId());
             sensor.setCamara(camara);
 
-            if (sensor.getEstado() == EstadoSensor.PENDIENTE && request.getEstado() == null)
+            if (sensor.getEstado().isPending() && request.getEstado() == null)
             {
                 sensor.setEstado(EstadoSensor.ACTIVO);
                 sensor.setEstadoPrevio(null);
@@ -174,9 +171,9 @@ public class SensorService
 
         if (request.getEstado() != null)
         {
-            if (request.getEstado() == EstadoSensor.PENDIENTE)
+            if (!request.getEstado().canBeAssignedManually())
             {
-                throw new IllegalArgumentException("No se puede asignar el estado PENDIENTE manualmente");
+                throw new IllegalArgumentException("No se puede asignar el estado " + request.getEstado() + " manualmente");
             }
             sensor.setEstado(request.getEstado());
             sensor.setEstadoPrevio(null);

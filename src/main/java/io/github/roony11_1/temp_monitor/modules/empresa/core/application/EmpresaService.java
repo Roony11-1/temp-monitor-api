@@ -7,6 +7,7 @@ import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
 import io.github.roony11_1.specification.core.FilterCondition;
 import io.github.roony11_1.specification.core.FilterOperator;
 import io.github.roony11_1.specification.spring.FilterSpecificationBuilder;
+import io.github.roony11_1.temp_monitor.kernel.spec.FilterParserAdapter;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.EmpresaRequest;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.EmpresaResponse;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.EmpresaSummaryResponse;
@@ -32,12 +33,13 @@ public class EmpresaService
     private final DetailEntityMapper<Empresa, EmpresaResponse> empresaDetailMapper;
     private final CurrentUserScope currentUserScope;
     private final CascadeStateService cascadeStateService;
+    private final FilterParserAdapter filterParserAdapter;
 
     @Transactional(readOnly = true)
     public Page<EmpresaSummaryResponse> listarTodas(Pageable pageable, Map<String, String> filters)
     {
         var userSpec = new FilterSpecificationBuilder<Empresa>()
-                .withConditions(filters)
+                .withConditions(filterParserAdapter.parse(filters))
                 .build();
         return empresaRepository.findAll(empresaScope().and(userSpec), pageable)
                 .map(empresaMapper::toSummaryResponse);

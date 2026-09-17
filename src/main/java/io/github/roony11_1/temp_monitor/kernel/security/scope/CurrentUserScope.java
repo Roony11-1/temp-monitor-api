@@ -5,27 +5,56 @@ import io.github.roony11_1.temp_monitor.kernel.security.exception.NoAutenticadoE
 import io.github.roony11_1.temp_monitor.kernel.security.model.Rol;
 import io.github.roony11_1.temp_monitor.kernel.security.model.TokenUser;
 import io.github.roony11_1.specification.core.FilterCondition;
-import io.github.roony11_1.specification.core.FilterOperator;
-import io.github.roony11_1.specification.spring.FilterSpecificationBuilder;
+import io.github.roony11_1.temp_monitor.kernel.security.scope.strategy.EmpresaScopeResolver;
+import io.github.roony11_1.temp_monitor.kernel.security.scope.strategy.ScopeStrategy;
+import io.github.roony11_1.temp_monitor.kernel.security.scope.strategy.ScopeStrategyFactory;
+import io.github.roony11_1.temp_monitor.kernel.security.scope.strategy.SucursalScopeResolver;
+import io.github.roony11_1.temp_monitor.kernel.security.scope.strategy.SuperAdminScopeResolver;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
  * Resuelve el ámbito de acceso del usuario autenticado.
  *
- * Política:
+ * <p>OCP: delega a {@link ScopeStrategy} resuelta por {@link ScopeStrategyFactory}
+ * vía cadena de {@code ScopeStrategyResolver}s. Agregar nuevo tipo de ámbito
+ * (ej. multi-sucursal, auditor) solo requiere un nuevo resolver bean, sin modificar
+ * esta clase ni duplicar if-else en 4 métodos.
+ *
+ * <p>Política original preservada:
  * - SUPER_ADMIN -> acceso total (sin filtro).
- * - Usuario con sucursal (ADMIN_SUCURSAL, USUARIO) -> solo su sucursal.
- * - Usuario con solo empresa (ADMIN_EMPRESA) -> solo su empresa.
+ * - Usuario con sucursal -> solo su sucursal.
+ * - Usuario con solo empresa -> solo su empresa.
  * - Sin empresa ni sucursal -> denegado.
  */
 @Component
 public class CurrentUserScope 
 {
+    private final ScopeStrategyFactory factory;
+
+    @Autowired
+    public CurrentUserScope(ScopeStrategyFactory factory) {
+        this.factory = factory;
+    }
+
+    /**
+     * Constructor para uso en tests sin Spring (mantiene compatibilidad con {@code new CurrentUserScope()}).
+     * Construye un factory con los resolvers por defecto ordenados.
+     */
+    public CurrentUserScope() {
+        this(new ScopeStrategyFactory(List.of(
+                new SuperAdminScopeResolver(),
+                new SucursalScopeResolver(),
+                new EmpresaScopeResolver()
+        )));
+    }
+
     public TokenUser currentUser()
     {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -41,6 +70,10 @@ public class CurrentUserScope
         return currentUser().roles().contains(Rol.SUPER_ADMIN);
     }
 
+    private ScopeStrategy strategy() {
+        return factory.resolve(currentUser());
+    }
+
     /**
      * Condición de ámbito para entidades anidadas jerárquicamente
      * (p.ej. Camara, Sucursal, Usuario) donde el súper ve todo y el resto ve
@@ -48,20 +81,7 @@ public class CurrentUserScope
      */
     public Optional<FilterCondition> scopeCondition(String empresaPath, String sucursalPath)
     {
-        if (isSuperAdmin())
-        {
-            return Optional.empty();
-        }
-        TokenUser user = currentUser();
-        if (user.sucursalId() != null)
-        {
-            return Optional.of(new FilterCondition(sucursalPath, FilterOperator.EQ, user.sucursalId()));
-        }
-        if (user.empresaId() != null)
-        {
-            return Optional.of(new FilterCondition(empresaPath, FilterOperator.EQ, user.empresaId()));
-        }
-        throw new AccesoDenegadoException("El usuario no tiene un ámbito de acceso asignado");
+        return strategy().scopeCondition(empresaPath, sucursalPath);
     }
 
     /**
@@ -70,16 +90,7 @@ public class CurrentUserScope
      */
     public Optional<FilterCondition> scopeEmpresaOnly(String empresaPath)
     {
-        if (isSuperAdmin())
-        {
-            return Optional.empty();
-        }
-        TokenUser user = currentUser();
-        if (user.empresaId() != null)
-        {
-            return Optional.of(new FilterCondition(empresaPath, FilterOperator.EQ, user.empresaId()));
-        }
-        throw new AccesoDenegadoException("El usuario no tiene un ámbito de acceso asignado");
+        return strategy().empresaOnlyCondition(empresaPath);
     }
 
     /**
@@ -91,15 +102,7 @@ public class CurrentUserScope
      */
     public <T> Specification<T> scopeSpec(String empresaPath, String sucursalPath)
     {
-        if (isSuperAdmin())
-        {
-            return (root, query, cb) -> cb.conjunction();
-        }
-        Optional<FilterCondition> condition = scopeCondition(empresaPath, sucursalPath);
-        FilterSpecificationBuilder<T> builder = new FilterSpecificationBuilder<T>()
-                .withCondition(new FilterCondition("deletedAt", FilterOperator.IS_NULL, null));
-        condition.ifPresent(builder::withCondition);
-        return builder.build();
+        return strategy().scopeSpec(empresaPath, sucursalPath);
     }
 
     /**
@@ -109,15 +112,7 @@ public class CurrentUserScope
      */
     public <T> Specification<T> scopeEmpresaOnlySpec(String empresaPath)
     {
-        if (isSuperAdmin())
-        {
-            return (root, query, cb) -> cb.conjunction();
-        }
-        Optional<FilterCondition> condition = scopeEmpresaOnly(empresaPath);
-        FilterSpecificationBuilder<T> builder = new FilterSpecificationBuilder<T>()
-                .withCondition(new FilterCondition("deletedAt", FilterOperator.IS_NULL, null));
-        condition.ifPresent(builder::withCondition);
-        return builder.build();
+        return strategy().empresaOnlySpec(empresaPath);
     }
 
     /**
@@ -126,20 +121,11 @@ public class CurrentUserScope
      */
     public boolean canAccess(Long sucursalId, Long empresaId)
     {
-        if (isSuperAdmin())
-        {
-            return true;
+        try {
+            return strategy().canAccess(sucursalId, empresaId);
+        } catch (AccesoDenegadoException e) {
+            return false;
         }
-        TokenUser user = currentUser();
-        if (user.sucursalId() != null)
-        {
-            return sucursalId != null && user.sucursalId().equals(sucursalId);
-        }
-        if (user.empresaId() != null)
-        {
-            return empresaId != null && user.empresaId().equals(empresaId);
-        }
-        return false;
     }
 
     public void assertAccess(Long sucursalId, Long empresaId)

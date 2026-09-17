@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
+import io.github.roony11_1.temp_monitor.kernel.util.TemperatureUtils;
 import java.time.Instant;
 import java.util.List;
 
@@ -32,7 +32,9 @@ import java.util.List;
 @Slf4j
 public class CamaraLecturaService 
 {
-    public static final Duration VENTANA_MUESTRA = Duration.ofMinutes(15);
+    /** @deprecated Usa {@link TemperatureUtils#VENTANA_15_MIN} */
+    @Deprecated(forRemoval = false)
+    public static final java.time.Duration VENTANA_MUESTRA = TemperatureUtils.VENTANA_15_MIN;
 
     private final CamaraRepository camaraRepository;
     private final CamaraLecturaRepository camaraLecturaRepository;
@@ -57,7 +59,7 @@ public class CamaraLecturaService
     public void muestrearCamara(Camara camara, Instant momento)
     {
         Instant bucketStart = bucketStart(momento);
-        Instant desde = bucketStart.minus(VENTANA_MUESTRA);
+        Instant desde = bucketStart.minus(TemperatureUtils.VENTANA_15_MIN);
 
         Double promedio = lecturaRepository.calcularPromedioPorCamara(camara.getId(), desde, EstadoSensor.ACTIVO);
         long sensores = lecturaRepository.contarSensoresConDatosPorCamara(camara.getId(), desde, EstadoSensor.ACTIVO);
