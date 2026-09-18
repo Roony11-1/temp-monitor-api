@@ -165,9 +165,7 @@ public class UsuarioService
         TokenUser currentUser = getCurrentUser();
         roleAssignmentPolicy.assertCanModify(currentUser, usuario, request.getRoles());
 
-        usuario.setNombre(request.getNombre());
-        usuario.setTelefono(request.getTelefono());
-
+        Empresa empresa = null;
         if (request.getEmpresaId() != null) 
         {
             if (!currentUser.roles().contains(Rol.SUPER_ADMIN)
@@ -175,36 +173,21 @@ public class UsuarioService
             {
                 throw new AccesoDenegadoException("Solo puedes asignar tu propia empresa");
             }
-
-            Empresa empresa = empresaRepository.findById(request.getEmpresaId())
+            empresa = empresaRepository.findById(request.getEmpresaId())
                     .orElseThrow(() -> new EmpresaNotFoundException("ID " + request.getEmpresaId()));
-
             if (empresa.getDeletedAt() != null)
             {
                 throw new EmpresaNotFoundException("ID " + request.getEmpresaId());
             }
-
-            usuario.setEmpresa(empresa);
-        } 
-        else 
-        {
-            usuario.setEmpresa(null);
         }
 
+        Sucursal sucursal = null;
         if (request.getSucursalId() != null) 
         {
-            Sucursal sucursal = findSucursalEnScope(request.getSucursalId());
-            usuario.setSucursal(sucursal);
-        } 
-        else 
-        {
-            usuario.setSucursal(null);
+            sucursal = findSucursalEnScope(request.getSucursalId());
         }
-        
-        if (request.getRoles() != null && !request.getRoles().isEmpty()) 
-        {
-            usuario.setRoles(request.getRoles());
-        }
+
+        usuario.actualizarPerfil(request.getNombre(), request.getTelefono(), empresa, sucursal, request.getRoles());
 
         return usuarioDetailMapper.toResponse(usuario);
     }
@@ -213,37 +196,35 @@ public class UsuarioService
     public void cambiarPassword(Long id, String nuevaPassword) 
     {
         Usuario usuario = buscarActivaPorId(id);
-        usuario.setPasswordHash(passwordHasher.hash(nuevaPassword));
+        usuario.cambiarPassword(passwordHasher.hash(nuevaPassword));
     }
 
     @Transactional
     public void activar(Long id) 
     {
         Usuario usuario = buscarActivaPorId(id);
-        usuario.setActivo(true);
+        usuario.activar();
     }
 
     @Transactional
     public void desactivar(Long id) 
     {
         Usuario usuario = buscarActivaPorId(id);
-        usuario.setActivo(false);
+        usuario.desactivar();
     }
 
     @Transactional
     public void eliminar(Long id) 
     {
         Usuario usuario = buscarActivaPorId(id);
-        usuario.setDeletedAt(Instant.now());
+        usuario.marcarEliminado(Instant.now());
     }
 
     @Transactional
     public UsuarioResponse restaurar(Long id) 
     {
         Usuario usuario = buscarEntidadPorId(id);
-
-        usuario.setDeletedAt(null);
-
+        usuario.restaurar();
         return usuarioDetailMapper.toResponse(usuario);
     }
 

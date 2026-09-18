@@ -105,9 +105,7 @@ public class SensorService
 
         currentUserScope.assertAccess(camara.getSucursal().getId(), camara.getSucursal().getEmpresa().getId());
 
-        sensor.setCamara(camara);
-        sensor.setEstado(EstadoSensor.ACTIVO);
-        sensor.setEstadoPrevio(null);
+        sensor.asignarACamara(camara);
 
         return sensorDetailMapper.toResponse(sensor);
     }
@@ -159,27 +157,18 @@ public class SensorService
             }
 
             currentUserScope.assertAccess(camara.getSucursal().getId(), camara.getSucursal().getEmpresa().getId());
-            sensor.setCamara(camara);
-
-            if (sensor.getEstado().isPending() && request.getEstado() == null)
-            {
-                sensor.setEstado(EstadoSensor.ACTIVO);
-                sensor.setEstadoPrevio(null);
-            }
-        }
-
-        if (request.getEstado() != null)
+            sensor.reasignarSiPendiente(camara, request.getEstado());
+        } else if (request.getEstado() != null)
         {
-            if (!request.getEstado().canBeAssignedManually())
-            {
-                throw new IllegalArgumentException("No se puede asignar el estado " + request.getEstado() + " manualmente");
-            }
-            sensor.setEstado(request.getEstado());
-            sensor.setEstadoPrevio(null);
+            sensor.cambiarEstado(request.getEstado());
         }
 
-        Hibernate.initialize(sensor.getCamara().getSucursal());
-        Hibernate.initialize(sensor.getCamara().getSucursal().getEmpresa());
+        if (sensor.getCamara() != null) {
+            Hibernate.initialize(sensor.getCamara().getSucursal());
+            if (sensor.getCamara().getSucursal() != null) {
+                Hibernate.initialize(sensor.getCamara().getSucursal().getEmpresa());
+            }
+        }
         
         return sensorDetailMapper.toResponse(sensor);
     }
@@ -209,7 +198,7 @@ public class SensorService
 
     private RegistroSensorResponse rotateKey(Sensor sensor) {
         String newApiKey = apiKeyGenerator.generate();
-        sensor.setApiKeyHash(hashService.hash(newApiKey));
+        sensor.rotarApiKey(hashService.hash(newApiKey));
         return RegistroSensorResponse.builder()
             .uuid(sensor.getUuid())
             .estado(sensor.getEstado())
@@ -222,8 +211,7 @@ public class SensorService
     {
         Sensor sensor = sensorRepository.findActiveByUuidWithHierarchy(uuid)
             .orElseThrow(() -> new SensorNotFoundException("UUID " + uuid));
-
-        sensor.setDeletedAt(Instant.now());
+        sensor.marcarEliminado(Instant.now());
     }
 
     @Transactional
@@ -231,9 +219,7 @@ public class SensorService
     {
         Sensor sensor = sensorRepository.findByUuidWithHierarchy(uuid)
             .orElseThrow(() -> new SensorNotFoundException("UUID " + uuid));
-
-        sensor.setDeletedAt(null);
-
+        sensor.restaurar();
         return sensorDetailMapper.toResponse(sensor);
     }
 

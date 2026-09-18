@@ -45,4 +45,17 @@ public class Sucursal
 
     @UpdateTimestamp
     private Instant updatedAt;
+
+    public void actualizar(String nombre, String direccion, String telefono, Empresa empresa) {
+        this.nombre = nombre;
+        this.direccion = direccion;
+        this.telefono = telefono;
+        if (empresa != null) this.empresa = empresa;
+    }
+
+    public void reasignarEmpresa(Empresa empresa) {
+        if (empresa == null) throw new IllegalArgumentException("Empresa no puede ser null");
+        if (empresa.getDeletedAt() != null) throw new IllegalArgumentException("Empresa eliminada");
+        this.empresa = empresa;
+    }
 }

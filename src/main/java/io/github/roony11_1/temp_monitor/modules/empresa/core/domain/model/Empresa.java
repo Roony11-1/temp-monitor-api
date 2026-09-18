@@ -48,4 +48,14 @@ public class Empresa
 
     @UpdateTimestamp
     private Instant updatedAt;
+
+    public void actualizar(String nombre, String direccion, String telefono, String email) {
+        this.nombre = nombre;
+        this.direccion = direccion;
+        this.telefono = telefono;
+        this.email = email;
+    }
+
+    public void marcarEliminada(Instant ahora) { this.deletedAt = ahora; }
+    public void restaurar() { this.deletedAt = null; }
 }

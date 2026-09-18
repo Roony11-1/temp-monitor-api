@@ -141,15 +141,9 @@ public class CamaraService
     @Transactional
     public CamaraResponse actualizar(Long id, CamaraRequest request) 
     {
-        validarRango(request.getTemperaturaMin(), request.getTemperaturaMax());
-
         Camara camara = buscarActivaPorId(id);
 
-        camara.setNombre(request.getNombre());
-        camara.setDescripcion(request.getDescripcion());
-        camara.setTemperaturaMin(request.getTemperaturaMin());
-        camara.setTemperaturaMax(request.getTemperaturaMax());
-        
+        Sucursal nuevaSucursal = null;
         if (request.getSucursalId() != null) 
         {
             Sucursal sucursal = sucursalRepository.findById(request.getSucursalId())
@@ -161,9 +155,10 @@ public class CamaraService
             }
 
             currentUserScope.assertAccess(sucursal.getId(), sucursal.getEmpresa().getId());
-
-            camara.setSucursal(sucursal);
+            nuevaSucursal = sucursal;
         }
+
+        camara.actualizar(request.getNombre(), request.getDescripcion(), request.getTemperaturaMin(), request.getTemperaturaMax(), nuevaSucursal);
 
         return camaraDetailMapper.toResponse(camara);
     }

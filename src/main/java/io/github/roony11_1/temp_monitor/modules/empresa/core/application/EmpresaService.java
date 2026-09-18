@@ -71,12 +71,7 @@ public class EmpresaService
     public EmpresaResponse actualizar(Long id, EmpresaRequest request) 
     {
         Empresa empresa = buscarActivaPorId(id);
-
-        empresa.setNombre(request.getNombre());
-        empresa.setDireccion(request.getDireccion());
-        empresa.setTelefono(request.getTelefono());
-        empresa.setEmail(request.getEmail());
-
+        empresa.actualizar(request.getNombre(), request.getDireccion(), request.getTelefono(), request.getEmail());
         return empresaDetailMapper.toResponse(empresa);
     }
 

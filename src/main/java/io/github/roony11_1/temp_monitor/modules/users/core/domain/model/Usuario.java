@@ -76,4 +76,18 @@ public class Usuario
     public Long getSucursalId() {
         return sucursal != null ? sucursal.getId() : null;
     }
+
+    public void actualizarPerfil(String nombre, String telefono, Empresa empresa, Sucursal sucursal, Set<Rol> roles) {
+        this.nombre = nombre;
+        this.telefono = telefono;
+        this.empresa = empresa;
+        this.sucursal = sucursal;
+        if (roles != null && !roles.isEmpty()) this.roles = roles;
+    }
+
+    public void cambiarPassword(String hash) { this.passwordHash = hash; }
+    public void desactivar() { this.activo = false; }
+    public void activar() { this.activo = true; }
+    public void marcarEliminado(Instant ahora) { this.deletedAt = ahora; }
+    public void restaurar() { this.deletedAt = null; }
 }

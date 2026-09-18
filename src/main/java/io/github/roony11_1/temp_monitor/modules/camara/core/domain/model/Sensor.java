@@ -97,4 +97,57 @@ public class Sensor
     {
         return !puedeRegistrarLectura();
     }
+
+    // ===== Métodos de dominio rico =====
+
+    /**
+     * Asigna el sensor a una cámara y activa automáticamente.
+     * Encapsula invariante: cámara no eliminada y transición a ACTIVO.
+     */
+    public void asignarACamara(Camara camara) {
+        if (camara == null) throw new IllegalArgumentException("Camara no puede ser null");
+        if (camara.getDeletedAt() != null) throw new IllegalArgumentException("Camara eliminada");
+        this.camara = camara;
+        this.estado = EstadoSensor.ACTIVO;
+        this.estadoPrevio = null;
+    }
+
+    /**
+     * Cambia el estado validando que no se asigne PENDIENTE manualmente (OCP vía enum).
+     */
+    public void cambiarEstado(EstadoSensor nuevoEstado) {
+        if (nuevoEstado == null) throw new IllegalArgumentException("Estado no puede ser null");
+        if (!nuevoEstado.canBeAssignedManually()) {
+            throw new IllegalArgumentException("No se puede asignar el estado " + nuevoEstado + " manualmente");
+        }
+        this.estado = nuevoEstado;
+        this.estadoPrevio = null;
+    }
+
+    /**
+     * Reasignación con lógica de negocio: si estaba PENDIENTE y no se especifica estado nuevo,
+     * se activa automáticamente (usado en actualización con cambio de cámara).
+     */
+    public void reasignarSiPendiente(Camara nuevaCamara, EstadoSensor estadoSolicitado) {
+        this.camara = nuevaCamara;
+        if (this.estado != null && this.estado.isPending() && estadoSolicitado == null) {
+            this.estado = EstadoSensor.ACTIVO;
+            this.estadoPrevio = null;
+        }
+        if (estadoSolicitado != null) {
+            cambiarEstado(estadoSolicitado);
+        }
+    }
+
+    public void rotarApiKey(String newHash) {
+        this.apiKeyHash = newHash;
+    }
+
+    public void marcarEliminado(Instant ahora) {
+        this.deletedAt = ahora;
+    }
+
+    public void restaurar() {
+        this.deletedAt = null;
+    }
 }

@@ -104,17 +104,16 @@ public class SucursalService
     {
         Sucursal sucursal = buscarActivaPorId(id);
 
-        sucursal.setNombre(request.getNombre());
-        sucursal.setDireccion(request.getDireccion());
-        sucursal.setTelefono(request.getTelefono());
-        
+        Empresa empresa = null;
         if (request.getEmpresaId() != null) 
         {
-            Empresa empresa = empresaRepository.findById(request.getEmpresaId())
+            empresa = empresaRepository.findById(request.getEmpresaId())
                     .orElseThrow(() -> new EmpresaNotFoundException("ID " + request.getEmpresaId()));
             currentUserScope.assertAccess(null, empresa.getId());
-            sucursal.setEmpresa(empresa);
         }
+
+        // Delega validación e invariantes a la entidad rica
+        sucursal.actualizar(request.getNombre(), request.getDireccion(), request.getTelefono(), empresa);
 
         return sucursalDetailMapper.toResponse(sucursal);
     }

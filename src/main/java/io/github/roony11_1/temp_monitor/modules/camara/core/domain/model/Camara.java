@@ -56,4 +56,34 @@ public class Camara
 
     @UpdateTimestamp
     private Instant updatedAt;
+
+    // ===== Métodos de dominio rico =====
+
+    /**
+     * Actualiza datos básicos y rango de temperatura con validación centralizada.
+     * OCP: validación vive en {@link io.github.roony11_1.temp_monitor.kernel.domain.RangoTemperatura},
+     * no dispersa en Services.
+     */
+    public void actualizar(String nombre, String descripcion, Double temperaturaMin, Double temperaturaMax, Sucursal nuevaSucursal) {
+        io.github.roony11_1.temp_monitor.kernel.domain.RangoTemperatura.validar(temperaturaMin, temperaturaMax);
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.temperaturaMin = temperaturaMin;
+        this.temperaturaMax = temperaturaMax;
+        if (nuevaSucursal != null) {
+            this.sucursal = nuevaSucursal;
+        }
+    }
+
+    public void cambiarRango(Double min, Double max) {
+        io.github.roony11_1.temp_monitor.kernel.domain.RangoTemperatura.validar(min, max);
+        this.temperaturaMin = min;
+        this.temperaturaMax = max;
+    }
+
+    public void reasignarSucursal(Sucursal sucursal) {
+        if (sucursal == null) throw new IllegalArgumentException("Sucursal no puede ser null");
+        if (sucursal.getDeletedAt() != null) throw new IllegalArgumentException("Sucursal eliminada");
+        this.sucursal = sucursal;
+    }
 }
