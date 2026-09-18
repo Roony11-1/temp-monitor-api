@@ -2,6 +2,7 @@ package io.github.roony11_1.temp_monitor.config;
 
 import io.github.roony11_1.temp_monitor.config.filter.JwtAuthenticationFilter;
 import io.github.roony11_1.temp_monitor.config.filter.SensorApiKeyFilter;
+import io.github.roony11_1.temp_monitor.kernel.security.SecurityRoles;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -48,8 +49,8 @@ public class SecurityConfig
                 .requestMatchers("/auth/login").permitAll()
                 .requestMatchers("/auth/refresh").permitAll()
                 .requestMatchers("/api/sensores/registrar").permitAll()
-                .requestMatchers("/api/sensores/renew-api-key-by-mac").hasRole("SUPER_ADMIN")
-                .requestMatchers("/api/sensores/{uuid}/renew-api-key").hasRole("SUPER_ADMIN")
+                .requestMatchers("/api/sensores/renew-api-key-by-mac").hasRole(SecurityRoles.SUPER_ADMIN)
+                .requestMatchers("/api/sensores/{uuid}/renew-api-key").hasRole(SecurityRoles.SUPER_ADMIN)
                 .requestMatchers("/actuator/**").permitAll()
                 .anyRequest().authenticated()
             )

@@ -16,8 +16,11 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 /**
  * Agregado (rollup) de lecturas de un sensor, generado por la compactación.
@@ -31,7 +34,10 @@ import lombok.NoArgsConstructor;
 @Table(name = "lecturas_resumen", uniqueConstraints = {
     @UniqueConstraint(name = "uk_lecturas_resumen_bucket", columnNames = {"sensor_uuid", "granularidad", "bucket_start"})
 })
-@Data
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -39,6 +45,7 @@ public class LecturaResumen
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
     @Column(name = "sensor_uuid", nullable = false)

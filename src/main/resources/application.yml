@@ -17,6 +17,12 @@ app:
     secret: ${APP_JWT_SECRET}
     access-expiration-minutes: ${APP_JWT_ACCESS_EXPIRATION_MINUTES:15}
     refresh-expiration-days: ${APP_JWT_REFRESH_EXPIRATION_DAYS:7}
+  ventana:
+    temperatura: ${APP_VENTANA_TEMPERATURA:15m}
+    muestra: ${APP_VENTANA_MUESTRA:15m}
+  dashboard:
+    online-threshold: ${APP_DASHBOARD_ONLINE_THRESHOLD:5m}
+    temperatura-ventana: ${APP_DASHBOARD_TEMPERATURA_VENTANA:24h}
   compactacion:
     enabled: ${COMPACTACION_ENABLED:false}
     cron: ${COMPACTACION_CRON:0 0 3 * * SUN}

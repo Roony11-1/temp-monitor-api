@@ -20,10 +20,9 @@ import io.github.roony11_1.temp_monitor.kernel.cascade.CascadeStateService;
 import io.github.roony11_1.temp_monitor.kernel.mapper.DetailEntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
-import io.github.roony11_1.specification.core.FilterCondition;
-import io.github.roony11_1.specification.core.FilterOperator;
 import io.github.roony11_1.specification.spring.FilterSpecificationBuilder;
 import io.github.roony11_1.temp_monitor.kernel.spec.FilterParserAdapter;
+import io.github.roony11_1.temp_monitor.kernel.spec.SpecificationFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +31,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import io.github.roony11_1.temp_monitor.config.AppProperties;
 import io.github.roony11_1.temp_monitor.kernel.domain.RangoTemperatura;
 import io.github.roony11_1.temp_monitor.kernel.util.TemperatureUtils;
 import java.time.Instant;
@@ -53,6 +53,7 @@ public class CamaraService
     private final CurrentUserScope currentUserScope;
     private final CascadeStateService cascadeStateService;
     private final FilterParserAdapter filterParserAdapter;
+    private final AppProperties appProperties;
 
     @Transactional(readOnly = true)
     public Page<CamaraSummaryResponse> listarTodas(Pageable pageable, Map<String, String> filters)
@@ -102,17 +103,12 @@ public class CamaraService
 
     private Specification<Camara> byIdSpec(Long id)
     {
-        return new FilterSpecificationBuilder<Camara>()
-                .withCondition(new FilterCondition("id", FilterOperator.EQ, id))
-                .build();
+        return SpecificationFactory.byId(id);
     }
 
     private Specification<Camara> bySucursalSpec(Long sucursalId)
     {
-        return new FilterSpecificationBuilder<Camara>()
-                .withCondition(new FilterCondition(
-                        "sucursal.id", FilterOperator.EQ, sucursalId))
-                .build();
+        return SpecificationFactory.byField("sucursal.id", sucursalId);
     }
 
     @Transactional
@@ -228,7 +224,7 @@ public class CamaraService
     {
         buscarEntidadPorId(id);
 
-        Instant since = Instant.now().minus(TemperatureUtils.VENTANA_15_MIN);
+        Instant since = Instant.now().minus(appProperties.getVentana().getTemperatura());
 
         Double promedio = lecturaRepository.calcularPromedioPorCamara(id, since, EstadoSensor.ACTIVO);
         long sensoresConDatos = lecturaRepository.contarSensoresConDatosPorCamara(id, since, EstadoSensor.ACTIVO);

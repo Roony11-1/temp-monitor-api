@@ -4,10 +4,9 @@ import io.github.roony11_1.temp_monitor.kernel.cascade.CascadeStateService;
 import io.github.roony11_1.temp_monitor.kernel.mapper.DetailEntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
-import io.github.roony11_1.specification.core.FilterCondition;
-import io.github.roony11_1.specification.core.FilterOperator;
 import io.github.roony11_1.specification.spring.FilterSpecificationBuilder;
 import io.github.roony11_1.temp_monitor.kernel.spec.FilterParserAdapter;
+import io.github.roony11_1.temp_monitor.kernel.spec.SpecificationFactory;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.SucursalRequest;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.SucursalResponse;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.SucursalSummaryResponse;
@@ -170,15 +169,11 @@ public class SucursalService
 
     private Specification<Sucursal> byIdSpec(Long id)
     {
-        return new FilterSpecificationBuilder<Sucursal>()
-                .withCondition(new FilterCondition("id", FilterOperator.EQ, id))
-                .build();
+        return SpecificationFactory.byId(id);
     }
 
     private Specification<Sucursal> byEmpresaSpec(Long empresaId)
     {
-        return new FilterSpecificationBuilder<Sucursal>()
-                .withCondition(new FilterCondition("empresa.id", FilterOperator.EQ, empresaId))
-                .build();
+        return SpecificationFactory.byField("empresa.id", empresaId);
     }
 }

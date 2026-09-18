@@ -4,10 +4,9 @@ import io.github.roony11_1.temp_monitor.kernel.cascade.CascadeStateService;
 import io.github.roony11_1.temp_monitor.kernel.mapper.DetailEntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
-import io.github.roony11_1.specification.core.FilterCondition;
-import io.github.roony11_1.specification.core.FilterOperator;
 import io.github.roony11_1.specification.spring.FilterSpecificationBuilder;
 import io.github.roony11_1.temp_monitor.kernel.spec.FilterParserAdapter;
+import io.github.roony11_1.temp_monitor.kernel.spec.SpecificationFactory;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.EmpresaRequest;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.EmpresaResponse;
 import io.github.roony11_1.temp_monitor.modules.empresa.api.dto.EmpresaSummaryResponse;
@@ -134,8 +133,6 @@ public class EmpresaService
 
     private Specification<Empresa> byIdSpec(Long id)
     {
-        return new FilterSpecificationBuilder<Empresa>()
-                .withCondition(new FilterCondition("id", FilterOperator.EQ, id))
-                .build();
+        return SpecificationFactory.byId(id);
     }
 }

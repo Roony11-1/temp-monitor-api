@@ -18,8 +18,10 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 /**
@@ -33,7 +35,10 @@ import lombok.ToString;
 @Table(name = "camara_lecturas_resumen", uniqueConstraints = {
     @UniqueConstraint(name = "uk_camara_lecturas_resumen_bucket", columnNames = {"camara_id", "granularidad", "bucket_start"})
 })
-@Data
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -41,6 +46,7 @@ public class CamaraLecturaResumen
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

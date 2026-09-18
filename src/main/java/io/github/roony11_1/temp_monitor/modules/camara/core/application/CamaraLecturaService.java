@@ -3,9 +3,7 @@ package io.github.roony11_1.temp_monitor.modules.camara.core.application;
 import io.github.roony11_1.temp_monitor.config.CamaraMuestreoConfig;
 import io.github.roony11_1.temp_monitor.kernel.mapper.DetailEntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
-import io.github.roony11_1.specification.core.FilterCondition;
-import io.github.roony11_1.specification.core.FilterOperator;
-import io.github.roony11_1.specification.spring.FilterSpecificationBuilder;
+import io.github.roony11_1.temp_monitor.kernel.spec.SpecificationFactory;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.exceptions.CamaraNotFoundException;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Camara;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.CamaraLectura;
@@ -23,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import io.github.roony11_1.temp_monitor.config.AppProperties;
 import io.github.roony11_1.temp_monitor.kernel.util.TemperatureUtils;
 import java.time.Instant;
 import java.util.List;
@@ -42,6 +41,7 @@ public class CamaraLecturaService
     private final LecturaRepository lecturaRepository;
     private final CurrentUserScope currentUserScope;
     private final CamaraMuestreoConfig camaraMuestreoConfig;
+    private final AppProperties appProperties;
     private final DetailEntityMapper<CamaraLectura, CamaraLecturaResponse> camaraLecturaMapper;
     private final DetailEntityMapper<CamaraLecturaResumen, CamaraLecturaResumenResponse> camaraLecturaResumenMapper;
 
@@ -49,9 +49,7 @@ public class CamaraLecturaService
     public void muestrear()
     {
         Instant ahora = Instant.now();
-        var noEliminadas = new FilterSpecificationBuilder<Camara>()
-                .withCondition(new FilterCondition("deletedAt", FilterOperator.IS_NULL, null))
-                .build();
+        var noEliminadas = SpecificationFactory.<Camara>notDeleted();
         camaraRepository.findAll(noEliminadas).forEach(camara -> muestrearCamara(camara, ahora));
     }
 
@@ -59,7 +57,7 @@ public class CamaraLecturaService
     public void muestrearCamara(Camara camara, Instant momento)
     {
         Instant bucketStart = bucketStart(momento);
-        Instant desde = bucketStart.minus(TemperatureUtils.VENTANA_15_MIN);
+        Instant desde = bucketStart.minus(appProperties.getVentana().getMuestra());
 
         Double promedio = lecturaRepository.calcularPromedioPorCamara(camara.getId(), desde, EstadoSensor.ACTIVO);
         long sensores = lecturaRepository.contarSensoresConDatosPorCamara(camara.getId(), desde, EstadoSensor.ACTIVO);
@@ -121,9 +119,7 @@ public class CamaraLecturaService
 
     private void assertCamaraEnScope(Long camaraId)
     {
-        var byId = new FilterSpecificationBuilder<Camara>()
-                .withCondition(new FilterCondition("id", FilterOperator.EQ, camaraId))
-                .build();
+        var byId = SpecificationFactory.<Camara>byId(camaraId);
         camaraRepository.findOne(currentUserScope.<Camara>scopeSpec("sucursal.empresa.id", "sucursal.id").and(byId))
             .orElseThrow(() -> new CamaraNotFoundException("ID " + camaraId));
     }

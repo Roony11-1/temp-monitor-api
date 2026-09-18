@@ -1,5 +1,6 @@
 package io.github.roony11_1.temp_monitor.modules.dashboard.core.application;
 
+import io.github.roony11_1.temp_monitor.config.AppProperties;
 import io.github.roony11_1.temp_monitor.kernel.util.TemperatureUtils;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import io.github.roony11_1.specification.core.FilterCondition;
 import io.github.roony11_1.specification.core.FilterOperator;
 import io.github.roony11_1.specification.spring.FilterSpecificationBuilder;
+import io.github.roony11_1.temp_monitor.kernel.spec.SpecificationFactory;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Camara;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.CamaraRepository;
 import io.github.roony11_1.temp_monitor.modules.camara.core.domain.repository.LecturaRepository;
@@ -33,21 +35,16 @@ public class DashboardService
     private final CamaraRepository camaraRepository;
     private final SensorRepository sensorRepository;
     private final LecturaRepository lecturaRepository;
+    private final AppProperties appProperties;
 
     @Transactional(readOnly = true)
     public DashboardResponse obtenerDashboard()
     {
-        Instant threshold = Instant.now().minus(TemperatureUtils.ONLINE_THRESHOLD_5_MIN);
+        Instant threshold = Instant.now().minus(appProperties.getDashboard().getOnlineThreshold());
 
-        var noEliminadasEmpresa = new FilterSpecificationBuilder<Empresa>()
-                .withCondition(new FilterCondition("deletedAt", FilterOperator.IS_NULL, null))
-                .build();
-        var noEliminadasSucursal = new FilterSpecificationBuilder<Sucursal>()
-                .withCondition(new FilterCondition("deletedAt", FilterOperator.IS_NULL, null))
-                .build();
-        var noEliminadasCamara = new FilterSpecificationBuilder<Camara>()
-                .withCondition(new FilterCondition("deletedAt", FilterOperator.IS_NULL, null))
-                .build();
+        var noEliminadasEmpresa = SpecificationFactory.<Empresa>notDeleted();
+        var noEliminadasSucursal = SpecificationFactory.<Sucursal>notDeleted();
+        var noEliminadasCamara = SpecificationFactory.<Camara>notDeleted();
 
         long empresas = empresaRepository.count(noEliminadasEmpresa);
         long sucursales = sucursalRepository.count(noEliminadasSucursal);
@@ -78,7 +75,7 @@ public class DashboardService
 
     private List<TemperaturePoint> obtenerTemperatura24h()
     {
-        Instant since = Instant.now().minus(TemperatureUtils.VENTANA_24_H);
+        Instant since = Instant.now().minus(appProperties.getDashboard().getTemperaturaVentana());
         List<io.github.roony11_1.temp_monitor.modules.camara.core.domain.model.Lectura> lecturas = lecturaRepository.findUltimas24h(since);
 
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM HH:mm").withZone(ZoneId.systemDefault());

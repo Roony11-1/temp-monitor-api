@@ -16,15 +16,18 @@ import io.github.roony11_1.temp_monitor.modules.empresa.core.domain.model.Sucurs
 
 @Entity
 @Table(name = "usuarios")
-@Data
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@EqualsAndHashCode(callSuper = false)
 public class Usuario 
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
     @Column(unique = true, nullable = false)

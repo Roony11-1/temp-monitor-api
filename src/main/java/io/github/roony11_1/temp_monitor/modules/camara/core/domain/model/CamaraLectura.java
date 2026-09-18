@@ -7,15 +7,18 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "camara_lecturas", uniqueConstraints = @UniqueConstraint(name = "uk_camara_lecturas_bucket", columnNames = {"camara_id", "bucket_start"}))
-@Data
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@EqualsAndHashCode(callSuper = false)
 public class CamaraLectura 
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

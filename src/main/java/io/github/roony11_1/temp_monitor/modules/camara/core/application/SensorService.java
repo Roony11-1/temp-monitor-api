@@ -18,10 +18,9 @@ import io.github.roony11_1.temp_monitor.kernel.mapper.EntityMapper;
 import io.github.roony11_1.temp_monitor.kernel.security.crypto.ApiKeyGenerator;
 import io.github.roony11_1.temp_monitor.kernel.security.crypto.HashService;
 import io.github.roony11_1.temp_monitor.kernel.security.scope.CurrentUserScope;
-import io.github.roony11_1.specification.core.FilterCondition;
-import io.github.roony11_1.specification.core.FilterOperator;
 import io.github.roony11_1.specification.spring.FilterSpecificationBuilder;
 import io.github.roony11_1.temp_monitor.kernel.spec.FilterParserAdapter;
+import io.github.roony11_1.temp_monitor.kernel.spec.SpecificationFactory;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.ActualizarSensorRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.AsignarSensorRequest;
 import io.github.roony11_1.temp_monitor.modules.camara.api.dto.RegistroSensorRequest;
@@ -197,15 +196,7 @@ public class SensorService
     {
         Sensor sensor = sensorRepository.findActiveByUuid(uuid)
             .orElseThrow(() -> new SensorNotFoundException("UUID " + uuid));
-
-        String newApiKey = apiKeyGenerator.generate();
-        sensor.setApiKeyHash(hashService.hash(newApiKey));
-
-        return RegistroSensorResponse.builder()
-            .uuid(sensor.getUuid())
-            .estado(sensor.getEstado())
-            .apiKey(newApiKey)
-            .build();
+        return rotateKey(sensor);
     }
 
     @Transactional
@@ -213,10 +204,12 @@ public class SensorService
     {
         Sensor sensor = sensorRepository.findActiveByMacAddress(macAddress)
             .orElseThrow(() -> new SensorNotFoundException("MAC " + macAddress));
+        return rotateKey(sensor);
+    }
 
+    private RegistroSensorResponse rotateKey(Sensor sensor) {
         String newApiKey = apiKeyGenerator.generate();
         sensor.setApiKeyHash(hashService.hash(newApiKey));
-
         return RegistroSensorResponse.builder()
             .uuid(sensor.getUuid())
             .estado(sensor.getEstado())
@@ -251,9 +244,7 @@ public class SensorService
 
     private void assertCamaraEnScope(Long camaraId)
     {
-        var byId = new FilterSpecificationBuilder<Camara>()
-                .withCondition(new FilterCondition("id", FilterOperator.EQ, camaraId))
-                .build();
+        var byId = SpecificationFactory.<Camara>byId(camaraId);
         camaraRepository.findOne(currentUserScope.<Camara>scopeSpec("sucursal.empresa.id", "sucursal.id").and(byId))
             .orElseThrow(() -> new CamaraNotFoundException("ID " + camaraId));
     }
