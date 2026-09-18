@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 
 /**
@@ -27,13 +28,14 @@ public class LecturaCompactionHandler implements CompactionHandler {
 
     @Override
     public int rollupDaily(Instant cutoff) {
+        ensureIndex();
         String daily = GranularidadLectura.DAILY.name();
         String truncDay = GranularidadLectura.DAILY.getDateTrunc();
         String sql = """
                 INSERT INTO lecturas_resumen
                     (sensor_uuid, granularidad, bucket_start, promedio, minimo, maximo, conteo, actualizado_en)
                 SELECT l.sensor_uuid, '%s', date_trunc('%s', l.timestamp),
-                       AVG(l.temperatura), MIN(l.temperatura), MAX(l.temperatura), COUNT(*), now()
+                       AVG(l.temperatura), MIN(l.temperatura), MAX(l.temperatura), COUNT(*)::int, now()
                 FROM lecturas l
                 WHERE l.timestamp < ?
                   AND NOT EXISTS (
@@ -43,10 +45,10 @@ public class LecturaCompactionHandler implements CompactionHandler {
                         AND r.bucket_start = date_trunc('%s', l.timestamp)
                   )
                 GROUP BY l.sensor_uuid, date_trunc('%s', l.timestamp)
-                ON CONFLICT (sensor_uuid, granularidad, bucket_start) DO NOTHING
+                ON CONFLICT ON CONSTRAINT uk_lecturas_resumen_bucket DO NOTHING
                 """.formatted(daily, truncDay, daily, truncDay, truncDay);
 
-        Integer insertados = jdbcTemplate.update(sql, cutoff);
+        Integer insertados = jdbcTemplate.update(sql, Timestamp.from(cutoff));
         if (insertados != null && insertados > 0) {
             log.info("Rollup diario (lecturas): {} buckets", insertados);
         }
@@ -55,6 +57,7 @@ public class LecturaCompactionHandler implements CompactionHandler {
 
     @Override
     public int rollupMonthly(Instant cutoff) {
+        ensureIndex();
         String daily = GranularidadLectura.DAILY.name();
         String monthly = GranularidadLectura.MONTHLY.name();
         String truncMonth = GranularidadLectura.MONTHLY.getDateTrunc();
@@ -73,10 +76,10 @@ public class LecturaCompactionHandler implements CompactionHandler {
                         AND m.bucket_start = date_trunc('%s', r.bucket_start)
                   )
                 GROUP BY r.sensor_uuid, date_trunc('%s', r.bucket_start)
-                ON CONFLICT (sensor_uuid, granularidad, bucket_start) DO NOTHING
+                ON CONFLICT ON CONSTRAINT uk_lecturas_resumen_bucket DO NOTHING
                 """.formatted(monthly, truncMonth, daily, monthly, truncMonth, truncMonth);
 
-        Integer insertados = jdbcTemplate.update(sqlInsert, cutoff);
+        Integer insertados = jdbcTemplate.update(sqlInsert, Timestamp.from(cutoff));
         if (insertados != null && insertados > 0) {
             String sqlDelete = """
                     DELETE FROM lecturas_resumen r
@@ -87,9 +90,17 @@ public class LecturaCompactionHandler implements CompactionHandler {
                       AND m.granularidad = '%s'
                       AND m.bucket_start = date_trunc('%s', r.bucket_start)
                     """.formatted(daily, monthly, truncMonth);
-            jdbcTemplate.update(sqlDelete, cutoff);
+            jdbcTemplate.update(sqlDelete, Timestamp.from(cutoff));
         }
         return insertados != null ? insertados : 0;
+    }
+
+    private void ensureIndex() {
+        try {
+            jdbcTemplate.execute("CREATE UNIQUE INDEX IF NOT EXISTS uk_lecturas_resumen_bucket ON lecturas_resumen (sensor_uuid, granularidad, bucket_start)");
+        } catch (Exception e) {
+            log.warn("No se pudo asegurar índice uk_lecturas_resumen_bucket", e);
+        }
     }
 
     @Override
@@ -102,7 +113,7 @@ public class LecturaCompactionHandler implements CompactionHandler {
                     WHERE id IN (
                         SELECT id FROM lecturas WHERE timestamp < ? LIMIT ?
                     )
-                    """, cutoff, maxBatch);
+                    """, Timestamp.from(cutoff), maxBatch);
             total += borrados;
         } while (borrados > 0);
         if (total > 0) {

@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 
 @Component
@@ -22,13 +23,14 @@ public class CamaraLecturaCompactionHandler implements CompactionHandler {
 
     @Override
     public int rollupDaily(Instant cutoff) {
+        ensureIndex();
         String daily = GranularidadLectura.DAILY.name();
         String truncDay = GranularidadLectura.DAILY.getDateTrunc();
         String sql = """
                 INSERT INTO camara_lecturas_resumen
                     (camara_id, granularidad, bucket_start, promedio, minimo, maximo, conteo, actualizado_en)
                 SELECT cl.camara_id, '%s', date_trunc('%s', cl.bucket_start),
-                       AVG(cl.promedio), MIN(cl.promedio), MAX(cl.promedio), COUNT(*), now()
+                       AVG(cl.promedio), MIN(cl.promedio), MAX(cl.promedio), COUNT(*)::int, now()
                 FROM camara_lecturas cl
                 WHERE cl.bucket_start < ?
                   AND NOT EXISTS (
@@ -38,10 +40,10 @@ public class CamaraLecturaCompactionHandler implements CompactionHandler {
                         AND r.bucket_start = date_trunc('%s', cl.bucket_start)
                   )
                 GROUP BY cl.camara_id, date_trunc('%s', cl.bucket_start)
-                ON CONFLICT (camara_id, granularidad, bucket_start) DO NOTHING
+                ON CONFLICT ON CONSTRAINT uk_camara_lecturas_resumen_bucket DO NOTHING
                 """.formatted(daily, truncDay, daily, truncDay, truncDay);
 
-        Integer insertados = jdbcTemplate.update(sql, cutoff);
+        Integer insertados = jdbcTemplate.update(sql, Timestamp.from(cutoff));
         if (insertados != null && insertados > 0) {
             log.info("Rollup diario de cámaras: {} buckets", insertados);
         }
@@ -50,6 +52,7 @@ public class CamaraLecturaCompactionHandler implements CompactionHandler {
 
     @Override
     public int rollupMonthly(Instant cutoff) {
+        ensureIndex();
         String daily = GranularidadLectura.DAILY.name();
         String monthly = GranularidadLectura.MONTHLY.name();
         String truncMonth = GranularidadLectura.MONTHLY.getDateTrunc();
@@ -68,10 +71,10 @@ public class CamaraLecturaCompactionHandler implements CompactionHandler {
                         AND m.bucket_start = date_trunc('%s', r.bucket_start)
                   )
                 GROUP BY r.camara_id, date_trunc('%s', r.bucket_start)
-                ON CONFLICT (camara_id, granularidad, bucket_start) DO NOTHING
+                ON CONFLICT ON CONSTRAINT uk_camara_lecturas_resumen_bucket DO NOTHING
                 """.formatted(monthly, truncMonth, daily, monthly, truncMonth, truncMonth);
 
-        Integer insertados = jdbcTemplate.update(sqlInsert, cutoff);
+        Integer insertados = jdbcTemplate.update(sqlInsert, Timestamp.from(cutoff));
         if (insertados != null && insertados > 0) {
             String sqlDelete = """
                     DELETE FROM camara_lecturas_resumen r
@@ -82,9 +85,17 @@ public class CamaraLecturaCompactionHandler implements CompactionHandler {
                       AND m.granularidad = '%s'
                       AND m.bucket_start = date_trunc('%s', r.bucket_start)
                     """.formatted(daily, monthly, truncMonth);
-            jdbcTemplate.update(sqlDelete, cutoff);
+            jdbcTemplate.update(sqlDelete, Timestamp.from(cutoff));
         }
         return insertados != null ? insertados : 0;
+    }
+
+    private void ensureIndex() {
+        try {
+            jdbcTemplate.execute("CREATE UNIQUE INDEX IF NOT EXISTS uk_camara_lecturas_resumen_bucket ON camara_lecturas_resumen (camara_id, granularidad, bucket_start)");
+        } catch (Exception e) {
+            log.warn("No se pudo asegurar índice uk_camara_lecturas_resumen_bucket", e);
+        }
     }
 
     @Override
@@ -97,7 +108,7 @@ public class CamaraLecturaCompactionHandler implements CompactionHandler {
                     WHERE id IN (
                         SELECT id FROM camara_lecturas WHERE bucket_start < ? LIMIT ?
                     )
-                    """, cutoff, maxBatch);
+                    """, Timestamp.from(cutoff), maxBatch);
             total += borrados;
         } while (borrados > 0);
         if (total > 0) {

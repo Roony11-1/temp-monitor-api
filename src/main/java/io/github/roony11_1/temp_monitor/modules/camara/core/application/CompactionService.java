@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -47,7 +49,7 @@ public class CompactionService
         jdbcTemplate.execute("SET TIME ZONE 'UTC'");
 
         Instant cutoffDias = Instant.now().minus(config.getRetencionDias(), ChronoUnit.DAYS);
-        Instant cutoffMeses = Instant.now().minus(config.getRetencionMeses(), ChronoUnit.MONTHS);
+        Instant cutoffMeses = ZonedDateTime.now(ZoneOffset.UTC).minusMonths(config.getRetencionMeses()).toInstant();
 
         int totalDiarios = 0, totalMensuales = 0, totalPurgados = 0;
         for (CompactionHandler handler : handlers) {
